@@ -1,6 +1,6 @@
 /* Service Worker: nötig für die Installation als App und das Teilen-Ziel,
-   und damit Tagwerk auch ohne Netz startet. Erst Netz, dann Cache. */
-const CACHE="tagwerk-v1";
+   und damit die App auch ohne Netz startet. Erst Netz, dann Cache. */
+const CACHE="brain-v1";
 const DATEIEN=["./","./index.html","./manifest.json","./icon-192.png","./icon-512.png"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(DATEIEN)).then(()=>self.skipWaiting()));});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys()

@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#F4F2ED">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Tagwerk</title>
+<title>Marco's brain</title>
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow">
 <link rel="manifest" href="manifest.json">
@@ -217,7 +217,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 <div id="app">
   <header>
     <div class="hd-zeile">
-      <div><div class="eyebrow" id="eyebrow">Heute</div><h1 id="titel">Tagwerk</h1></div>
+      <div><div class="eyebrow" id="eyebrow">Heute</div><h1 id="titel">Marco's brain</h1></div>
       <div id="hdside"></div>
     </div>
   </header>
@@ -228,9 +228,10 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 <input type="file" id="bildwahl" accept="image/*" style="display:none">
 <input type="file" id="keepwahl" accept=".json,.html,application/json,text/html" multiple style="display:none">
 <script>
-/* ===== Tagwerk: Aufgaben und Notizen ===== */
+/* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
-const VERSION="1.5";
+const APP_NAME="Marco's brain";
+const VERSION="1.7";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -953,20 +954,34 @@ function ausschnitt(n,q){
 
 const ICON_STIFT_N='<svg viewBox="0 0 24 24"><path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M13.5 6.5l4 4"/></svg>';
 const ICON_WEG_N='<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>';
+const ICON_NADEL='<svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-3 4h10l-3-4V3M12 13v8"/></svg>';
 const ICON_ARCHIV='<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg>';
 
-const notizSortierung=()=>((S.einst&&S.einst.notizSort)||"neu");
-const notizPos=n=>n.pos||n.geaendert||n.erstellt||0;
-
+const SORTEN={erstellt:"Neueste zuerst",geoeffnet:"Zuletzt geöffnet",geaendert:"Zuletzt geändert",eigen:"Eigene Reihenfolge"};
+const notizSortierung=()=>{const s=(S.einst&&S.einst.notizSort)||"erstellt";return SORTEN[s]?s:"erstellt";};
+const notizPos=n=>n.pos||n.erstellt||0;
+/* Für jede Sortierung der passende Zeitstempel. Werte vor dem Jahr 2000 stammen
+   aus fehlerhaften Importen und werden übersprungen, sonst landet alles in „1970“. */
+const zeitOk=t=>typeof t==="number"&&t>946684800000;
+function sortWert(n,art){
+  const kette=art==="geoeffnet"?[n.geoeffnet,n.geaendert,n.erstellt]
+            :art==="geaendert"?[n.geaendert,n.erstellt,n.geoeffnet]
+            :[n.erstellt,n.geaendert,n.geoeffnet];
+  for(const t of kette) if(zeitOk(t)) return t;
+  return 0;
+}
 function notizenGeordnet(liste){
-  return notizSortierung()==="eigen"
-    /* aufsteigend, damit die abgelegte Reihenfolge genau der angezeigten entspricht */
-    ? liste.slice().sort((a,b)=>notizPos(a)-notizPos(b))
-    : liste.slice().sort((a,b)=>(b.geaendert||b.erstellt||0)-(a.geaendert||a.erstellt||0));
+  const art=notizSortierung();
+  const kern=art==="eigen"
+    ? (a,b)=>notizPos(a)-notizPos(b)
+    : (a,b)=>sortWert(b,art)-sortWert(a,art);
+  /* Angeheftetes steht immer oben, unabhängig von der gewählten Sortierung */
+  return liste.slice().sort((a,b)=>(b.oben?1:0)-(a.oben?1:0)||kern(a,b));
 }
 /* Zeitliche Gliederung: was heute war, was diese Woche, was älter */
 function zeitGruppe(n){
-  const t=n.geaendert||n.erstellt||0, d=iso(new Date(t));
+  if(n.oben) return "Angeheftet";
+  const t=sortWert(n,notizSortierung()), d=iso(new Date(t));
   if(d===heute()) return "Heute";
   if(wochenTage(0).includes(d)) return "Diese Woche";
   const jetzt=new Date(), dat=new Date(t);
@@ -985,10 +1000,11 @@ function vNotizen(){
 function notizFilterZeile(){
   const k=katFilter==="alle"?null:S.kategorien[katFilter];
   const status={aktiv:"Aktiv",archiv:"Archiv",alle:"Überall"}[notizFilter];
+  const sortKurz={erstellt:"neueste",geoeffnet:"zuletzt geöffnet",geaendert:"zuletzt geändert",eigen:"eigene Ordnung"}[notizSortierung()];
   const anz=notizAuswahl().length;
   return `<button class="filterknopf" onclick="notizFilterWaehlen()">
       ${k?`<i class="punkt" style="background:${k.f}"></i>`:""}
-      <b>${k?esc(k.n):"Alle Listen"}</b><span class="anz">${status} · ${anz}</span><span class="pfeil">▾</span></button>
+      <b>${k?esc(k.n):"Alle Listen"}</b><span class="anz">${status} · ${anz} · ${sortKurz}</span><span class="pfeil">▾</span></button>
     <button class="btn btn-s${sortAn?" btn-primary":""}" onclick="sortAn=!sortAn;render()" aria-label="Sortieren">${sortAn?"Fertig":"Sortieren"}</button>`;
 }
 function notizAuswahl(){
@@ -1000,7 +1016,7 @@ function notizTreffer(){
   if(!liste.length) return `<div class="leerzustand"><b>${notizSuche?"Nichts gefunden":(notizFilter==="archiv"?"Archiv ist leer":"Noch keine Notiz")}</b>
     ${notizSuche?"Andere Begriffe probieren, oder oben auf „Überall“ stellen, um das Archiv einzubeziehen.":"Mit dem Plus oben rechts legst du eine an."}</div>`;
   /* Bei eigener Reihenfolge oder Suche keine Zeitgruppen, sonst würde die Ordnung zerfallen */
-  const gruppieren=!notizSuche&&notizSortierung()==="neu"&&!sortAn;
+  const gruppieren=!notizSuche&&notizSortierung()!=="eigen"&&!sortAn;
   if(!gruppieren) return `<div id="nbox">`+liste.map(notizKarte).join("")+`</div>`;
   let letzte="", raus="";
   liste.forEach(n=>{
@@ -1017,7 +1033,7 @@ function notizKarte(n){
   return `<div class="notizreihe" data-dnd="${n.id}" style="border-left-color:${k?k.f:"var(--line-2)"}">
     ${sortAn?`<button class="griff" onpointerdown="dndGriff(event,'${box}','notiz')" aria-label="Verschieben">${GRIFF}</button>`:""}
     <button class="notiz" onclick="notizOeffnen('${n.id}')">
-      <b>${esc(n.titel||"Ohne Titel")}</b>
+      <b>${n.oben?'<span style="color:var(--akz)">▲ </span>':""}${esc(n.titel||"Ohne Titel")}</b>
       <p>${notizSuche?ausschnitt(n,notizSuche):esc(textAus(n.html).slice(0,150)||"Leer")}</p>
       <span class="nm">${k?`<span class="tag" style="background:${k.f}22;color:${k.f}">${esc(k.n)}</span>`:""}
         ${n.archiv?`<span class="tag tag-gold">Archiv</span>`:""}
@@ -1025,6 +1041,7 @@ function notizKarte(n){
         <span class="mini">${new Date(n.geaendert||n.erstellt||Date.now()).toLocaleDateString("de-DE")}</span></span>
     </button>
     ${sortAn?"":`<span class="notiz-akt">
+      <button onclick="notizAnheften('${n.id}')" aria-label="${n.oben?"Lösen":"Anheften"}" style="${n.oben?"color:var(--akz)":""}">${ICON_NADEL}</button>
       <button onclick="notizArchivListe('${n.id}')" aria-label="${n.archiv?"Zurückholen":"Archivieren"}">${ICON_ARCHIV}</button>
       <button onclick="notizLoeschenFragen('${n.id}')" aria-label="Löschen">${ICON_WEG_N}</button></span>`}
   </div>`;
@@ -1047,7 +1064,7 @@ function notizFilterWaehlen(){
     ${kats.map(([id,k])=>`<button class="wahlzeile" aria-pressed="${katFilter===id}" onclick="katFilter='${id}';closeSheet()">
       <i class="punkt" style="background:${k.f}"></i>${esc(k.n)}<span class="anz">${zahl(notizFilter,id)}</span></button>`).join("")}
     <label class="fl">Reihenfolge</label>
-    ${[["neu","Zuletzt geändert"],["eigen","Eigene Reihenfolge"]].map(([f,l])=>
+    ${Object.entries(SORTEN).map(([f,l])=>
       `<button class="wahlzeile" aria-pressed="${notizSortierung()===f}" onclick="mut('einst/notizSort','${f}',false);closeSheet()">${l}</button>`).join("")}
     <button class="btn btn-wide" style="margin-top:14px" onclick="closeSheet();katVerwalten()">Listen verwalten</button>`);
 }
@@ -1058,6 +1075,11 @@ function notizSucheAendern(v){
   if(!t){render();return;}
   t.innerHTML=notizTreffer();
   const c=document.getElementById("nchips"); if(c)c.innerHTML=notizFilterZeile();
+}
+function notizAnheften(id){
+  const n=S.notizen[id]; if(!n) return;
+  mut("notizen/"+id+"/oben",!n.oben);
+  hinweis(n.oben?"Nicht mehr angeheftet":"Nach oben geheftet");
 }
 function notizArchivListe(id){
   const n=S.notizen[id]; if(!n) return;
@@ -1091,6 +1113,8 @@ function notizAnlegen(art){
 function notizOeffnen(id){
   const n=S.notizen[id]; if(!n) return;
   offeneNotiz=id;
+  setPfad(S,"notizen/"+id+"/geoeffnet",Date.now()); schreibenLokal();
+  senden("notizen/"+id+"/geoeffnet",S.notizen[id].geoeffnet);
   const kats=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
   openSheet(`<div class="sheet-kopf"><h2>Notiz</h2>
       <button class="btn btn-ghost btn-s" onclick="notizSchliessen()" aria-label="Schließen">✕</button></div>
@@ -1115,6 +1139,7 @@ function notizOeffnen(id){
     <div class="row-btns" style="margin-top:14px">
       <button class="btn btn-primary" style="flex:1" onclick="notizSchliessen()">Fertig</button>
       <button class="btn" onclick="notizTeilen('${id}')">Teilen</button>
+      <button class="btn" onclick="mut('notizen/${id}/oben',${!n.oben},false);notizOeffnen('${id}')">${n.oben?"Lösen":"Anheften"}</button>
       <button class="btn" onclick="notizArchiv('${id}')">${n.archiv?"Zurückholen":"Archivieren"}</button>
       <button class="btn" onclick="notizLoeschenAusEditor('${id}')">Löschen</button>
     </div>
@@ -1364,7 +1389,7 @@ function keepBericht(){
         ${archiviert} archiviert${keepOpt.archivMit?" (werden mitgenommen)":" (werden übersprungen)"}${geloescht?" · "+geloescht+" im Papierkorb, immer übersprungen":""}<br>
         <b style="color:var(--ink)">${alsNotiz} werden zu Notizen</b>${keepOpt.listenAlsAufgaben&&checklisten.length?`<br><b style="color:var(--ink)">${checklisten.length} Checklisten mit ${offenePunkte} offenen Punkten werden zu Aufgaben</b>`:""}
         ${neueListen.length?`<br>${neueListen.length} neue Liste${neueListen.length>1?"n":""}: ${neueListen.map(esc).join(", ")}`:""}
-        ${genommen.filter(n=>n.gepinnt).length?`<br>${genommen.filter(n=>n.gepinnt).length} waren angepinnt und bekommen einen Stern vor den Titel.`:""}
+        ${genommen.filter(n=>n.gepinnt).length?`<br>${genommen.filter(n=>n.gepinnt).length} waren angepinnt und werden oben angeheftet.`:""}
         ${anhaenge?`<br>${anhaenge} Notizen hatten Anhänge – Bilder liegen im Takeout als eigene Dateien und lassen sich nicht mit übernehmen.`:""}
         ${keepStand.kaputt.length?`<br>Nicht lesbar: ${keepStand.kaputt.slice(0,3).map(esc).join(", ")}`:""}
       </p></div>
@@ -1427,7 +1452,7 @@ function keepUebernehmen(){
     let html=n.html;
     if(n.liste.length) html=(html||"")+"<ul>"+n.liste.map(x=>"<li>"+(x.ab?"<s>":"")+esc(x.t)+(x.ab?"</s>":"")+"</li>").join("")+"</ul>";
     setPfad(S,"notizen/n"+id6(),{
-      titel:(n.gepinnt?"★ ":"")+(n.titel||textAus(html).slice(0,60)||"Ohne Titel"),
+      titel:n.titel||textAus(html).slice(0,60)||"Ohne Titel", oben:!!n.gepinnt,
       html:html||"<p><br></p>", kat:katId, art:"frei",
       archiv:n.archiviert&&keepOpt.archivMit, erstellt:n.erstellt, geaendert:n.geaendert
     });
@@ -1457,7 +1482,7 @@ function nav(){
   if(h) h.innerHTML=basis()?`<span class="sync ${syncState==="live"?"on":syncState==="lokal"?"":"off"}"><i></i>${syncState}</span>`:"";
 }
 function go(t){tab=t;render();scrollTo(0,0);}
-const TITEL={heute:["Heute","Tagwerk"],woche:["Überblick","Woche"],listen:["Vorräte","Listen"],notizen:["Sammlung","Notizen"],mehr:["Einstellungen","Mehr"]};
+const TITEL={heute:["Heute",APP_NAME],woche:["Überblick","Woche"],listen:["Vorräte","Listen"],notizen:["Sammlung","Notizen"],mehr:["Einstellungen","Mehr"]};
 function render(){
   const [eb,ti]=TITEL[tab];
   document.getElementById("eyebrow").textContent=eb;
@@ -1543,7 +1568,7 @@ function vMehr(){
 
     <div class="sect"><h2>Zurücksetzen</h2></div>
     <button class="btn btn-wide" onclick="if(confirm('Wirklich alle Daten auf diesem Gerät löschen?')){localStorage.removeItem(KEY);location.reload()}">App zurücksetzen</button>
-    <p class="note" style="margin-top:12px;text-align:center">Tagwerk ${VERSION}</p>`;
+    <p class="note" style="margin-top:12px;text-align:center">${APP_NAME} ${VERSION}</p>`;
 }
 function altesAufraeumen(){
   const grenze=Date.now()-30*TAG_MS;
