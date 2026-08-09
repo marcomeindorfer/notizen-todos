@@ -226,6 +226,7 @@ const leer=()=>({aufgaben:{},notizen:{},kategorien:STARTKAT(),einst:{},version:V
 let S=leer();
 let cfg={db:"",hid:""};
 let tab="heute", es=null, syncState="lokal", queue=[];
+const SYNCTEXT={lokal:"nur auf diesem Gerät",verbindet:"verbindet …",live:"live verbunden",wartet:"wartet auf Verbindung",getrennt:"getrennt, versucht erneut"};
 let katFilter="alle", notizSuche="", notizFilter="aktiv", wochenVersatz=0, offenAuf=null;
 
 /* ---------- Speicher und Synchronisierung ---------- */
@@ -251,41 +252,102 @@ function setPfad(o,pfad,daten){
   for(let i=0;i<p.length-1;i++){if(typeof z[p[i]]!=="object"||z[p[i]]===null)z[p[i]]={};z=z[p[i]];}
   if(daten===null)delete z[p[p.length-1]]; else z[p[p.length-1]]=daten;
 }
+/* Wurzel und Unterpfad brauchen unterschiedliche Adressen */
+const adresse=pfad=>{const b=basis();return pfad?b+"/"+pfad+".json":b+".json";};
+
 async function senden(pfad,wert){
-  const b=basis(); if(!b) return;
+  if(!basis()) return false;
   try{
-    const res=await fetch(b+"/"+pfad+".json",{method:wert===null?"DELETE":"PUT",
+    const res=await fetch(adresse(pfad),{method:wert===null?"DELETE":"PUT",
       headers:{"Content-Type":"application/json"},body:wert===null?undefined:JSON.stringify(wert)});
-    if(!res.ok) throw new Error(res.status);
+    if(!res.ok) throw new Error("HTTP "+res.status);
     if(syncState!=="live"){syncState="live";nav();}
+    return true;
   }catch(e){
     queue.push({pfad,wert}); if(queue.length>500)queue.shift();
-    syncState="wartet"; schreibenLokal(); nav();
+    if(syncState==="live"){syncState="wartet";nav();}
+    schreibenLokal();
+    return false;
   }
 }
 async function flush(){
-  const b=basis(); if(!b||!queue.length) return;
+  if(!basis()||!queue.length) return;
   const q=[...queue]; queue=[];
-  for(const {pfad,wert} of q) await senden(pfad,wert);
-  schreibenLokal();
+  for(const {pfad,wert} of q){ if(!await senden(pfad,wert)) return; }
+  schreibenLokal(); nav();
 }
 function mut(pfad,wert,neuZeichnen=true){
   setPfad(S,pfad,wert); schreibenLokal(); senden(pfad,wert);
   if(neuZeichnen) render();
 }
-function verbinden(){
-  if(es){es.close();es=null;}
-  const b=basis(); if(!b){syncState="lokal";nav();return;}
-  syncState="verbindet"; nav();
-  try{
-    es=new EventSource(b+".json");
-    es.addEventListener("put",e=>{const d=JSON.parse(e.data);setPfad(S,d.path,d.data);schreibenLokal();render();});
-    es.addEventListener("patch",e=>{const d=JSON.parse(e.data);Object.entries(d.data||{}).forEach(([k,v])=>setPfad(S,(d.path==="/"?"":d.path)+"/"+k,v));schreibenLokal();render();});
-    es.onopen=()=>{syncState="live";flush();nav();};
-    es.onerror=()=>{syncState="getrennt";nav();};
-  }catch(e){syncState="getrennt";nav();}
+
+/* ---------- Zusammenführen statt Überschreiben ----------
+   Beim Verbinden treffen zwei Stände aufeinander. Pro Eintrag gewinnt der
+   jüngere Zeitstempel, Einträge die es nur auf einer Seite gibt bleiben erhalten. */
+const stempel=v=>(v&&(v.geaendert||v.fertig||v.erstellt||v.pos))||0;
+function zusammenfuehren(fern){
+  const vorher=JSON.stringify(S);
+  const neu={...leer()};
+  ["aufgaben","notizen","kategorien"].forEach(f=>{
+    const lokal=S[f]||{}, entfernt=(fern&&fern[f])||{};
+    const raus={...entfernt};
+    Object.entries(lokal).forEach(([k,v])=>{
+      const r=entfernt[k];
+      if(!r||stempel(v)>stempel(r)) raus[k]=v;
+    });
+    neu[f]=raus;
+  });
+  neu.einst={...((fern&&fern.einst)||{}),...(S.einst||{})};
+  S=neu; schreibenLokal();
+  /* Alles, was die Gegenseite noch nicht kennt, hochschieben */
+  const fernText=JSON.stringify({aufgaben:(fern&&fern.aufgaben)||{},notizen:(fern&&fern.notizen)||{},kategorien:(fern&&fern.kategorien)||{}});
+  const neuText=JSON.stringify({aufgaben:neu.aufgaben,notizen:neu.notizen,kategorien:neu.kategorien});
+  if(fernText!==neuText) senden("",S);
+  if(vorher!==JSON.stringify(S)) render();
 }
-if(typeof addEventListener!=="undefined")addEventListener("online",()=>{flush();verbinden();});
+
+/* ---------- Verbindung mit Selbstheilung ---------- */
+let erstesPut=true, wiederTimer=null, versuche=0;
+function verbinden(){
+  if(es){try{es.close();}catch(e){} es=null;}
+  clearTimeout(wiederTimer);
+  if(!basis()){syncState="lokal";nav();return;}
+  syncState="verbindet"; erstesPut=true; nav();
+  try{
+    es=new EventSource(adresse(""));
+    es.addEventListener("put",e=>{
+      const d=JSON.parse(e.data);
+      /* Jedes vollständige Update wird zusammengeführt, nie blind übernommen.
+         Stimmen beide Stände überein, entsteht dabei kein weiterer Schreibvorgang. */
+      if(d.path==="/"||d.path===""){ erstesPut=false; zusammenfuehren(d.data); return; }
+      setPfad(S,d.path,d.data); schreibenLokal(); render();
+    });
+    es.addEventListener("patch",e=>{
+      const d=JSON.parse(e.data);
+      Object.entries(d.data||{}).forEach(([k,v])=>setPfad(S,(d.path==="/"?"":d.path)+"/"+k,v));
+      schreibenLokal(); render();
+    });
+    es.addEventListener("keep-alive",()=>{ if(syncState!=="live"){syncState="live";nav();} });
+    es.onopen=()=>{ versuche=0; syncState="live"; flush(); nav(); };
+    es.onerror=()=>{ syncState="getrennt"; nav(); neuVerbinden(); };
+  }catch(e){ syncState="getrennt"; nav(); neuVerbinden(); }
+}
+/* Nach einem Abbruch mit wachsendem Abstand erneut versuchen, höchstens alle 30 Sekunden */
+function neuVerbinden(){
+  clearTimeout(wiederTimer);
+  const wartezeit=Math.min(30000,1000*Math.pow(2,Math.min(versuche++,5)));
+  wiederTimer=setTimeout(()=>{ if(basis()&&syncState!=="live") verbinden(); },wartezeit);
+}
+/* Kommt das Gerät aus dem Ruhezustand, ist die Verbindung meist tot */
+function syncPruefen(){
+  if(!basis()) return;
+  flush();
+  if(syncState!=="live"&&syncState!=="verbindet"){ versuche=0; verbinden(); }
+}
+if(typeof addEventListener!=="undefined"){
+  addEventListener("online",()=>{versuche=0;syncPruefen();});
+  addEventListener("offline",()=>{if(syncState==="live"){syncState="getrennt";nav();}});
+}
 
 /* ---------- Aufgaben ---------- */
 const kat=k=>S.kategorien[k]||{n:"Ohne Liste",f:"#8E8981"};
@@ -872,7 +934,9 @@ function vMehr(){
 
     <div class="sect"><h2>Sync zwischen Geräten</h2></div>
     <div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
-      <p class="note">Status: <b style="color:var(--ink)">${basis()?syncState:"nur auf diesem Gerät"}</b>${queue.length?` · ${queue.length} Änderungen warten`:""}</p>
+      <p class="note">Status: <b style="color:var(--ink)">${basis()?SYNCTEXT[syncState]||syncState:"nur auf diesem Gerät"}</b>${queue.length?` · ${queue.length} Änderungen warten`:""}</p>
+      ${basis()?`<div class="row-btns" style="margin-top:8px"><button class="btn btn-s" onclick="versuche=0;verbinden()">Neu verbinden</button>
+        ${queue.length?`<button class="btn btn-s" onclick="flush()">Wartendes senden</button>`:""}</div>`:""}
       <label class="fl" for="db">Datenbank-URL aus Firebase</label>
       <input type="url" id="db" value="${esc(cfg.db)}" placeholder="https://name-default-rtdb.europe-west1.firebasedatabase.app">
       <label class="fl" for="hid">Code für diese App</label>
@@ -882,7 +946,8 @@ function vMehr(){
         <button class="btn btn-s btn-primary" onclick="cfgSpeichern()">Speichern und verbinden</button>
         ${basis()?`<button class="btn btn-s" onclick="hochladen()">Diesen Stand hochladen</button>`:""}
       </div>
-      <p class="note" style="margin-top:11px">Du kannst dasselbe Firebase-Projekt wie beim Küchenplan nutzen. Nimm aber einen <b>eigenen Code</b>, sonst vermischen sich die Daten beider Apps. Die vorhandenen Regeln passen unverändert.</p>
+      <p class="note" style="margin-top:11px">Beim ersten Verbinden werden beide Stände zusammengeführt: Was es nur auf einem Gerät gibt, bleibt erhalten; bei gleichen Einträgen gewinnt der jüngere. „Diesen Stand hochladen“ brauchst du deshalb nur, wenn du bewusst überschreiben willst.</p>
+      <p class="note" style="margin-top:8px">Du kannst dasselbe Firebase-Projekt wie beim Küchenplan nutzen. Nimm aber einen <b>eigenen Code</b>, sonst vermischen sich die Daten beider Apps. Die vorhandenen Regeln passen unverändert.</p>
     </div>
 
     <div class="sect"><h2>Sichern</h2></div>
@@ -987,8 +1052,15 @@ if(typeof document!=="undefined"&&document.getElementById){
   if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
   /* Tageswechsel im Hintergrund abfangen, damit "Heute" stimmt */
   let letzterTag=heute();
-  setInterval(()=>{ if(heute()!==letzterTag){letzterTag=heute();render();} },60000);
-  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&heute()!==letzterTag){letzterTag=heute();render();} });
+  setInterval(()=>{
+    if(heute()!==letzterTag){letzterTag=heute();render();}
+    syncPruefen();
+  },30000);
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState!=="visible") return;
+    if(heute()!==letzterTag){letzterTag=heute();render();}
+    syncPruefen();
+  });
 }
 
 </script>
