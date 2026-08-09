@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F4F2ED">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Tagwerk</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%234A2D6E'/><path d='M15 20l4 4 7-9' stroke='%23E8A84A' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M30 20h18M30 32h18M30 44h12' stroke='%23F4F2ED' stroke-width='5' stroke-linecap='round'/></svg>">
+<style>
+:root{
+  --paper:#F4F2ED; --card:#FFFFFF; --card-2:#EDEAE3; --karte-hoch:#FBFAF8;
+  --ink:#1B1A18; --ink-2:#5C5850; --ink-3:#8E8981;
+  --line:#E0DCD3; --line-2:#CBC5B9;
+  --akz:#4A2D6E; --akz-bg:#EDE7F4; --akz-hell:#7B5AA6;
+  --gold:#9A6512; --gold-bg:#F8EEDA;
+  --erf:#136B54; --erf-bg:#E1F0EA;
+  --rot:#9B3327; --rot-bg:#F8E7E4;
+  --r:14px; --r-s:10px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --nav-h:64px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#151417; --card:#1F1E23; --card-2:#292731; --karte-hoch:#242229;
+  --ink:#EDEAE4; --ink-2:#A9A3B0; --ink-3:#7C7686;
+  --line:#332F3A; --line-2:#443F4E;
+  --akz:#B79BE0; --akz-bg:#2A2138; --akz-hell:#9A7CCB;
+  --gold:#DFAE60; --gold-bg:#33280F;
+  --erf:#69C7A6; --erf-bg:#132E26;
+  --rot:#E29187; --rot-bg:#33201D;}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:16px;line-height:1.45;
+  overscroll-behavior-y:none;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom))}
+#app{max-width:600px;margin:0 auto;padding:0 16px}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.015em}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+header{padding:20px 0 10px}
+.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+header h1{font-size:27px}
+.hd-zeile{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.sync{font-family:var(--mono);font-size:11px;color:var(--ink-3);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.sync i{width:7px;height:7px;border-radius:99px;background:var(--ink-3)}
+.sync.on i{background:var(--erf)} .sync.off i{background:var(--gold)}
+
+/* Tagesbogen: der Fortschritt des Tages als durchgehende Linie */
+.bogen{margin:14px 0 4px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.bogen-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.bogen-kopf b{font-size:15px}
+.bogen-kopf span{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);letter-spacing:.04em}
+.balken{height:8px;border-radius:99px;background:var(--card-2);overflow:hidden;display:flex}
+.balken i{display:block;height:100%;background:var(--erf);transition:width .45s cubic-bezier(.3,1.2,.5,1)}
+.bogen.voll{border-color:var(--erf);background:var(--erf-bg)}
+
+.sect{margin:22px 0 9px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sect h2{font-size:12px;font-family:var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+.sect .zahl{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+
+/* Aufgabenzeile */
+.auf{display:flex;align-items:flex-start;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-s);padding:12px 13px;margin-bottom:7px}
+.auf.fertig{background:transparent;border-color:transparent;padding-top:7px;padding-bottom:7px}
+.auf.ueber{border-left:3px solid var(--rot)}
+.hak{width:26px;height:26px;flex:none;border-radius:50%;border:1.8px solid var(--line-2);background:transparent;display:grid;place-items:center;padding:0;position:relative}
+.hak svg{width:15px;height:15px;stroke:var(--card);stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:22;stroke-dashoffset:22}
+.auf.fertig .hak{background:var(--erf);border-color:var(--erf)}
+.auf.fertig .hak svg{stroke-dashoffset:0;transition:stroke-dashoffset .28s ease .06s}
+.auf-txt{flex:1;min-width:0;font-size:15.5px;line-height:1.35;word-break:break-word}
+.auf.fertig .auf-txt{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
+.auf-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px}
+.auf-mehr{flex:none;border:0;background:transparent;color:var(--ink-3);padding:2px 4px;font-size:17px;line-height:1;align-self:center}
+.punkt{width:8px;height:8px;border-radius:99px;flex:none;display:inline-block}
+.mini{font-size:11.5px;color:var(--ink-3)}
+.mini.spaet{color:var(--rot);font-weight:600}
+
+@keyframes puls{0%{transform:scale(1);opacity:.55}70%{transform:scale(2.1);opacity:0}100%{opacity:0}}
+@keyframes hupf{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+.hak.feier{animation:hupf .34s ease}
+.hak.feier::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--erf);animation:puls .55s ease-out}
+@keyframes rein{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.auf{animation:rein .18s ease}
+
+/* Schnelleingabe */
+.schnell{display:flex;gap:8px;margin-bottom:6px}
+.schnell input{flex:1}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line-2);background:var(--card);border-radius:99px;padding:7px 13px;font-size:14px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--akz);color:#fff;border-color:var(--akz)}
+@media (prefers-color-scheme:dark){.chip[aria-pressed="true"]{color:#17131F}}
+
+.btn{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-s);padding:11px 14px;font-weight:550;transition:transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--akz);border-color:var(--akz);color:#fff}
+@media (prefers-color-scheme:dark){.btn-primary{color:#17131F}}
+.btn-wide{width:100%;display:block;text-align:center;padding:14px;font-size:16px}
+.btn-s{padding:7px 11px;font-size:14px;border-radius:8px}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--ink-3)}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--card-2);color:var(--ink-2);white-space:nowrap}
+.tag-akz{background:var(--akz-bg);color:var(--akz)}
+.tag-gold{background:var(--gold-bg);color:var(--gold)}
+.tag-erf{background:var(--erf-bg);color:var(--erf)}
+
+/* Wochenspalten */
+.tagblock{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:9px;overflow:hidden}
+.tagblock.heute{border-color:var(--akz);border-width:1.5px}
+.tagblock-h{display:flex;align-items:baseline;justify-content:space-between;padding:10px 13px;background:var(--card-2)}
+.tagblock.heute .tagblock-h{background:var(--akz-bg)}
+.tagblock-h b{font-size:14.5px}
+.tagblock.heute .tagblock-h b{color:var(--akz)}
+.tagblock-h span{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.06em}
+.tagblock .auf{border:0;border-radius:0;margin:0;border-top:1px solid var(--line);background:transparent}
+.tagblock .leer{padding:11px 13px;font-size:13.5px;color:var(--ink-3);border-top:1px solid var(--line)}
+
+/* Notizen */
+.notiz{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;margin-bottom:8px;width:100%;text-align:left;display:block}
+.notiz b{display:block;font-size:15.5px;line-height:1.3;margin-bottom:4px}
+.notiz p{margin:0;font-size:13.5px;color:var(--ink-2);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.notiz .nm{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.notiz mark{background:var(--gold-bg);color:var(--gold);padding:0 2px;border-radius:3px}
+.werkzeug{display:flex;gap:4px;flex-wrap:wrap;padding:8px 0;position:sticky;top:0;background:var(--paper);z-index:2;border-bottom:1px solid var(--line)}
+.werkzeug button{border:1px solid var(--line-2);background:var(--card);border-radius:8px;min-width:38px;height:36px;padding:0 9px;font-size:14px}
+.werkzeug button b{font-weight:700}
+.werkzeug button s{text-decoration:line-through}
+.editor{min-height:46vh;padding:14px 2px;font-size:16.5px;line-height:1.62;outline:none;font-family:var(--serif)}
+.editor:empty::before{content:attr(data-leer);color:var(--ink-3)}
+.editor h3{font-family:var(--sans);font-size:17px;margin:18px 0 6px}
+.editor ul,.editor ol{padding-left:22px;margin:8px 0}
+.editor li{margin:3px 0}
+.editor img{max-width:100%;border-radius:10px;margin:10px 0;display:block}
+.editor hr{border:0;border-top:1px solid var(--line-2);margin:18px 0}
+.editor a{color:var(--akz)}
+
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:40;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:transparent;height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink-3);font-size:10.5px}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-current="page"]{color:var(--akz);font-weight:600}
+.badge{position:absolute;transform:translate(15px,-11px);background:var(--akz);color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:99px;display:grid;place-items:center;padding:0 4px}
+@media (prefers-color-scheme:dark){.badge{color:#17131F}}
+
+.sheet{position:fixed;inset:0;background:rgba(15,12,20,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet-in{background:var(--paper);width:100%;max-width:600px;max-height:94vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom))}
+.grab{width:38px;height:4px;border-radius:99px;background:var(--line-2);margin:0 auto 14px}
+.leerzustand{text-align:center;padding:40px 20px;color:var(--ink-3)}
+.leerzustand b{display:block;color:var(--ink);font-size:16.5px;margin-bottom:5px}
+.note{font-size:13px;color:var(--ink-3);line-height:1.55}
+input[type=text],input[type=search],input[type=url],input[type=date],select,textarea{
+  font-family:inherit;font-size:16px;width:100%;padding:12px 13px;border:1px solid var(--line-2);
+  border-radius:var(--r-s);background:var(--card);color:var(--ink)}
+label.fl{display:block;font-size:13px;color:var(--ink-2);margin:12px 0 5px;font-weight:550}
+.liste-zeile{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-s);padding:11px 13px;margin-bottom:7px}
+.liste-zeile b{font-size:15px;font-weight:600}
+pre{font-family:var(--mono);font-size:12px;background:var(--card-2);border:1px solid var(--line);border-radius:var(--r-s);padding:11px;overflow-x:auto;line-height:1.5}
+code{font-family:var(--mono);font-size:12.5px;background:var(--card-2);padding:2px 5px;border-radius:5px;word-break:break-all}
+input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--akz-hell);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="hd-zeile">
+      <div><div class="eyebrow" id="eyebrow">Heute</div><h1 id="titel">Tagwerk</h1></div>
+      <div id="hdside"></div>
+    </div>
+  </header>
+  <main id="view"></main>
+</div>
+<nav id="nav"></nav>
+<div id="sheet"></div>
+<input type="file" id="bildwahl" accept="image/*" style="display:none">
+<script>
+/* ===== Tagwerk: Aufgaben und Notizen ===== */
+const KEY="tagwerk.v1";
+const VERSION="1.0";
+const TAG_MS=86400000;
+const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
+const MONATE=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+const FARBEN=["#4A2D6E","#136B54","#9A6512","#9B3327","#2A6478","#7A3B62","#4C6B18","#5C5850"];
+
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const id6=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const slug=s=>String(s).toLowerCase().replace(/[äÄ]/g,"ae").replace(/[öÖ]/g,"oe").replace(/[üÜ]/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,60);
+
+/* ---------- Datum ---------- */
+const iso=d=>{const x=new Date(d);x.setHours(12,0,0,0);return x.toISOString().slice(0,10);};
+const heute=()=>iso(new Date());
+const morgen=()=>iso(new Date(Date.now()+TAG_MS));
+const ausIso=s=>{const [j,m,t]=s.split("-").map(Number);return new Date(j,m-1,t,12);};
+const wochentag=s=>(ausIso(s).getDay()+6)%7;
+function wochenStart(versatz=0){
+  const d=new Date(); d.setHours(12,0,0,0);
+  d.setDate(d.getDate()-((d.getDay()+6)%7)+versatz*7);
+  return d;
+}
+const wochenTage=(versatz=0)=>{const a=wochenStart(versatz);return [...Array(7)].map((_,i)=>iso(new Date(a.getTime()+i*TAG_MS)));};
+function kw(d=new Date()){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));const j=new Date(Date.UTC(t.getUTCFullYear(),0,1));return "KW "+Math.ceil(((t-j)/86400000+1)/7);}
+function datumText(s){
+  if(s===heute())return "Heute";
+  if(s===morgen())return "Morgen";
+  if(s===iso(new Date(Date.now()-TAG_MS)))return "Gestern";
+  const d=ausIso(s), diff=Math.round((d-ausIso(heute()))/TAG_MS);
+  if(diff>0&&diff<7)return TAGE[wochentag(s)];
+  return TAGE_K[wochentag(s)]+", "+d.getDate()+". "+MONATE[d.getMonth()].slice(0,3);
+}
+const istHeuteFertig=a=>a.fertig&&iso(new Date(a.fertig))===heute();
+
+/* ---------- Zustand ---------- */
+const STARTKAT=()=>({
+  k_all:{n:"Allgemein",f:"#5C5850",art:"beides",pos:0},
+  k_geb:{n:"Geburt",f:"#7A3B62",art:"beides",pos:1},
+  k_arb:{n:"Arbeit",f:"#2A6478",art:"beides",pos:2},
+  k_idee:{n:"Ideen",f:"#9A6512",art:"beides",pos:3}
+});
+const leer=()=>({aufgaben:{},notizen:{},kategorien:STARTKAT(),einst:{},version:VERSION});
+let S=leer();
+let cfg={db:"",hid:""};
+let tab="heute", es=null, syncState="lokal", queue=[];
+let katFilter="alle", notizSuche="", notizFilter="aktiv", wochenVersatz=0, offenAuf=null;
+
+/* ---------- Speicher und Synchronisierung ---------- */
+function lesenLokal(){
+  try{const v=localStorage.getItem(KEY); if(v)S={...leer(),...JSON.parse(v)};}catch(e){}
+  try{const c=localStorage.getItem(KEY+".cfg"); if(c)cfg={...cfg,...JSON.parse(c)};}catch(e){}
+  try{const q=localStorage.getItem(KEY+".q"); if(q)queue=JSON.parse(q);}catch(e){}
+  ["aufgaben","notizen","kategorien","einst"].forEach(f=>{if(!S[f]||typeof S[f]!=="object")S[f]={};});
+  if(!Object.keys(S.kategorien).length)S.kategorien=STARTKAT();
+}
+function schreibenLokal(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify(S));
+    localStorage.setItem(KEY+".cfg",JSON.stringify(cfg));
+    localStorage.setItem(KEY+".q",JSON.stringify(queue));
+  }catch(e){ if(String(e).match(/quota|Quota/)) alert("Der Speicher des Browsers ist voll. Meist liegt das an Bildern in Notizen – ältere Notizen archivieren und löschen schafft Platz."); }
+}
+const basis=()=>cfg.db&&cfg.hid?cfg.db.replace(/\/$/,"")+"/haushalte/"+cfg.hid:null;
+function setPfad(o,pfad,daten){
+  const p=pfad.split("/").filter(Boolean);
+  if(!p.length){S=daten?{...leer(),...daten}:leer();return;}
+  let z=o;
+  for(let i=0;i<p.length-1;i++){if(typeof z[p[i]]!=="object"||z[p[i]]===null)z[p[i]]={};z=z[p[i]];}
+  if(daten===null)delete z[p[p.length-1]]; else z[p[p.length-1]]=daten;
+}
+async function senden(pfad,wert){
+  const b=basis(); if(!b) return;
+  try{
+    const res=await fetch(b+"/"+pfad+".json",{method:wert===null?"DELETE":"PUT",
+      headers:{"Content-Type":"application/json"},body:wert===null?undefined:JSON.stringify(wert)});
+    if(!res.ok) throw new Error(res.status);
+    if(syncState!=="live"){syncState="live";nav();}
+  }catch(e){
+    queue.push({pfad,wert}); if(queue.length>500)queue.shift();
+    syncState="wartet"; schreibenLokal(); nav();
+  }
+}
+async function flush(){
+  const b=basis(); if(!b||!queue.length) return;
+  const q=[...queue]; queue=[];
+  for(const {pfad,wert} of q) await senden(pfad,wert);
+  schreibenLokal();
+}
+function mut(pfad,wert,neuZeichnen=true){
+  setPfad(S,pfad,wert); schreibenLokal(); senden(pfad,wert);
+  if(neuZeichnen) render();
+}
+function verbinden(){
+  if(es){es.close();es=null;}
+  const b=basis(); if(!b){syncState="lokal";nav();return;}
+  syncState="verbindet"; nav();
+  try{
+    es=new EventSource(b+".json");
+    es.addEventListener("put",e=>{const d=JSON.parse(e.data);setPfad(S,d.path,d.data);schreibenLokal();render();});
+    es.addEventListener("patch",e=>{const d=JSON.parse(e.data);Object.entries(d.data||{}).forEach(([k,v])=>setPfad(S,(d.path==="/"?"":d.path)+"/"+k,v));schreibenLokal();render();});
+    es.onopen=()=>{syncState="live";flush();nav();};
+    es.onerror=()=>{syncState="getrennt";nav();};
+  }catch(e){syncState="getrennt";nav();}
+}
+if(typeof addEventListener!=="undefined")addEventListener("online",()=>{flush();verbinden();});
+
+/* ---------- Aufgaben ---------- */
+const kat=k=>S.kategorien[k]||{n:"Ohne Liste",f:"#8E8981"};
+const aufListe=()=>Object.entries(S.aufgaben||{}).map(([id,a])=>({id,...a}));
+const offen=a=>!a.fertig;
+const sortiert=arr=>arr.sort((a,b)=>(a.pos||0)-(b.pos||0)||(a.erstellt||0)-(b.erstellt||0));
+
+/* Schnelleingabe versteht "morgen", Wochentage und #liste */
+function eingabeDeuten(text){
+  let t=" "+text.trim()+" ", katId=null, wann=null;
+  const km=t.match(/\s#(\S+)/);
+  if(km){
+    const gesucht=slug(km[1]);
+    const treffer=Object.entries(S.kategorien).find(([id,k])=>slug(k.n).startsWith(gesucht)||id===km[1]);
+    if(treffer){katId=treffer[0];t=t.replace(km[0]," ");}
+  }
+  const worte=[["heute",()=>heute()],["morgen",()=>morgen()],["übermorgen",()=>iso(new Date(Date.now()+2*TAG_MS))],
+    ["uebermorgen",()=>iso(new Date(Date.now()+2*TAG_MS))],["woche",()=>"woche"],["danach",()=>"danach"],["irgendwann",()=>"danach"]];
+  for(const [w,f] of worte){
+    const re=new RegExp("\\s"+w+"\\s","i");
+    if(re.test(t)){wann=f();t=t.replace(re," ");break;}
+  }
+  if(!wann){
+    for(let i=0;i<7;i++){
+      const re=new RegExp("\\s(?:am\\s)?"+TAGE[i]+"\\s|\\s"+TAGE_K[i]+"\\s","i");
+      if(re.test(t)){
+        const heuteIdx=(new Date().getDay()+6)%7;
+        let diff=i-heuteIdx; if(diff<=0)diff+=7;
+        wann=iso(new Date(Date.now()+diff*TAG_MS)); t=t.replace(re," "); break;
+      }
+    }
+  }
+  const dm=t.match(/\s(\d{1,2})\.(\d{1,2})\.?\s/);
+  if(!wann&&dm){
+    const j=new Date().getFullYear();
+    let d=new Date(j,+dm[2]-1,+dm[1],12);
+    if(d<ausIso(heute()))d=new Date(j+1,+dm[2]-1,+dm[1],12);
+    wann=iso(d); t=t.replace(dm[0]," ");
+  }
+  return {text:t.replace(/\s+/g," ").trim(),katId,wann};
+}
+function aufgabeAnlegen(rohtext,vorgabeWann,vorgabeKat){
+  const d=eingabeDeuten(rohtext);
+  if(!d.text) return null;
+  const id="a"+id6();
+  const a={t:d.text,wann:d.wann||vorgabeWann||null,kat:d.katId||vorgabeKat||null,
+           fertig:null,erstellt:Date.now(),pos:Date.now()};
+  mut("aufgaben/"+id,a);
+  return id;
+}
+function haken(id){
+  const a=S.aufgaben[id]; if(!a) return;
+  if(a.fertig){ mut("aufgaben/"+id+"/fertig",null); return; }
+  /* Kurz die Feier zeigen, dann erst neu zeichnen */
+  const el=document.getElementById("hak_"+id);
+  if(el&&el.classList){ el.classList.add("feier"); }
+  mut("aufgaben/"+id+"/fertig",Date.now(),false);
+  setTimeout(render,320);
+}
+function verschieben(id,wann){ mut("aufgaben/"+id+"/wann",wann); }
+function aufgabeLoeschen(id){ mut("aufgaben/"+id,null); }
+
+/* Was gehört in welchen Topf? */
+function topfHeute(){
+  const h=heute();
+  const alle=aufListe();
+  return {
+    faellig: sortiert(alle.filter(a=>offen(a)&&a.wann===h)),
+    ueberfaellig: sortiert(alle.filter(a=>offen(a)&&a.wann&&a.wann<h&&/^\d{4}-/.test(a.wann))),
+    fertig: alle.filter(istHeuteFertig).sort((a,b)=>b.fertig-a.fertig)
+  };
+}
+
+/* ===== Ansichten: Heute, Woche, Listen ===== */
+
+function aufZeile(a,opt={}){
+  const k=a.kat?kat(a.kat):null;
+  const h=heute();
+  const spaet=!a.fertig&&a.wann&&/^\d{4}-/.test(a.wann)&&a.wann<h;
+  const meta=[];
+  if(k) meta.push(`<span class="mini"><i class="punkt" style="background:${k.f}"></i> ${esc(k.n)}</span>`);
+  if(opt.datum&&a.wann){
+    if(a.wann==="woche") meta.push(`<span class="mini">Diese Woche</span>`);
+    else if(a.wann==="danach") meta.push(`<span class="mini">Danach</span>`);
+    else meta.push(`<span class="mini ${spaet?"spaet":""}">${spaet?"seit ":""}${datumText(a.wann)}</span>`);
+  }
+  if(a.notiz) meta.push(`<span class="mini">Notiz</span>`);
+  return `<div class="auf ${a.fertig?"fertig":""} ${spaet&&!a.fertig?"ueber":""}">
+    <button class="hak" id="hak_${a.id}" onclick="haken('${a.id}')" aria-label="${a.fertig?"Wieder öffnen":"Erledigt"}">
+      <svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9"/></svg></button>
+    <div class="auf-txt" onclick="aufgabeOeffnen('${a.id}')">${esc(a.t)}
+      ${meta.length?`<div class="auf-meta">${meta.join("")}</div>`:""}</div>
+    <button class="auf-mehr" onclick="aufgabeOeffnen('${a.id}')" aria-label="Mehr">···</button>
+  </div>`;
+}
+
+function schnellFeld(vorgabeWann,vorgabeKat){
+  return `<div class="schnell">
+    <input type="text" id="neu" placeholder="Aufgabe eintippen …"
+      onkeydown="if(event.key==='Enter'){neuAnlegen('${vorgabeWann||""}','${vorgabeKat||""}')}">
+    <button class="btn btn-primary" onclick="neuAnlegen('${vorgabeWann||""}','${vorgabeKat||""}')">+</button></div>
+    <p class="note" style="margin:0 0 12px">„morgen“, „Freitag“, „14.9.“ oder „#Geburt“ mitschreiben – das wird direkt zugeordnet.</p>`;
+}
+function neuAnlegen(wann,katId){
+  const el=document.getElementById("neu"); if(!el) return;
+  const t=el.value; if(!t.trim()) return;
+  el.value="";
+  aufgabeAnlegen(t,wann||null,katId||null);
+}
+
+/* ---------- Heute ---------- */
+function vHeute(){
+  const {faellig,ueberfaellig,fertig}=topfHeute();
+  const ges=faellig.length+ueberfaellig.length+fertig.length;
+  const anteil=ges?Math.round(fertig.length/ges*100):0;
+  const bogen=`<div class="bogen ${ges&&fertig.length===ges?"voll":""}">
+    <div class="bogen-kopf"><b>${ges?(fertig.length===ges?"Alles erledigt":fertig.length+" von "+ges+" erledigt"):"Noch nichts geplant"}</b>
+      <span>${new Date().getDate()}. ${MONATE[new Date().getMonth()].toUpperCase()} · ${kw()}</span></div>
+    <div class="balken"><i style="width:${anteil}%"></i></div></div>`;
+
+  const teil=(titel,liste,opt)=>liste.length
+    ? `<div class="sect"><h2>${titel}</h2><span class="zahl">${liste.length}</span></div>${liste.map(a=>aufZeile(a,opt)).join("")}`
+    : "";
+
+  const nichts=!faellig.length&&!ueberfaellig.length&&!fertig.length
+    ? `<div class="leerzustand"><b>Der Tag ist frei</b>Trag oben etwas ein oder hol dir unter Listen eine Aufgabe aus einem deiner Vorräte.
+       <div style="margin-top:14px"><button class="btn" onclick="go('listen')">Zu den Listen</button></div></div>` : "";
+
+  return bogen + `<div style="margin-top:14px"></div>` + schnellFeld(heute(),null)
+    + teil("Überfällig",ueberfaellig,{datum:true})
+    + teil("Für heute",faellig,{})
+    + nichts
+    + (fertig.length?`<div class="sect"><h2>Heute geschafft</h2><span class="zahl">${fertig.length}</span></div>
+       ${fertig.map(a=>aufZeile(a,{})).join("")}
+       <p class="note" style="margin-top:6px">Verschwindet um Mitternacht von allein.</p>`:"");
+}
+
+/* ---------- Woche ---------- */
+function vWoche(){
+  const tage=wochenTage(wochenVersatz);
+  const alle=aufListe();
+  const inWoche=a=>a.wann&&tage.includes(a.wann);
+  const kopf=`<div class="row-btns" style="margin-bottom:12px">
+      <button class="btn btn-s" onclick="wochenVersatz--;render()">‹</button>
+      <button class="btn btn-s" style="flex:1;text-align:center" onclick="wochenVersatz=0;render()">
+        ${wochenVersatz===0?"Diese Woche":wochenVersatz===1?"Nächste Woche":wochenVersatz===-1?"Letzte Woche":kw(wochenStart(wochenVersatz))}
+        · ${kw(wochenStart(wochenVersatz))}</button>
+      <button class="btn btn-s" onclick="wochenVersatz++;render()">›</button></div>`;
+
+  const bloecke=tage.map(d=>{
+    const drin=sortiert(alle.filter(a=>a.wann===d&&!a.fertig));
+    const fertigT=alle.filter(a=>a.wann===d&&a.fertig).length;
+    return `<div class="tagblock ${d===heute()?"heute":""}">
+      <div class="tagblock-h"><b>${TAGE[wochentag(d)]}${d===heute()?" · heute":""}</b>
+        <span>${ausIso(d).getDate()}.${ausIso(d).getMonth()+1}.${drin.length?" · "+drin.length+" OFFEN":""}${fertigT?" · "+fertigT+" ERLEDIGT":""}</span></div>
+      ${drin.length?drin.map(a=>aufZeile(a,{})).join(""):`<div class="leer">frei — <button class="btn btn-ghost btn-s" style="padding:0" onclick="schnellFuer('${d}')">etwas eintragen</button></div>`}
+    </div>`;}).join("");
+
+  const wocheOffen=sortiert(alle.filter(a=>!a.fertig&&a.wann==="woche"));
+  const danach=sortiert(alle.filter(a=>!a.fertig&&a.wann==="danach"));
+
+  return kopf + bloecke
+    + `<div class="sect"><h2>Diese Woche, ohne festen Tag</h2><span class="zahl">${wocheOffen.length}</span></div>`
+    + (wocheOffen.length?wocheOffen.map(a=>aufZeile(a,{})).join(""):`<p class="note" style="margin-bottom:10px">Nichts offen.</p>`)
+    + schnellFeld("woche",null)
+    + `<div class="sect"><h2>Danach</h2><span class="zahl">${danach.length}</span></div>`
+    + (danach.length?danach.map(a=>aufZeile(a,{})).join(""):`<p class="note">Nichts vorgemerkt.</p>`);
+}
+function schnellFuer(d){
+  offenAuf=null;
+  openSheet(`<div class="grab"></div><h2 style="font-size:19px">Aufgabe für ${datumText(d)}</h2>
+    <div class="schnell" style="margin-top:12px">
+      <input type="text" id="neu" placeholder="Aufgabe …" onkeydown="if(event.key==='Enter'){neuAnlegen('${d}','');closeSheet()}">
+      <button class="btn btn-primary" onclick="neuAnlegen('${d}','');closeSheet()">+</button></div>
+    <button class="btn btn-wide btn-ghost" style="margin-top:8px" onclick="closeSheet()">Abbrechen</button>`);
+  setTimeout(()=>{const e=document.getElementById("neu");if(e&&e.focus)e.focus();},60);
+}
+
+/* ---------- Listen (Vorräte ohne Datum) ---------- */
+function vListen(){
+  const alle=aufListe();
+  const ohneDatum=a=>!a.fertig&&!a.wann;
+  const katsSortiert=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
+  const chips=`<div class="chips">
+    <button class="chip" aria-pressed="${katFilter==="alle"}" onclick="katFilter='alle';render()">Alle</button>
+    ${katsSortiert.map(([id,k])=>`<button class="chip" aria-pressed="${katFilter===id}" onclick="katFilter='${id}';render()">
+      <i class="punkt" style="background:${k.f}"></i>${esc(k.n)}
+      <span style="font-family:var(--mono);font-size:11px;opacity:.7">${alle.filter(a=>ohneDatum(a)&&a.kat===id).length}</span></button>`).join("")}
+    <button class="chip" onclick="katVerwalten()">+ Liste</button></div>`;
+
+  const zeigen=katsSortiert.filter(([id])=>katFilter==="alle"||katFilter===id);
+  const bloecke=zeigen.map(([id,k])=>{
+    const drin=sortiert(alle.filter(a=>ohneDatum(a)&&a.kat===id));
+    const notizZahl=Object.values(S.notizen||{}).filter(n=>n.kat===id&&!n.archiv).length;
+    return `<div class="sect"><h2><i class="punkt" style="background:${k.f}"></i> ${esc(k.n)}</h2>
+        <span class="zahl">${drin.length} offen${notizZahl?" · "+notizZahl+" Notizen":""}</span></div>
+      ${drin.length?drin.map(a=>aufZeile(a,{})).join(""):`<p class="note" style="margin-bottom:8px">Noch nichts gesammelt.</p>`}
+      <div class="schnell" style="margin-bottom:14px">
+        <input type="text" id="neu_${id}" placeholder="In „${esc(k.n)}“ sammeln …"
+          onkeydown="if(event.key==='Enter')sammeln('${id}')">
+        <button class="btn" onclick="sammeln('${id}')">+</button></div>`;
+  }).join("");
+
+  const ohneListe=sortiert(alle.filter(a=>ohneDatum(a)&&!a.kat));
+  return chips + bloecke
+    + (ohneListe.length&&katFilter==="alle"
+      ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${ohneListe.length}</span></div>${ohneListe.map(a=>aufZeile(a,{})).join("")}`:"")
+    + `<p class="note" style="margin-top:16px">Aufgaben hier haben bewusst kein Datum. Über das ···-Menü ziehst du sie in den Tag oder in die Woche.</p>`;
+}
+function sammeln(katId){
+  const el=document.getElementById("neu_"+katId); if(!el||!el.value.trim())return;
+  const t=el.value; el.value="";
+  aufgabeAnlegen(t,null,katId);
+}
+
+/* ---------- Aufgabe bearbeiten ---------- */
+function aufgabeOeffnen(id){
+  const a=S.aufgaben[id]; if(!a) return;
+  const body=()=>{
+    const b=S.aufgaben[id]; if(!b) return "";
+    const wannIst=w=>b.wann===w;
+    return `<div class="grab"></div>
+      <label class="fl" for="atxt">Aufgabe</label>
+      <textarea id="atxt" rows="2" onchange="mut('aufgaben/${id}/t',this.value.trim()||'Ohne Titel',false)">${esc(b.t)}</textarea>
+      <label class="fl">Wann</label>
+      <div class="chips" style="padding-bottom:4px">
+        <button class="chip" aria-pressed="${wannIst(heute())}" onclick="verschieben('${id}','${heute()}');aufgabeOeffnen('${id}')">Heute</button>
+        <button class="chip" aria-pressed="${wannIst(morgen())}" onclick="verschieben('${id}','${morgen()}');aufgabeOeffnen('${id}')">Morgen</button>
+        <button class="chip" aria-pressed="${wannIst("woche")}" onclick="verschieben('${id}','woche');aufgabeOeffnen('${id}')">Diese Woche</button>
+        <button class="chip" aria-pressed="${wannIst("danach")}" onclick="verschieben('${id}','danach');aufgabeOeffnen('${id}')">Danach</button>
+        <button class="chip" aria-pressed="${!b.wann}" onclick="verschieben('${id}',null);aufgabeOeffnen('${id}')">Nur sammeln</button>
+      </div>
+      <input type="date" value="${/^\d{4}-/.test(b.wann||"")?b.wann:""}" onchange="if(this.value){verschieben('${id}',this.value);aufgabeOeffnen('${id}')}">
+      <label class="fl">Liste</label>
+      <div class="chips" style="padding-bottom:4px">
+        ${Object.entries(S.kategorien).sort((x,y)=>(x[1].pos||0)-(y[1].pos||0)).map(([kid,k])=>
+          `<button class="chip" aria-pressed="${b.kat===kid}" onclick="mut('aufgaben/${id}/kat','${kid}',false);aufgabeOeffnen('${id}')"><i class="punkt" style="background:${k.f}"></i>${esc(k.n)}</button>`).join("")}
+        <button class="chip" aria-pressed="${!b.kat}" onclick="mut('aufgaben/${id}/kat',null,false);aufgabeOeffnen('${id}')">Ohne</button>
+      </div>
+      <label class="fl" for="anotiz">Notiz dazu</label>
+      <textarea id="anotiz" rows="3" placeholder="Details, Telefonnummer, Link …"
+        onchange="mut('aufgaben/${id}/notiz',this.value.trim()||null,false)">${esc(b.notiz||"")}</textarea>
+      <div class="row-btns" style="margin-top:14px">
+        <button class="btn btn-primary" style="flex:1" onclick="closeSheet()">Fertig</button>
+        <button class="btn" onclick="verdoppeln('${id}')">Duplizieren</button>
+        <button class="btn" onclick="if(confirm('Aufgabe löschen?')){aufgabeLoeschen('${id}');closeSheet()}">Löschen</button>
+      </div>`;
+  };
+  openSheet(body());
+}
+function verdoppeln(id){
+  const a=S.aufgaben[id]; if(!a)return;
+  mut("aufgaben/a"+id6(),{...a,fertig:null,erstellt:Date.now(),pos:Date.now()});
+  closeSheet();
+}
+
+/* ---------- Listen verwalten ---------- */
+function katBody(){
+  return `<div class="grab"></div><h2 style="font-size:19px">Listen</h2>
+    <p class="note" style="margin:8px 0 14px">Listen gelten für Aufgaben und Notizen gleichermaßen.</p>
+    ${Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0)).map(([id,k])=>`
+      <div class="liste-zeile"><i class="punkt" style="background:${k.f};width:12px;height:12px"></i>
+        <b style="flex:1">${esc(k.n)}</b>
+        <button class="btn btn-s" onclick="katFarbe('${id}')">Farbe</button>
+        <button class="btn btn-s" onclick="katUmbenennen('${id}')">Name</button>
+        <button class="btn btn-ghost btn-s" onclick="katLoeschen('${id}')">✕</button></div>`).join("")}
+    <div class="schnell" style="margin-top:12px">
+      <input type="text" id="katneu" placeholder="Neue Liste, etwa „Umzug“" onkeydown="if(event.key==='Enter')katAnlegen()">
+      <button class="btn btn-primary" onclick="katAnlegen()">+</button></div>
+    <button class="btn btn-wide btn-ghost" style="margin-top:10px" onclick="closeSheet()">Schließen</button>`;
+}
+function katVerwalten(){ openSheet(katBody()); }
+function katAnlegen(){
+  const el=document.getElementById("katneu"); if(!el||!el.value.trim())return;
+  const n=el.value.trim(); el.value="";
+  const pos=Object.values(S.kategorien).length;
+  mut("kategorien/k"+id6(),{n,f:FARBEN[pos%FARBEN.length],art:"beides",pos},false);
+  openSheet(katBody(),true);
+}
+function katUmbenennen(id){
+  const n=prompt("Neuer Name",S.kategorien[id].n); if(!n||!n.trim())return;
+  mut("kategorien/"+id+"/n",n.trim(),false); openSheet(katBody(),true);
+}
+function katFarbe(id){
+  const jetzt=FARBEN.indexOf(S.kategorien[id].f);
+  mut("kategorien/"+id+"/f",FARBEN[(jetzt+1)%FARBEN.length],false);
+  openSheet(katBody(),true);
+}
+function katLoeschen(id){
+  const auf=aufListe().filter(a=>a.kat===id).length;
+  const not=Object.values(S.notizen||{}).filter(n=>n.kat===id).length;
+  if(!confirm("Liste löschen?"+(auf+not?` ${auf} Aufgaben und ${not} Notizen bleiben erhalten, verlieren aber die Zuordnung.`:"")))return;
+  aufListe().filter(a=>a.kat===id).forEach(a=>setPfad(S,"aufgaben/"+a.id+"/kat",null));
+  Object.entries(S.notizen||{}).forEach(([nid,n])=>{if(n.kat===id)setPfad(S,"notizen/"+nid+"/kat",null);});
+  mut("aufgaben",S.aufgaben,false); mut("notizen",S.notizen,false);
+  mut("kategorien/"+id,null,false);
+  openSheet(katBody(),true);
+}
+
+/* ===== Notizen ===== */
+const NOTIZ_ARTEN={
+  frei:{n:"Leer",v:""},
+  karte:{n:"Kartentext",v:"<p>Liebe/r …</p><p><br></p><p><br></p><p>Alles Liebe,<br>Marco</p>"},
+  buch:{n:"Buch oder Podcast",v:"<h3>Quelle</h3><p><br></p><h3>Kernaussagen</h3><ul><li><br></li></ul><h3>Was ich mitnehme</h3><p><br></p>"},
+  input:{n:"Input oder Vortrag",v:"<h3>Anlass und Publikum</h3><p><br></p><h3>Roter Faden</h3><ol><li><br></li></ol><h3>Beispiele</h3><ul><li><br></li></ul><h3>Schluss</h3><p><br></p>"}
+};
+let offeneNotiz=null, speicherTimer=null;
+
+const textAus=h=>String(h||"").replace(/<br\s*\/?>/gi," ").replace(/<\/(p|div|li|h\d)>/gi," ").replace(/<[^>]+>/g," ")
+  .replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\s+/g," ").trim();
+const sauberHtml=h=>String(h||"").replace(/<script[\s\S]*?<\/script>/gi,"").replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|\S+)/gi,"");
+
+/* ---------- Suche: Wortweise, gewichtet nach Fundort ---------- */
+function notizenSuchen(q,mitArchiv){
+  const worte=slug(q).split("_").filter(w=>w.length>1);
+  let liste=Object.entries(S.notizen||{}).map(([id,n])=>({id,...n}));
+  if(!mitArchiv) liste=liste.filter(n=>!n.archiv); else liste=liste.filter(n=>n.archiv);
+  if(!worte.length) return liste.sort((a,b)=>(b.geaendert||0)-(a.geaendert||0));
+  return liste.map(n=>{
+    const t=slug(n.titel||""), k=slug(kat(n.kat).n), b=slug(textAus(n.html));
+    let punkte=0, alle=true;
+    worte.forEach(w=>{
+      let p=0;
+      if(t.includes(w))p+=6;
+      if(k.includes(w))p+=3;
+      if(b.includes(w))p+=1+Math.min(3,(b.split(w).length-1));
+      if(!p)alle=false;
+      punkte+=p;
+    });
+    return {...n,punkte,alle};
+  }).filter(n=>n.alle).sort((a,b)=>b.punkte-a.punkte||(b.geaendert||0)-(a.geaendert||0));
+}
+/* Ausschnitt rund um den ersten Treffer, Fundstellen hervorgehoben */
+function ausschnitt(n,q){
+  const roh=textAus(n.html);
+  const worte=q.trim().split(/\s+/).filter(w=>w.length>1);
+  let start=0;
+  if(worte.length){
+    const i=roh.toLowerCase().indexOf(worte[0].toLowerCase());
+    if(i>60) start=i-40;
+  }
+  let s=(start?"… ":"")+roh.slice(start,start+180)+(roh.length>start+180?" …":"");
+  s=esc(s);
+  worte.forEach(w=>{ s=s.replace(new RegExp("("+w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<mark>$1</mark>"); });
+  return s||"<i>Leer</i>";
+}
+
+function vNotizen(){
+  const treffer=notizenSuchen(notizSuche,notizFilter==="archiv");
+  const gefiltert=katFilter==="alle"?treffer:treffer.filter(n=>n.kat===katFilter);
+  const kats=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
+  const kopf=`<div class="schnell">
+      <input type="search" id="nsuche" placeholder="In allen Notizen suchen …" value="${esc(notizSuche)}" oninput="notizSucheAendern(this.value)">
+      <button class="btn btn-primary" onclick="notizNeu()">+</button></div>
+    <div class="chips" id="nchips">${chipsNotiz(kats)}</div>`;
+  return kopf+`<div id="ntreffer">${notizListe(gefiltert)}</div>`;
+}
+function chipsNotiz(kats){
+  return `<button class="chip" aria-pressed="${notizFilter==="aktiv"}" onclick="notizFilter='aktiv';notizTeil()">Aktiv</button>
+    <button class="chip" aria-pressed="${notizFilter==="archiv"}" onclick="notizFilter='archiv';notizTeil()">Archiv</button>
+    <button class="chip" aria-pressed="${katFilter==="alle"}" onclick="katFilter='alle';notizTeil()">Alle Listen</button>
+    ${kats.map(([id,k])=>`<button class="chip" aria-pressed="${katFilter===id}" onclick="katFilter='${id}';notizTeil()"><i class="punkt" style="background:${k.f}"></i>${esc(k.n)}</button>`).join("")}`;
+}
+function notizListe(liste){
+  if(!liste.length) return `<div class="leerzustand"><b>${notizSuche?"Nichts gefunden":(notizFilter==="archiv"?"Archiv ist leer":"Noch keine Notiz")}</b>
+    ${notizSuche?"Andere Begriffe probieren – gesucht wird in Titel, Text und Liste.":"Mit dem Plus oben rechts legst du eine an."}</div>`;
+  return liste.map(n=>{
+    const k=n.kat?kat(n.kat):null;
+    return `<button class="notiz" onclick="notizOeffnen('${n.id}')">
+      <b>${esc(n.titel||"Ohne Titel")}</b>
+      <p>${notizSuche?ausschnitt(n,notizSuche):esc(textAus(n.html).slice(0,160)||"Leer")}</p>
+      <span class="nm">${k?`<span class="tag" style="background:${k.f}22;color:${k.f}">${esc(k.n)}</span>`:""}
+        ${n.art&&n.art!=="frei"?`<span class="tag">${NOTIZ_ARTEN[n.art]?NOTIZ_ARTEN[n.art].n:n.art}</span>`:""}
+        ${n.archiv?`<span class="tag tag-gold">Archiv</span>`:""}
+        ${/<img/i.test(n.html||"")?`<span class="tag">Bild</span>`:""}
+        <span class="mini">${new Date(n.geaendert||n.erstellt||Date.now()).toLocaleDateString("de-DE")}</span></span></button>`;
+  }).join("");
+}
+/* Nur die Trefferliste tauschen, damit die Tastatur beim Tippen offen bleibt */
+function notizTeil(){
+  const c=document.getElementById("nchips"), t=document.getElementById("ntreffer");
+  if(!c||!t){render();return;}
+  const kats=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
+  c.innerHTML=chipsNotiz(kats);
+  const treffer=notizenSuchen(notizSuche,notizFilter==="archiv");
+  t.innerHTML=notizListe(katFilter==="alle"?treffer:treffer.filter(n=>n.kat===katFilter));
+}
+function notizSucheAendern(v){notizSuche=v;notizTeil();}
+
+/* ---------- Anlegen ---------- */
+function notizNeu(){
+  openSheet(`<div class="grab"></div><h2 style="font-size:19px">Neue Notiz</h2>
+    <p class="note" style="margin:8px 0 12px">Eine Vorlage spart das Sortieren hinterher.</p>
+    ${Object.entries(NOTIZ_ARTEN).map(([id,a])=>`<button class="btn btn-wide" style="margin-bottom:7px;text-align:left" onclick="notizAnlegen('${id}')">${a.n}</button>`).join("")}
+    <button class="btn btn-wide btn-ghost" style="margin-top:6px" onclick="closeSheet()">Abbrechen</button>`);
+}
+function notizAnlegen(art){
+  const id="n"+id6();
+  mut("notizen/"+id,{titel:"",html:NOTIZ_ARTEN[art].v,kat:katFilter!=="alle"?katFilter:null,
+    art,archiv:false,erstellt:Date.now(),geaendert:Date.now()},false);
+  closeSheet(); notizOeffnen(id);
+}
+
+/* ---------- Editor ---------- */
+function notizOeffnen(id){
+  const n=S.notizen[id]; if(!n) return;
+  offeneNotiz=id;
+  const kats=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
+  openSheet(`<div class="grab"></div>
+    <input type="text" id="ntitel" placeholder="Titel" value="${esc(n.titel||"")}"
+      style="font-size:19px;font-weight:650;border:0;background:transparent;padding:0 0 8px" oninput="notizMerken()">
+    <div class="chips" style="padding-bottom:6px">
+      ${kats.map(([kid,k])=>`<button class="chip" aria-pressed="${n.kat===kid}" onclick="mut('notizen/${id}/kat','${kid}',false);this.parentNode.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));this.setAttribute('aria-pressed','true')"><i class="punkt" style="background:${k.f}"></i>${esc(k.n)}</button>`).join("")}
+      <button class="chip" aria-pressed="${!n.kat}" onclick="mut('notizen/${id}/kat',null,false);this.parentNode.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));this.setAttribute('aria-pressed','true')">Ohne Liste</button>
+    </div>
+    <div class="werkzeug">
+      <button onclick="fmt('bold')" title="Fett"><b>F</b></button>
+      <button onclick="fmt('italic')" title="Kursiv"><i>K</i></button>
+      <button onclick="fmt('strikeThrough')" title="Durchgestrichen"><s>D</s></button>
+      <button onclick="fmtBlock('h3')" title="Überschrift">H</button>
+      <button onclick="fmt('insertUnorderedList')" title="Liste">•</button>
+      <button onclick="fmt('insertOrderedList')" title="Nummerierte Liste">1.</button>
+      <button onclick="fmt('insertHorizontalRule')" title="Trennlinie">—</button>
+      <button onclick="bildEinfuegen()" title="Bild">Bild</button>
+      <button onclick="fmtBlock('p')" title="Normaler Text">¶</button>
+    </div>
+    <div class="editor" id="edit" contenteditable="true" data-leer="Schreib los …" oninput="notizMerken()">${sauberHtml(n.html)}</div>
+    <div class="row-btns" style="margin-top:14px">
+      <button class="btn btn-primary" style="flex:1" onclick="notizSchliessen()">Fertig</button>
+      <button class="btn" onclick="notizTeilen('${id}')">Teilen</button>
+      <button class="btn" onclick="notizArchiv('${id}')">${n.archiv?"Zurückholen":"Archivieren"}</button>
+      <button class="btn" onclick="notizLoeschen('${id}')">Löschen</button>
+    </div>
+    <p class="note" style="margin-top:10px" id="nstatus">Wird beim Tippen gespeichert.</p>`);
+}
+function fmt(befehl){ document.execCommand&&document.execCommand(befehl,false,null); const e=document.getElementById("edit"); if(e&&e.focus)e.focus(); notizMerken(); }
+function fmtBlock(t){ document.execCommand&&document.execCommand("formatBlock",false,t); const e=document.getElementById("edit"); if(e&&e.focus)e.focus(); notizMerken(); }
+function notizMerken(){
+  if(!offeneNotiz) return;
+  clearTimeout(speicherTimer);
+  const st=document.getElementById("nstatus"); if(st)st.textContent="…";
+  speicherTimer=setTimeout(()=>{
+    const id=offeneNotiz; if(!id||!S.notizen[id]) return;
+    const e=document.getElementById("edit"), t=document.getElementById("ntitel");
+    const html=e?sauberHtml(e.innerHTML):S.notizen[id].html;
+    let titel=t?t.value.trim():"";
+    if(!titel){ const roh=textAus(html); titel=roh.slice(0,60)||""; }
+    mut("notizen/"+id,{...S.notizen[id],titel,html,geaendert:Date.now()},false);
+    const s2=document.getElementById("nstatus"); if(s2)s2.textContent="Gespeichert um "+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+  },600);
+}
+function notizSchliessen(){ clearTimeout(speicherTimer); notizMerkenSofort(); offeneNotiz=null; closeSheet(); }
+function notizMerkenSofort(){
+  const id=offeneNotiz; if(!id||!S.notizen[id]) return;
+  const e=document.getElementById("edit"), t=document.getElementById("ntitel");
+  const html=e?sauberHtml(e.innerHTML):S.notizen[id].html;
+  let titel=t?t.value.trim():"";
+  if(!titel) titel=textAus(html).slice(0,60);
+  mut("notizen/"+id,{...S.notizen[id],titel,html,geaendert:Date.now()},false);
+}
+function notizArchiv(id){ notizMerkenSofort(); mut("notizen/"+id+"/archiv",!S.notizen[id].archiv,false); offeneNotiz=null; closeSheet(); }
+function notizLoeschen(id){
+  if(!confirm("Notiz endgültig löschen?"))return;
+  clearTimeout(speicherTimer); offeneNotiz=null; mut("notizen/"+id,null,false); closeSheet();
+}
+async function notizTeilen(id){
+  notizMerkenSofort();
+  const n=S.notizen[id];
+  const t=(n.titel?n.titel+"\n\n":"")+textAus(n.html);
+  try{ if(navigator.share){await navigator.share({title:n.titel||"Notiz",text:t});return;} }catch(e){ if(e&&e.name==="AbortError")return; }
+  openSheet(`<div class="grab"></div><h2 style="font-size:19px">Als Text</h2>
+    <p class="note" style="margin:8px 0 12px">Antippen markiert alles.</p>
+    <textarea rows="14" onclick="this.select()">${esc(t)}</textarea>
+    <button class="btn btn-wide btn-ghost" style="margin-top:8px" onclick="notizOeffnen('${id}')">Zurück</button>`);
+}
+
+/* ---------- Bilder: verkleinern, sonst ist der Speicher schnell voll ---------- */
+function bildEinfuegen(){
+  const f=document.getElementById("bildwahl"); if(!f) return;
+  f.value="";
+  f.onchange=async()=>{
+    const datei=f.files&&f.files[0]; if(!datei) return;
+    try{
+      const daten=await bildVerkleinern(datei,1200,0.72);
+      document.execCommand&&document.execCommand("insertImage",false,daten);
+      notizMerken();
+    }catch(e){ alert("Das Bild konnte nicht eingefügt werden."); }
+  };
+  f.click();
+}
+function bildVerkleinern(datei,maxKante,guete){
+  return new Promise((ok,fehler)=>{
+    const leser=new FileReader();
+    leser.onerror=()=>fehler(new Error("lesen"));
+    leser.onload=()=>{
+      const bild=new Image();
+      bild.onerror=()=>fehler(new Error("laden"));
+      bild.onload=()=>{
+        let {width:b,height:h}=bild;
+        const f=Math.min(1,maxKante/Math.max(b,h));
+        b=Math.round(b*f); h=Math.round(h*f);
+        const c=document.createElement("canvas"); c.width=b; c.height=h;
+        c.getContext("2d").drawImage(bild,0,0,b,h);
+        ok(c.toDataURL("image/jpeg",guete));
+      };
+      bild.src=leser.result;
+    };
+    leser.readAsDataURL(datei);
+  });
+}
+
+/* ===== Gerüst, Einstellungen, Start ===== */
+const TABS=[
+ ["heute","Heute",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'],
+ ["woche","Woche",'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/>'],
+ ["listen","Listen",'<path d="M4 7h1M4 12h1M4 17h1M9 7h11M9 12h11M9 17h7"/>'],
+ ["notizen","Notizen",'<path d="M5 4h9l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5M8 13h8M8 17h5"/>'],
+ ["mehr","Mehr",'<circle cx="12" cy="6" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="18" r="1.4"/>']
+];
+function nav(){
+  const {faellig,ueberfaellig}=topfHeute();
+  const rest=faellig.length+ueberfaellig.length;
+  document.getElementById("nav").innerHTML=TABS.map(([id,l,ic])=>
+    `<button onclick="go('${id}')" ${tab===id?'aria-current="page"':""}><svg viewBox="0 0 24 24">${ic}</svg>${
+      id==="heute"&&rest?`<i class="badge">${rest}</i>`:""}<span>${l}</span></button>`).join("");
+  const h=document.getElementById("hdside");
+  if(h) h.innerHTML=basis()?`<span class="sync ${syncState==="live"?"on":syncState==="lokal"?"":"off"}"><i></i>${syncState}</span>`:"";
+}
+function go(t){tab=t;render();scrollTo(0,0);}
+const TITEL={heute:["Heute","Tagwerk"],woche:["Überblick","Woche"],listen:["Vorräte","Listen"],notizen:["Sammlung","Notizen"],mehr:["Einstellungen","Mehr"]};
+function render(){
+  const [eb,ti]=TITEL[tab];
+  document.getElementById("eyebrow").textContent=eb;
+  document.getElementById("titel").textContent=ti;
+  document.getElementById("view").innerHTML={heute:vHeute,woche:vWoche,listen:vListen,notizen:vNotizen,mehr:vMehr}[tab]();
+  nav();
+}
+function openSheet(html,behalten){
+  const alt=document.querySelector(".sheet-in"), y=behalten&&alt?alt.scrollTop:0;
+  document.getElementById("sheet").innerHTML=`<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sheet-in">${html}</div></div>`;
+  document.body.style.overflow="hidden";
+  if(y){const neu=document.querySelector(".sheet-in");if(neu)neu.scrollTop=y;}
+}
+function closeSheet(){
+  if(offeneNotiz){notizMerkenSofort();offeneNotiz=null;}
+  document.getElementById("sheet").innerHTML="";
+  document.body.style.overflow=""; render();
+}
+
+/* ---------- Rückblick: was in den letzten Tagen zusammenkam ---------- */
+function rueckblick(){
+  const tage=[...Array(7)].map((_,i)=>iso(new Date(Date.now()-i*TAG_MS)));
+  const alle=aufListe().filter(a=>a.fertig);
+  return tage.map(d=>({d,n:alle.filter(a=>iso(new Date(a.fertig))===d).length}));
+}
+
+function vMehr(){
+  const rb=rueckblick(), max=Math.max(1,...rb.map(x=>x.n));
+  const offenGes=aufListe().filter(offen).length;
+  const notGes=Object.values(S.notizen||{}).length;
+  const archGes=Object.values(S.notizen||{}).filter(n=>n.archiv).length;
+  const bilder=Object.values(S.notizen||{}).reduce((s,n)=>s+((String(n.html||"").match(/<img/gi)||[]).length),0);
+  let platz=0; try{platz=Math.round((localStorage.getItem(KEY)||"").length/1024);}catch(e){}
+
+  return `<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
+      <b style="font-size:15px">Die letzten sieben Tage</b>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:12px">
+        ${rb.slice().reverse().map(x=>`<div style="flex:1;text-align:center">
+          <div style="height:${Math.round(x.n/max*50)+4}px;background:${x.n?"var(--erf)":"var(--line)"};border-radius:4px 4px 0 0"></div>
+          <div class="mini" style="margin-top:5px">${TAGE_K[wochentag(x.d)]}</div>
+          <div class="mini" style="font-family:var(--mono)">${x.n||""}</div></div>`).join("")}
+      </div>
+      <p class="note" style="margin-top:10px">${rb.reduce((s,x)=>s+x.n,0)} Aufgaben erledigt · ${offenGes} noch offen</p></div>
+
+    <div class="sect"><h2>Listen</h2></div>
+    <button class="btn btn-wide" onclick="katVerwalten()">Listen verwalten</button>
+
+    <div class="sect"><h2>Aufräumen</h2></div>
+    <div class="row-btns">
+      <button class="btn btn-s" onclick="altesAufraeumen()">Erledigtes älter als 30 Tage löschen</button>
+      <button class="btn btn-s" onclick="ueberfaelligHolen()">Überfälliges auf heute ziehen</button>
+    </div>
+    <p class="note" style="margin-top:9px">${notGes} Notizen, davon ${archGes} im Archiv · ${bilder} Bilder · ${platz} KB belegt</p>
+
+    <div class="sect"><h2>Sync zwischen Geräten</h2></div>
+    <div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
+      <p class="note">Status: <b style="color:var(--ink)">${basis()?syncState:"nur auf diesem Gerät"}</b>${queue.length?` · ${queue.length} Änderungen warten`:""}</p>
+      <label class="fl" for="db">Datenbank-URL aus Firebase</label>
+      <input type="url" id="db" value="${esc(cfg.db)}" placeholder="https://name-default-rtdb.europe-west1.firebasedatabase.app">
+      <label class="fl" for="hid">Code für diese App</label>
+      <input type="text" id="hid" value="${esc(cfg.hid)}" placeholder="mindestens 20 Zeichen">
+      <div class="row-btns" style="margin-top:10px">
+        <button class="btn btn-s" onclick="codeErzeugen()">Code erzeugen</button>
+        <button class="btn btn-s btn-primary" onclick="cfgSpeichern()">Speichern und verbinden</button>
+        ${basis()?`<button class="btn btn-s" onclick="hochladen()">Diesen Stand hochladen</button>`:""}
+      </div>
+      <p class="note" style="margin-top:11px">Du kannst dasselbe Firebase-Projekt wie beim Küchenplan nutzen. Nimm aber einen <b>eigenen Code</b>, sonst vermischen sich die Daten beider Apps. Die vorhandenen Regeln passen unverändert.</p>
+    </div>
+
+    <div class="sect"><h2>Sichern</h2></div>
+    <div class="row-btns">
+      <button class="btn btn-s" onclick="allesExportieren()">Alles als Datei sichern</button>
+      <button class="btn btn-s" onclick="allesImportieren()">Sicherung einspielen</button>
+    </div>
+
+    <div class="sect"><h2>Zurücksetzen</h2></div>
+    <button class="btn btn-wide" onclick="if(confirm('Wirklich alle Daten auf diesem Gerät löschen?')){localStorage.removeItem(KEY);location.reload()}">App zurücksetzen</button>
+    <p class="note" style="margin-top:12px;text-align:center">Tagwerk ${VERSION}</p>`;
+}
+function altesAufraeumen(){
+  const grenze=Date.now()-30*TAG_MS;
+  const weg=aufListe().filter(a=>a.fertig&&a.fertig<grenze);
+  if(!weg.length){alert("Nichts zum Aufräumen – alles Erledigte ist jünger als 30 Tage.");return;}
+  if(!confirm(weg.length+" erledigte Aufgaben endgültig löschen?"))return;
+  const rest={...S.aufgaben}; weg.forEach(a=>delete rest[a.id]);
+  mut("aufgaben",rest);
+}
+function ueberfaelligHolen(){
+  const {ueberfaellig}=topfHeute();
+  if(!ueberfaellig.length){alert("Nichts ist überfällig.");return;}
+  const neu={...S.aufgaben};
+  ueberfaellig.forEach(a=>neu[a.id]={...neu[a.id],wann:heute()});
+  mut("aufgaben",neu); go("heute");
+}
+function codeErzeugen(){
+  const a="abcdefghijkmnopqrstuvwxyz23456789"; let s="";
+  const r=crypto.getRandomValues(new Uint8Array(24)); r.forEach(x=>s+=a[x%a.length]);
+  document.getElementById("hid").value=s;
+}
+function cfgSpeichern(){
+  cfg.db=document.getElementById("db").value.trim().replace(/\/$/,"");
+  cfg.hid=document.getElementById("hid").value.trim();
+  if(cfg.hid&&cfg.hid.length<20){alert("Der Code muss mindestens 20 Zeichen haben – so verlangen es die Firebase-Regeln.");return;}
+  schreibenLokal(); verbinden(); render();
+}
+async function hochladen(){
+  if(!confirm("Den Stand dieses Geräts in die Datenbank schreiben? Ein dort vorhandener Stand wird überschrieben."))return;
+  await senden("",S); render();
+}
+function allesExportieren(){
+  const daten=JSON.stringify(S,null,1);
+  openSheet(`<div class="grab"></div><h2 style="font-size:19px">Sicherung</h2>
+    <p class="note" style="margin:8px 0 12px">Text kopieren und ablegen. Enthält Aufgaben, Notizen und Listen samt Bildern.</p>
+    <textarea rows="12" onclick="this.select()">${esc(daten)}</textarea>
+    <button class="btn btn-wide btn-ghost" style="margin-top:8px" onclick="closeSheet()">Schließen</button>`);
+}
+function allesImportieren(){
+  openSheet(`<div class="grab"></div><h2 style="font-size:19px">Sicherung einspielen</h2>
+    <p class="note" style="margin:8px 0 12px">Ersetzt den aktuellen Stand vollständig.</p>
+    <textarea id="imp" rows="10" placeholder='{ "aufgaben": … }'></textarea>
+    <button class="btn btn-primary btn-wide" style="margin-top:10px" onclick="importAusfuehren()">Einspielen</button>
+    <button class="btn btn-wide btn-ghost" style="margin-top:6px" onclick="closeSheet()">Abbrechen</button>`);
+}
+function importAusfuehren(){
+  let d;
+  try{ d=JSON.parse(document.getElementById("imp").value); }
+  catch(e){ alert("Das ist kein gültiges JSON."); return; }
+  if(!d||typeof d!=="object"||(!d.aufgaben&&!d.notizen)){alert("Darin stecken weder Aufgaben noch Notizen.");return;}
+  if(!confirm("Aktuellen Stand ersetzen?"))return;
+  S={...leer(),...d};
+  schreibenLokal(); if(basis())senden("",S);
+  closeSheet(); go("heute");
+}
+
+/* ---------- Geteilte Inhalte aufnehmen ---------- */
+function shareAufnehmen(){
+  const p=new URLSearchParams(location.search);
+  const url=p.get("url")||"", titel=p.get("title")||"", text=p.get("text")||"";
+  if(!url&&!titel&&!text) return false;
+  history.replaceState({},"",location.pathname);
+  const inhalt=[titel,text,url].filter(Boolean).join("\n");
+  openSheet(`<div class="grab"></div><h2 style="font-size:19px">Geteiltes übernehmen</h2>
+    <p class="note" style="margin:8px 0 12px">Als schnelle Aufgabe oder als Notiz mit dem vollen Text.</p>
+    <textarea id="geteilt" rows="5">${esc(inhalt)}</textarea>
+    <button class="btn btn-primary btn-wide" style="margin-top:10px" onclick="geteiltAlsAufgabe()">Als Aufgabe</button>
+    <button class="btn btn-wide" style="margin-top:6px" onclick="geteiltAlsNotiz()">Als Notiz</button>
+    <button class="btn btn-wide btn-ghost" style="margin-top:6px" onclick="closeSheet()">Verwerfen</button>`);
+  return true;
+}
+function geteiltAlsAufgabe(){
+  const t=document.getElementById("geteilt").value.split("\n")[0];
+  aufgabeAnlegen(t,null,null); closeSheet(); go("listen");
+}
+function geteiltAlsNotiz(){
+  const roh=document.getElementById("geteilt").value;
+  const zeilen=roh.split("\n").filter(Boolean);
+  const id="n"+id6();
+  mut("notizen/"+id,{titel:zeilen[0]||"Geteilt",html:zeilen.map(z=>"<p>"+esc(z)+"</p>").join(""),
+    kat:null,art:"frei",archiv:false,erstellt:Date.now(),geaendert:Date.now()},false);
+  closeSheet(); go("notizen"); notizOeffnen(id);
+}
+
+/* ---------- Start ---------- */
+if(typeof document!=="undefined"&&document.getElementById){
+  lesenLokal();
+  render();
+  shareAufnehmen();
+  if(basis())verbinden();
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+  /* Tageswechsel im Hintergrund abfangen, damit "Heute" stimmt */
+  let letzterTag=heute();
+  setInterval(()=>{ if(heute()!==letzterTag){letzterTag=heute();render();} },60000);
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&heute()!==letzterTag){letzterTag=heute();render();} });
+}
+
+</script>
+</body>
+</html>
