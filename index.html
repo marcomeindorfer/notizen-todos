@@ -75,7 +75,16 @@ header h1{font-size:27px}
 .auf-txt{flex:1;min-width:0;font-size:15.5px;line-height:1.35;word-break:break-word}
 .auf.fertig .auf-txt{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
 .auf-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px}
-.auf-mehr{flex:none;border:0;background:transparent;color:var(--ink-3);padding:2px 4px;font-size:17px;line-height:1;align-self:center}
+.auf-akt{display:flex;align-items:center;gap:2px;flex:none;align-self:center}
+.auf-akt button{border:0;background:transparent;color:var(--ink-3);padding:5px 6px;line-height:1;display:grid;place-items:center}
+.auf-akt svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.auf-akt button.weg:active{color:var(--rot)}
+.auf-notiz{margin-top:5px;font-size:12.5px;color:var(--ink-3);line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  border-left:2px solid var(--line-2);padding-left:8px}
+.sortpfeil{display:flex;flex-direction:column;gap:1px;flex:none;align-self:center}
+.sortpfeil button{border:1px solid var(--line-2);background:var(--card);width:30px;height:22px;padding:0;font-size:11px;line-height:1;border-radius:6px}
+.sortpfeil button[disabled]{opacity:.35}
 .punkt{width:8px;height:8px;border-radius:99px;flex:none;display:inline-block}
 .mini{font-size:11.5px;color:var(--ink-3)}
 .mini.spaet{color:var(--rot);font-weight:600}
@@ -147,9 +156,17 @@ nav button[aria-current="page"]{color:var(--akz);font-weight:600}
 .badge{position:absolute;transform:translate(15px,-11px);background:var(--akz);color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:99px;display:grid;place-items:center;padding:0 4px}
 @media (prefers-color-scheme:dark){.badge{color:#17131F}}
 
-.sheet{position:fixed;inset:0;background:rgba(15,12,20,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center}
-.sheet-in{background:var(--paper);width:100%;max-width:600px;max-height:94vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom))}
+.sheet{position:fixed;inset:0;background:rgba(15,12,20,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.sheet-in{background:var(--paper);width:100%;max-width:520px;max-height:88vh;overflow-y:auto;border-radius:18px;
+  padding:18px 16px 20px;box-shadow:0 18px 50px rgba(15,12,20,.28)}
+@media (max-height:560px){.sheet{align-items:flex-end;padding:0}.sheet-in{max-height:96vh;border-radius:18px 18px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}}
 .grab{width:38px;height:4px;border-radius:99px;background:var(--line-2);margin:0 auto 14px}
+.sheet-kopf{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.sheet-kopf h2{font-size:18px}
+.hinweis{display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);border-radius:var(--r-s);
+  padding:11px 13px;margin-bottom:12px;font-size:14px;animation:rein .2s ease}
+.hinweis span{flex:1}
+.hinweis button{border:0;background:transparent;color:var(--paper);font-weight:650;text-decoration:underline;padding:2px 4px}
 .leerzustand{text-align:center;padding:40px 20px;color:var(--ink-3)}
 .leerzustand b{display:block;color:var(--ink);font-size:16.5px;margin-bottom:5px}
 .note{font-size:13px;color:var(--ink-3);line-height:1.55}
@@ -178,10 +195,11 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 <nav id="nav"></nav>
 <div id="sheet"></div>
 <input type="file" id="bildwahl" accept="image/*" style="display:none">
+<input type="file" id="keepwahl" accept=".json,.html,application/json,text/html" multiple style="display:none">
 <script>
 /* ===== Tagwerk: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
-const VERSION="1.0";
+const VERSION="1.3";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -190,7 +208,14 @@ const FARBEN=["#4A2D6E","#136B54","#9A6512","#9B3327","#2A6478","#7A3B62","#4C6B
 
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const id6=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const slug=s=>String(s).toLowerCase().replace(/[äÄ]/g,"ae").replace(/[öÖ]/g,"oe").replace(/[üÜ]/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,60);
+/* Streng aufsteigend, damit zwei Einträge derselben Millisekunde eine stabile Reihenfolge haben */
+let posZaehler=0;
+const naechstePos=()=>Date.now()*100+(posZaehler++%100);
+/* normText für Suche über ganze Texte, slug für kurze Schlüssel */
+const normText=s=>String(s==null?"":s).toLowerCase()
+  .replace(/[äÄ]/g,"ae").replace(/[öÖ]/g,"oe").replace(/[üÜ]/g,"ue").replace(/ß/g,"ss")
+  .replace(/[^a-z0-9]+/g,"_");
+const slug=s=>normText(s).replace(/^_|_$/g,"").slice(0,60);
 
 /* ---------- Datum ---------- */
 const iso=d=>{const x=new Date(d);x.setHours(12,0,0,0);return x.toISOString().slice(0,10);};
@@ -228,6 +253,24 @@ let cfg={db:"",hid:""};
 let tab="heute", es=null, syncState="lokal", queue=[];
 const SYNCTEXT={lokal:"nur auf diesem Gerät",verbindet:"verbindet …",live:"live verbunden",wartet:"wartet auf Verbindung",getrennt:"getrennt, versucht erneut"};
 let katFilter="alle", notizSuche="", notizFilter="aktiv", wochenVersatz=0, offenAuf=null;
+let sortAn=false, aufSuche="", hinweisDaten=null, hinweisTimer=null;
+const WDH={taeglich:"Täglich",woechentlich:"Wöchentlich",monatlich:"Monatlich"};
+
+/* Kurze Rückmeldung mit optionaler Rücknahme, statt Bestätigungsdialoge */
+function hinweis(text,aktionText,aktion){
+  clearTimeout(hinweisTimer);
+  hinweisDaten={text,aktionText,aktion};
+  hinweisTimer=setTimeout(()=>{hinweisDaten=null;render();},7000);
+  render();
+}
+function hinweisLeiste(){
+  if(!hinweisDaten) return "";
+  return `<div class="hinweis"><span>${esc(hinweisDaten.text)}</span>
+    ${hinweisDaten.aktionText?`<button onclick="hinweisAktion()">${esc(hinweisDaten.aktionText)}</button>`:""}
+    <button onclick="hinweisWeg()" aria-label="Schließen">✕</button></div>`;
+}
+function hinweisAktion(){ const h=hinweisDaten; hinweisDaten=null; clearTimeout(hinweisTimer); if(h&&h.aktion)h.aktion(); else render(); }
+function hinweisWeg(){ hinweisDaten=null; clearTimeout(hinweisTimer); render(); }
 
 /* ---------- Speicher und Synchronisierung ---------- */
 function lesenLokal(){
@@ -394,13 +437,37 @@ function aufgabeAnlegen(rohtext,vorgabeWann,vorgabeKat){
   if(!d.text) return null;
   const id="a"+id6();
   const a={t:d.text,wann:d.wann||vorgabeWann||null,kat:d.katId||vorgabeKat||null,
-           fertig:null,erstellt:Date.now(),pos:Date.now()};
-  mut("aufgaben/"+id,a);
+           fertig:null,erstellt:Date.now(),pos:naechstePos()};
+  const doppelt=aufListe().find(x=>!x.fertig&&normText(x.t)===normText(a.t));
+  mut("aufgaben/"+id,a,!doppelt);
+  if(doppelt){
+    const wo=doppelt.wann?(/^\d{4}-/.test(doppelt.wann)?datumText(doppelt.wann):(doppelt.wann==="woche"?"Diese Woche":"Danach")):(doppelt.kat?kat(doppelt.kat).n:"ohne Liste");
+    hinweis("Steht schon offen unter "+wo,"Neue löschen",()=>aufgabeLoeschen(id));
+  }
   return id;
+}
+function naechsterTermin(a){
+  const basis=/^\d{4}-/.test(a.wann||"")?ausIso(a.wann):ausIso(heute());
+  const d=new Date(basis);
+  if(a.wdh==="taeglich")d.setDate(d.getDate()+1);
+  else if(a.wdh==="woechentlich")d.setDate(d.getDate()+7);
+  else if(a.wdh==="monatlich")d.setMonth(d.getMonth()+1);
+  else return null;
+  /* Läge der nächste Termin schon wieder in der Vergangenheit, weiterrücken */
+  while(iso(d)<heute()){
+    if(a.wdh==="taeglich")d.setDate(d.getDate()+1);
+    else if(a.wdh==="woechentlich")d.setDate(d.getDate()+7);
+    else d.setMonth(d.getMonth()+1);
+  }
+  return iso(d);
 }
 function haken(id){
   const a=S.aufgaben[id]; if(!a) return;
   if(a.fertig){ mut("aufgaben/"+id+"/fertig",null); return; }
+  if(a.wdh){
+    const naechst=naechsterTermin(a);
+    if(naechst) mut("aufgaben/a"+id6(),{...a,wann:naechst,fertig:null,erstellt:Date.now(),pos:naechstePos()},false);
+  }
   /* Kurz die Feier zeigen, dann erst neu zeichnen */
   const el=document.getElementById("hak_"+id);
   if(el&&el.classList){ el.classList.add("feier"); }
@@ -408,7 +475,24 @@ function haken(id){
   setTimeout(render,320);
 }
 function verschieben(id,wann){ mut("aufgaben/"+id+"/wann",wann); }
-function aufgabeLoeschen(id){ mut("aufgaben/"+id,null); }
+function umEinenTag(id){
+  const a=S.aufgaben[id]; if(!a) return;
+  const basis=/^\d{4}-/.test(a.wann||"")?ausIso(a.wann):ausIso(heute());
+  basis.setDate(basis.getDate()+1);
+  verschieben(id,iso(basis));
+}
+/* Reihenfolge: die Positionen zweier Nachbarn tauschen */
+function posTausch(idA,idB){
+  const a=S.aufgaben[idA], b=S.aufgaben[idB]; if(!a||!b) return;
+  const pa=a.pos||a.erstellt||0, pb=b.pos||b.erstellt||0;
+  mut("aufgaben/"+idA+"/pos",pb,false);
+  mut("aufgaben/"+idB+"/pos",pa);
+}
+function aufgabeLoeschen(id){
+  const kopie=S.aufgaben[id]; if(!kopie) return;
+  mut("aufgaben/"+id,null,false);
+  hinweis("„"+kopie.t.slice(0,34)+(kopie.t.length>34?"…":"")+"“ gelöscht","Rückgängig",()=>mut("aufgaben/"+id,kopie));
+}
 
 /* Was gehört in welchen Topf? */
 function topfHeute(){
@@ -423,6 +507,10 @@ function topfHeute(){
 
 /* ===== Ansichten: Heute, Woche, Listen ===== */
 
+const ICON_STIFT='<svg viewBox="0 0 24 24"><path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M13.5 6.5l4 4"/></svg>';
+const ICON_WEG='<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>';
+const ICON_WDH='<svg viewBox="0 0 24 24"><path d="M4 11a8 8 0 0 1 13.7-5.7L20 7"/><path d="M20 4v3h-3"/><path d="M20 13a8 8 0 0 1-13.7 5.7L4 17"/><path d="M4 20v-3h3"/></svg>';
+
 function aufZeile(a,opt={}){
   const k=a.kat?kat(a.kat):null;
   const h=heute();
@@ -434,15 +522,29 @@ function aufZeile(a,opt={}){
     else if(a.wann==="danach") meta.push(`<span class="mini">Danach</span>`);
     else meta.push(`<span class="mini ${spaet?"spaet":""}">${spaet?"seit ":""}${datumText(a.wann)}</span>`);
   }
-  if(a.notiz) meta.push(`<span class="mini">Notiz</span>`);
+  if(a.wdh) meta.push(`<span class="mini">${WDH[a.wdh]}</span>`);
+  const pfeile=opt.sort?`<span class="sortpfeil">
+      <button ${opt.erster?"disabled":`onclick="posTausch('${a.id}','${opt.vor}')"`} aria-label="Nach oben">▲</button>
+      <button ${opt.letzter?"disabled":`onclick="posTausch('${a.id}','${opt.nach}')"`} aria-label="Nach unten">▼</button></span>`:"";
   return `<div class="auf ${a.fertig?"fertig":""} ${spaet&&!a.fertig?"ueber":""}">
     <button class="hak" id="hak_${a.id}" onclick="haken('${a.id}')" aria-label="${a.fertig?"Wieder öffnen":"Erledigt"}">
       <svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9"/></svg></button>
     <div class="auf-txt" onclick="aufgabeOeffnen('${a.id}')">${esc(a.t)}
-      ${meta.length?`<div class="auf-meta">${meta.join("")}</div>`:""}</div>
-    <button class="auf-mehr" onclick="aufgabeOeffnen('${a.id}')" aria-label="Mehr">···</button>
+      ${meta.length?`<div class="auf-meta">${meta.join("")}</div>`:""}
+      ${a.notiz?`<div class="auf-notiz">${esc(a.notiz)}</div>`:""}</div>
+    ${pfeile||`<span class="auf-akt">
+      <button onclick="aufgabeOeffnen('${a.id}')" aria-label="Bearbeiten">${ICON_STIFT}</button>
+      <button class="weg" onclick="aufgabeLoeschen('${a.id}')" aria-label="Löschen">${ICON_WEG}</button></span>`}
   </div>`;
 }
+/* Eine Liste mit optionalen Sortierpfeilen ausgeben */
+function aufListeHtml(liste,opt={}){
+  return liste.map((a,i)=>aufZeile(a,{...opt,
+    sort:sortAn&&liste.length>1,
+    erster:i===0, letzter:i===liste.length-1,
+    vor:i>0?liste[i-1].id:null, nach:i<liste.length-1?liste[i+1].id:null})).join("");
+}
+const sortKnopf=()=>`<button class="btn btn-s" onclick="sortAn=!sortAn;render()">${sortAn?"Fertig":"Sortieren"}</button>`;
 
 function schnellFeld(vorgabeWann,vorgabeKat){
   return `<div class="schnell">
@@ -456,6 +558,8 @@ function neuAnlegen(wann,katId){
   const t=el.value; if(!t.trim()) return;
   el.value="";
   aufgabeAnlegen(t,wann||null,katId||null);
+  /* Fokus zurückholen, damit man mehrere Aufgaben am Stück eintippen kann */
+  const neu=document.getElementById("neu"); if(neu&&neu.focus)neu.focus();
 }
 
 /* ---------- Heute ---------- */
@@ -469,16 +573,16 @@ function vHeute(){
     <div class="balken"><i style="width:${anteil}%"></i></div></div>`;
 
   const teil=(titel,liste,opt)=>liste.length
-    ? `<div class="sect"><h2>${titel}</h2><span class="zahl">${liste.length}</span></div>${liste.map(a=>aufZeile(a,opt)).join("")}`
+    ? `<div class="sect"><h2>${titel}</h2><span class="zahl">${liste.length}${liste.length>1&&opt&&opt.sortierbar?" · "+"":""}</span></div>${aufListeHtml(liste,opt)}`
     : "";
 
   const nichts=!faellig.length&&!ueberfaellig.length&&!fertig.length
     ? `<div class="leerzustand"><b>Der Tag ist frei</b>Trag oben etwas ein oder hol dir unter Listen eine Aufgabe aus einem deiner Vorräte.
        <div style="margin-top:14px"><button class="btn" onclick="go('listen')">Zu den Listen</button></div></div>` : "";
 
-  return bogen + `<div style="margin-top:14px"></div>` + schnellFeld(heute(),null)
+  return hinweisLeiste() + bogen + `<div style="margin-top:14px"></div>` + schnellFeld(heute(),null)
     + teil("Überfällig",ueberfaellig,{datum:true})
-    + teil("Für heute",faellig,{})
+    + (faellig.length?`<div class="sect"><h2>Für heute</h2><span class="zahl">${faellig.length}</span>${faellig.length>1?sortKnopf():""}</div>${aufListeHtml(faellig)}`:"")
     + nichts
     + (fertig.length?`<div class="sect"><h2>Heute geschafft</h2><span class="zahl">${fertig.length}</span></div>
        ${fertig.map(a=>aufZeile(a,{})).join("")}
@@ -503,22 +607,22 @@ function vWoche(){
     return `<div class="tagblock ${d===heute()?"heute":""}">
       <div class="tagblock-h"><b>${TAGE[wochentag(d)]}${d===heute()?" · heute":""}</b>
         <span>${ausIso(d).getDate()}.${ausIso(d).getMonth()+1}.${drin.length?" · "+drin.length+" OFFEN":""}${fertigT?" · "+fertigT+" ERLEDIGT":""}</span></div>
-      ${drin.length?drin.map(a=>aufZeile(a,{})).join(""):`<div class="leer">frei — <button class="btn btn-ghost btn-s" style="padding:0" onclick="schnellFuer('${d}')">etwas eintragen</button></div>`}
+      ${drin.length?aufListeHtml(drin):`<div class="leer">frei — <button class="btn btn-ghost btn-s" style="padding:0" onclick="schnellFuer('${d}')">etwas eintragen</button></div>`}
     </div>`;}).join("");
 
   const wocheOffen=sortiert(alle.filter(a=>!a.fertig&&a.wann==="woche"));
   const danach=sortiert(alle.filter(a=>!a.fertig&&a.wann==="danach"));
 
-  return kopf + bloecke
+  return hinweisLeiste() + kopf + `<div class="row-btns" style="margin-bottom:10px">${sortKnopf()}</div>` + bloecke
     + `<div class="sect"><h2>Diese Woche, ohne festen Tag</h2><span class="zahl">${wocheOffen.length}</span></div>`
-    + (wocheOffen.length?wocheOffen.map(a=>aufZeile(a,{})).join(""):`<p class="note" style="margin-bottom:10px">Nichts offen.</p>`)
+    + (wocheOffen.length?aufListeHtml(wocheOffen):`<p class="note" style="margin-bottom:10px">Nichts offen.</p>`)
     + schnellFeld("woche",null)
     + `<div class="sect"><h2>Danach</h2><span class="zahl">${danach.length}</span></div>`
-    + (danach.length?danach.map(a=>aufZeile(a,{})).join(""):`<p class="note">Nichts vorgemerkt.</p>`);
+    + (danach.length?aufListeHtml(danach):`<p class="note">Nichts vorgemerkt.</p>`);
 }
 function schnellFuer(d){
   offenAuf=null;
-  openSheet(`<div class="grab"></div><h2 style="font-size:19px">Aufgabe für ${datumText(d)}</h2>
+  openSheet(`<div class="sheet-kopf"><h2>Aufgabe für ${datumText(d)}</h2><button class="btn btn-ghost btn-s" onclick="closeSheet()">✕</button></div>
     <div class="schnell" style="margin-top:12px">
       <input type="text" id="neu" placeholder="Aufgabe …" onkeydown="if(event.key==='Enter'){neuAnlegen('${d}','');closeSheet()}">
       <button class="btn btn-primary" onclick="neuAnlegen('${d}','');closeSheet()">+</button></div>
@@ -544,7 +648,7 @@ function vListen(){
     const notizZahl=Object.values(S.notizen||{}).filter(n=>n.kat===id&&!n.archiv).length;
     return `<div class="sect"><h2><i class="punkt" style="background:${k.f}"></i> ${esc(k.n)}</h2>
         <span class="zahl">${drin.length} offen${notizZahl?" · "+notizZahl+" Notizen":""}</span></div>
-      ${drin.length?drin.map(a=>aufZeile(a,{})).join(""):`<p class="note" style="margin-bottom:8px">Noch nichts gesammelt.</p>`}
+      ${drin.length?aufListeHtml(drin):`<p class="note" style="margin-bottom:8px">Noch nichts gesammelt.</p>`}
       <div class="schnell" style="margin-bottom:14px">
         <input type="text" id="neu_${id}" placeholder="In „${esc(k.n)}“ sammeln …"
           onkeydown="if(event.key==='Enter')sammeln('${id}')">
@@ -552,15 +656,31 @@ function vListen(){
   }).join("");
 
   const ohneListe=sortiert(alle.filter(a=>ohneDatum(a)&&!a.kat));
-  return chips + bloecke
+  if(aufSuche.trim()){
+    const q=normText(aufSuche);
+    const treffer=aufListe().filter(a=>normText(a.t).includes(q)||(a.notiz&&normText(a.notiz).includes(q)))
+      .sort((a,b)=>(a.fertig?1:0)-(b.fertig?1:0)||(b.erstellt||0)-(a.erstellt||0));
+    return hinweisLeiste()+sucheFeld()+`<div class="sect"><h2>Gefunden</h2><span class="zahl">${treffer.length}</span></div>`
+      +(treffer.length?treffer.map(a=>aufZeile(a,{datum:true})).join(""):`<div class="leerzustand"><b>Nichts gefunden</b>Gesucht wird in Aufgabentext und Notiz, auch im Erledigten.</div>`);
+  }
+  return hinweisLeiste() + sucheFeld() + chips + `<div class="row-btns" style="margin-bottom:10px">${sortKnopf()}</div>` + bloecke
     + (ohneListe.length&&katFilter==="alle"
-      ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${ohneListe.length}</span></div>${ohneListe.map(a=>aufZeile(a,{})).join("")}`:"")
+      ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${ohneListe.length}</span></div>${aufListeHtml(ohneListe)}`:"")
     + `<p class="note" style="margin-top:16px">Aufgaben hier haben bewusst kein Datum. Über das ···-Menü ziehst du sie in den Tag oder in die Woche.</p>`;
+}
+function sucheFeld(){
+  return `<div class="schnell"><input type="search" id="asuche" placeholder="Alle Aufgaben durchsuchen …" value="${esc(aufSuche)}" oninput="aufSucheAendern(this.value)">
+    ${aufSuche?`<button class="btn" onclick="aufSuche='';render()">✕</button>`:""}</div>`;
+}
+function aufSucheAendern(v){
+  aufSuche=v; render();
+  const e=document.getElementById("asuche"); if(e&&e.focus){e.focus(); if(e.setSelectionRange)try{e.setSelectionRange(v.length,v.length)}catch(x){}}
 }
 function sammeln(katId){
   const el=document.getElementById("neu_"+katId); if(!el||!el.value.trim())return;
   const t=el.value; el.value="";
   aufgabeAnlegen(t,null,katId);
+  const neu=document.getElementById("neu_"+katId); if(neu&&neu.focus)neu.focus();
 }
 
 /* ---------- Aufgabe bearbeiten ---------- */
@@ -569,9 +689,10 @@ function aufgabeOeffnen(id){
   const body=()=>{
     const b=S.aufgaben[id]; if(!b) return "";
     const wannIst=w=>b.wann===w;
-    return `<div class="grab"></div>
-      <label class="fl" for="atxt">Aufgabe</label>
-      <textarea id="atxt" rows="2" onchange="mut('aufgaben/${id}/t',this.value.trim()||'Ohne Titel',false)">${esc(b.t)}</textarea>
+    const festesDatum=/^\d{4}-/.test(b.wann||"");
+    return `<div class="sheet-kopf"><h2>Aufgabe</h2>
+        <button class="btn btn-ghost btn-s" onclick="closeSheet()" aria-label="Schließen">✕</button></div>
+      <textarea id="atxt" rows="2" oninput="mut('aufgaben/${id}/t',this.value.trim()||'Ohne Titel',false)">${esc(b.t)}</textarea>
       <label class="fl">Wann</label>
       <div class="chips" style="padding-bottom:4px">
         <button class="chip" aria-pressed="${wannIst(heute())}" onclick="verschieben('${id}','${heute()}');aufgabeOeffnen('${id}')">Heute</button>
@@ -580,33 +701,41 @@ function aufgabeOeffnen(id){
         <button class="chip" aria-pressed="${wannIst("danach")}" onclick="verschieben('${id}','danach');aufgabeOeffnen('${id}')">Danach</button>
         <button class="chip" aria-pressed="${!b.wann}" onclick="verschieben('${id}',null);aufgabeOeffnen('${id}')">Nur sammeln</button>
       </div>
-      <input type="date" value="${/^\d{4}-/.test(b.wann||"")?b.wann:""}" onchange="if(this.value){verschieben('${id}',this.value);aufgabeOeffnen('${id}')}">
+      ${b.wann?`<div class="row-btns" style="margin-top:6px">
+          <input type="date" style="flex:1" value="${festesDatum?b.wann:""}" onchange="if(this.value){verschieben('${id}',this.value);aufgabeOeffnen('${id}')}">
+          <button class="btn btn-s" onclick="umEinenTag('${id}');aufgabeOeffnen('${id}')">+1 Tag</button></div>`:""}
       <label class="fl">Liste</label>
       <div class="chips" style="padding-bottom:4px">
         ${Object.entries(S.kategorien).sort((x,y)=>(x[1].pos||0)-(y[1].pos||0)).map(([kid,k])=>
           `<button class="chip" aria-pressed="${b.kat===kid}" onclick="mut('aufgaben/${id}/kat','${kid}',false);aufgabeOeffnen('${id}')"><i class="punkt" style="background:${k.f}"></i>${esc(k.n)}</button>`).join("")}
         <button class="chip" aria-pressed="${!b.kat}" onclick="mut('aufgaben/${id}/kat',null,false);aufgabeOeffnen('${id}')">Ohne</button>
       </div>
+      <label class="fl">Wiederholung</label>
+      <div class="chips" style="padding-bottom:4px">
+        <button class="chip" aria-pressed="${!b.wdh}" onclick="mut('aufgaben/${id}/wdh',null,false);aufgabeOeffnen('${id}')">Einmalig</button>
+        ${Object.entries(WDH).map(([w,l])=>`<button class="chip" aria-pressed="${b.wdh===w}" onclick="mut('aufgaben/${id}/wdh','${w}',false);aufgabeOeffnen('${id}')">${l}</button>`).join("")}
+      </div>
+      ${b.wdh?`<p class="note" style="margin-top:4px">Beim Abhaken entsteht automatisch der nächste Termin.</p>`:""}
       <label class="fl" for="anotiz">Notiz dazu</label>
       <textarea id="anotiz" rows="3" placeholder="Details, Telefonnummer, Link …"
-        onchange="mut('aufgaben/${id}/notiz',this.value.trim()||null,false)">${esc(b.notiz||"")}</textarea>
+        oninput="mut('aufgaben/${id}/notiz',this.value.trim()||null,false)">${esc(b.notiz||"")}</textarea>
       <div class="row-btns" style="margin-top:14px">
         <button class="btn btn-primary" style="flex:1" onclick="closeSheet()">Fertig</button>
         <button class="btn" onclick="verdoppeln('${id}')">Duplizieren</button>
-        <button class="btn" onclick="if(confirm('Aufgabe löschen?')){aufgabeLoeschen('${id}');closeSheet()}">Löschen</button>
+        <button class="btn" onclick="aufgabeLoeschen('${id}');closeSheet()">Löschen</button>
       </div>`;
   };
-  openSheet(body());
+  openSheet(body(),true);
 }
 function verdoppeln(id){
   const a=S.aufgaben[id]; if(!a)return;
-  mut("aufgaben/a"+id6(),{...a,fertig:null,erstellt:Date.now(),pos:Date.now()});
+  mut("aufgaben/a"+id6(),{...a,fertig:null,erstellt:Date.now(),pos:naechstePos()});
   closeSheet();
 }
 
 /* ---------- Listen verwalten ---------- */
 function katBody(){
-  return `<div class="grab"></div><h2 style="font-size:19px">Listen</h2>
+  return `<div class="sheet-kopf"><h2>Listen</h2><button class="btn btn-ghost btn-s" onclick="closeSheet()">✕</button></div>
     <p class="note" style="margin:8px 0 14px">Listen gelten für Aufgaben und Notizen gleichermaßen.</p>
     ${Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0)).map(([id,k])=>`
       <div class="liste-zeile"><i class="punkt" style="background:${k.f};width:12px;height:12px"></i>
@@ -656,18 +785,19 @@ const NOTIZ_ARTEN={
 };
 let offeneNotiz=null, speicherTimer=null;
 
-const textAus=h=>String(h||"").replace(/<br\s*\/?>/gi," ").replace(/<\/(p|div|li|h\d)>/gi," ").replace(/<[^>]+>/g," ")
-  .replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\s+/g," ").trim();
+const textAus=h=>entziffern(String(h||"").replace(/<br\s*\/?>/gi," ").replace(/<\/(p|div|li|h\d)>/gi," ").replace(/<[^>]+>/g," "))
+  .replace(/\u00a0/g," ").replace(/\s+/g," ").trim();
 const sauberHtml=h=>String(h||"").replace(/<script[\s\S]*?<\/script>/gi,"").replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|\S+)/gi,"");
 
 /* ---------- Suche: Wortweise, gewichtet nach Fundort ---------- */
-function notizenSuchen(q,mitArchiv){
-  const worte=slug(q).split("_").filter(w=>w.length>1);
+function notizenSuchen(q,modus){
+  const worte=normText(q).split("_").filter(w=>w.length>1);
   let liste=Object.entries(S.notizen||{}).map(([id,n])=>({id,...n}));
-  if(!mitArchiv) liste=liste.filter(n=>!n.archiv); else liste=liste.filter(n=>n.archiv);
+  if(modus==="archiv") liste=liste.filter(n=>n.archiv);
+  else if(modus!=="alle") liste=liste.filter(n=>!n.archiv);
   if(!worte.length) return liste.sort((a,b)=>(b.geaendert||0)-(a.geaendert||0));
   return liste.map(n=>{
-    const t=slug(n.titel||""), k=slug(kat(n.kat).n), b=slug(textAus(n.html));
+    const t=normText(n.titel), k=normText(kat(n.kat).n), b=normText(textAus(n.html));
     let punkte=0, alle=true;
     worte.forEach(w=>{
       let p=0;
@@ -696,7 +826,7 @@ function ausschnitt(n,q){
 }
 
 function vNotizen(){
-  const treffer=notizenSuchen(notizSuche,notizFilter==="archiv");
+  const treffer=notizenSuchen(notizSuche,notizFilter);
   const gefiltert=katFilter==="alle"?treffer:treffer.filter(n=>n.kat===katFilter);
   const kats=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
   const kopf=`<div class="schnell">
@@ -708,12 +838,13 @@ function vNotizen(){
 function chipsNotiz(kats){
   return `<button class="chip" aria-pressed="${notizFilter==="aktiv"}" onclick="notizFilter='aktiv';notizTeil()">Aktiv</button>
     <button class="chip" aria-pressed="${notizFilter==="archiv"}" onclick="notizFilter='archiv';notizTeil()">Archiv</button>
+    <button class="chip" aria-pressed="${notizFilter==="alle"}" onclick="notizFilter='alle';notizTeil()">Überall suchen</button>
     <button class="chip" aria-pressed="${katFilter==="alle"}" onclick="katFilter='alle';notizTeil()">Alle Listen</button>
     ${kats.map(([id,k])=>`<button class="chip" aria-pressed="${katFilter===id}" onclick="katFilter='${id}';notizTeil()"><i class="punkt" style="background:${k.f}"></i>${esc(k.n)}</button>`).join("")}`;
 }
 function notizListe(liste){
   if(!liste.length) return `<div class="leerzustand"><b>${notizSuche?"Nichts gefunden":(notizFilter==="archiv"?"Archiv ist leer":"Noch keine Notiz")}</b>
-    ${notizSuche?"Andere Begriffe probieren – gesucht wird in Titel, Text und Liste.":"Mit dem Plus oben rechts legst du eine an."}</div>`;
+    ${notizSuche?"Andere Begriffe probieren, oder mit „Überall suchen“ das Archiv einbeziehen.":"Mit dem Plus oben rechts legst du eine an."}</div>`;
   return liste.map(n=>{
     const k=n.kat?kat(n.kat):null;
     return `<button class="notiz" onclick="notizOeffnen('${n.id}')">
@@ -732,14 +863,14 @@ function notizTeil(){
   if(!c||!t){render();return;}
   const kats=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
   c.innerHTML=chipsNotiz(kats);
-  const treffer=notizenSuchen(notizSuche,notizFilter==="archiv");
+  const treffer=notizenSuchen(notizSuche,notizFilter);
   t.innerHTML=notizListe(katFilter==="alle"?treffer:treffer.filter(n=>n.kat===katFilter));
 }
 function notizSucheAendern(v){notizSuche=v;notizTeil();}
 
 /* ---------- Anlegen ---------- */
 function notizNeu(){
-  openSheet(`<div class="grab"></div><h2 style="font-size:19px">Neue Notiz</h2>
+  openSheet(`<div class="sheet-kopf"><h2>Neue Notiz</h2><button class="btn btn-ghost btn-s" onclick="closeSheet()">✕</button></div>
     <p class="note" style="margin:8px 0 12px">Eine Vorlage spart das Sortieren hinterher.</p>
     ${Object.entries(NOTIZ_ARTEN).map(([id,a])=>`<button class="btn btn-wide" style="margin-bottom:7px;text-align:left" onclick="notizAnlegen('${id}')">${a.n}</button>`).join("")}
     <button class="btn btn-wide btn-ghost" style="margin-top:6px" onclick="closeSheet()">Abbrechen</button>`);
@@ -756,7 +887,8 @@ function notizOeffnen(id){
   const n=S.notizen[id]; if(!n) return;
   offeneNotiz=id;
   const kats=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
-  openSheet(`<div class="grab"></div>
+  openSheet(`<div class="sheet-kopf"><h2>Notiz</h2>
+      <button class="btn btn-ghost btn-s" onclick="notizSchliessen()" aria-label="Schließen">✕</button></div>
     <input type="text" id="ntitel" placeholder="Titel" value="${esc(n.titel||"")}"
       style="font-size:19px;font-weight:650;border:0;background:transparent;padding:0 0 8px" oninput="notizMerken()">
     <div class="chips" style="padding-bottom:6px">
@@ -859,6 +991,245 @@ function bildVerkleinern(datei,maxKante,guete){
   });
 }
 
+/* ===== Import aus Google Notizen (Takeout) ===== */
+
+const ENTITAET={nbsp:" ",amp:"&",quot:'"',apos:"'",lt:"<",gt:">",auml:"ä",ouml:"ö",uuml:"ü",
+  Auml:"Ä",Ouml:"Ö",Uuml:"Ü",szlig:"ß",eacute:"é",ndash:"–",mdash:"—",hellip:"…",
+  bdquo:"„",ldquo:"“",rdquo:"”",lsquo:"‘",rsquo:"’",laquo:"«",raquo:"»",deg:"°",euro:"€",middot:"·"};
+/* Sicher heißt: spitze Klammern und & bleiben stehen, damit aus Text kein Tag wird */
+const entziffernSicher=t=>String(t||"")
+  .replace(/&#x([0-9a-f]+);/gi,(_,h)=>{const c=String.fromCodePoint(parseInt(h,16));return /[<>&]/.test(c)?_:c;})
+  .replace(/&#(\d+);/g,(_,d)=>{const c=String.fromCodePoint(+d);return /[<>&]/.test(c)?_:c;})
+  .replace(/&([a-z]+);/gi,(m,n)=>(n==="lt"||n==="gt"||n==="amp"||ENTITAET[n]===undefined)?m:ENTITAET[n]);
+const entziffern=t=>String(t||"")
+  .replace(/&#x([0-9a-f]+);/gi,(_,h)=>String.fromCodePoint(parseInt(h,16)))
+  .replace(/&#(\d+);/g,(_,d)=>String.fromCodePoint(+d))
+  .replace(/&([a-z]+);/gi,(m,n)=>ENTITAET[n]!==undefined?ENTITAET[n]:m);
+
+/* Google steckt alles in <span> mit festen Schriftgrößen. Behalten wird nur,
+   was wirklich Auszeichnung ist: fett, kursiv, durchgestrichen, unterstrichen. */
+function keepSaeubern(roh){
+  let h=String(roh||"").replace(/<br\s*\/?>/gi,"<br>").replace(/<\/?(html|body|head|meta|div)[^>]*>/gi,"");
+  for(let runde=0;runde<12;runde++){
+    const vorher=h;
+    h=h.replace(/<span([^>]*)>([\s\S]*?)<\/span>/gi,(m,attr,inhalt)=>{
+      const st=(attr.match(/style\s*=\s*"([^"]*)"/i)||["",""])[1].toLowerCase();
+      let auf="",zu="";
+      if(/font-weight\s*:\s*(bold|[6-9]00)/.test(st)){auf+="<b>";zu="</b>"+zu;}
+      if(/font-style\s*:\s*italic/.test(st)){auf+="<i>";zu="</i>"+zu;}
+      if(/text-decoration[^;]*line-through/.test(st)){auf+="<s>";zu="</s>"+zu;}
+      if(/text-decoration[^;]*underline/.test(st)){auf+="<u>";zu="</u>"+zu;}
+      return auf+inhalt+zu;
+    });
+    if(h===vorher) break;
+  }
+  const erlaubt=["p","br","ul","ol","li","b","i","s","u","h3","strong","em","strike","a"];
+  h=h.replace(/<\/?([a-z0-9]+)([^>]*)>/gi,(m,tag,attr)=>{
+    const t=tag.toLowerCase();
+    if(!erlaubt.includes(t)) return "";
+    if(m[1]==="/") return "</"+t+">";
+    if(t==="a"){const href=(attr.match(/href\s*=\s*"([^"]*)"/i)||[])[1];
+      return href&&/^https?:/i.test(href)?'<a href="'+href.replace(/"/g,"")+'">':"";}
+    return "<"+t+">";
+  });
+  h=entziffernSicher(h).replace(/\u00a0/g," ");
+  h=h.replace(/<p>\s*<\/p>/gi,"").replace(/(<br>\s*){3,}/gi,"<br><br>");
+  return h.trim();
+}
+const textZuHtml=t=>String(t||"").split("\n")
+  .map(z=>z.trim()?"<p>"+esc(z)+"</p>":"<p><br></p>").join("").replace(/(<p><br><\/p>){3,}/g,"<p><br></p>");
+
+/* Eine Takeout-Datei auswerten, egal ob JSON oder HTML */
+function keepLesen(name,inhalt){
+  if(/\.json$/i.test(name)){
+    let d; try{ d=JSON.parse(inhalt); }catch(e){ return {fehler:"kein gültiges JSON"}; }
+    if(!d||typeof d!=="object") return {fehler:"unerwarteter Inhalt"};
+    return {
+      quelle:"json", datei:name,
+      titel:String(d.title||"").trim(),
+      html:d.textContentHtml?keepSaeubern(d.textContentHtml):textZuHtml(d.textContent),
+      text:String(d.textContent||""),
+      liste:Array.isArray(d.listContent)?d.listContent.map(x=>({t:String(x.text||"").trim(),ab:!!x.isChecked})).filter(x=>x.t):[],
+      etiketten:(d.labels||[]).map(l=>String(l.name||"").trim()).filter(Boolean),
+      archiviert:!!d.isArchived, geloescht:!!d.isTrashed, gepinnt:!!d.isPinned,
+      erstellt:Math.round((d.createdTimestampUsec||0)/1000)||Date.now(),
+      geaendert:Math.round((d.userEditedTimestampUsec||d.createdTimestampUsec||0)/1000)||Date.now(),
+      anhaenge:(d.attachments||[]).length
+    };
+  }
+  /* HTML-Rückfall, falls kein JSON zu einer Notiz vorliegt */
+  const titel=entziffern((inhalt.match(/<div class="title">([\s\S]*?)<\/div>/)||[])[1]||"").replace(/<[^>]+>/g,"").trim();
+  const körper=(inhalt.match(/<div class="content">([\s\S]*?)<\/div>\s*(?:<div class="chips">|<\/div>)/)||[])[1]||"";
+  const listePunkte=keepListeAusHtml(körper);
+  const etiketten=[...inhalt.matchAll(/<span class="label-name">([\s\S]*?)<\/span>/g)].map(m=>entziffern(m[1]).trim());
+  const datum=(inhalt.match(/<div class="heading">[\s\S]*?(\d{2}\.\d{2}\.\d{4}),\s*(\d{2}:\d{2}:\d{2})/)||[]);
+  let zeit=Date.now();
+  if(datum[1]){const [t,m,j]=datum[1].split(".");zeit=new Date(+j,+m-1,+t,...(datum[2]||"12:00:00").split(":").map(Number)).getTime();}
+  return {
+    quelle:"html", datei:name, titel,
+    html:listePunkte.length?"":keepSaeubern(körper),
+    text:entziffern(körper.replace(/<br>/gi,"\n").replace(/<[^>]+>/g," ")),
+    liste:listePunkte, etiketten,
+    archiviert:/class="archived"/.test(inhalt), geloescht:/class="trashed"/.test(inhalt),
+    gepinnt:/class="pinned"/.test(inhalt),
+    erstellt:zeit, geaendert:zeit, anhaenge:(inhalt.match(/class="attachments"/g)||[]).length
+  };
+}
+
+/* Keep exportiert Checklisten als <li class="listitem"> mit ☐ oder ☑ */
+function keepListeAusHtml(körper){
+  if(!/class="listitem/.test(körper||"")) return [];
+  return [...String(körper).matchAll(/<li class="listitem([^"]*)"[\s\S]*?<span class="text">([\s\S]*?)<\/span>/g)]
+    .map(m=>({
+      t:entziffern(m[2].replace(/<[^>]+>/g," ")).replace(/[\u2610\u2611\u2612]/g,"").replace(/\s+/g," ").trim(),
+      ab:/checked/.test(m[1])
+    })).filter(x=>x.t);
+}
+
+/* Doppelte Dateien: JSON schlägt HTML, gleicher Name zählt einmal */
+function keepBuendeln(dateien){
+  const nachName={};
+  dateien.forEach(d=>{
+    const basis=d.name.replace(/\.(json|html)$/i,"");
+    if(!nachName[basis]||/\.json$/i.test(d.name)) nachName[basis]=d;
+  });
+  return Object.values(nachName);
+}
+
+/* ---------- Oberfläche ---------- */
+let keepStand=null;
+const keepOpt={archivMit:false,listenAlsAufgaben:true,etikettenAlsListen:true};
+
+function keepImport(){
+  keepStand=null;
+  openSheet(keepMaske());
+  const f=document.getElementById("keepwahl");
+  if(f){ f.value=""; f.onchange=()=>keepDateienLesen(f.files); }
+}
+function keepMaske(){
+  return `<div class="sheet-kopf"><h2>Aus Google Notizen importieren</h2>
+      <button class="btn btn-ghost btn-s" onclick="closeSheet()">✕</button></div>
+    <p class="note" style="margin:6px 0 12px">Lade dein Takeout-Archiv herunter, entpacke es und wähle hier den Inhalt des Ordners <code>Keep</code> aus. Du kannst alle Dateien auf einmal markieren – JSON und HTML gemischt ist kein Problem, die App nimmt jeweils die bessere Fassung.</p>
+    <button class="btn btn-primary btn-wide" onclick="keepWaehlen()">Dateien auswählen</button>
+    <div id="keepbericht" style="margin-top:14px">${keepStand?keepBericht():""}</div>`;
+}
+function keepWaehlen(){ const f=document.getElementById("keepwahl"); if(f&&f.click)f.click(); }
+
+async function keepDateienLesen(dateien){
+  const liste=[...(dateien||[])].filter(f=>/\.(json|html)$/i.test(f.name));
+  if(!liste.length){ alert("Darunter war keine JSON- oder HTML-Datei."); return; }
+  const ziel=document.getElementById("keepbericht");
+  if(ziel) ziel.innerHTML='<p class="note">Wird gelesen …</p>';
+  const roh=[];
+  for(const f of liste){
+    try{ roh.push({name:f.name, inhalt: await f.text()}); }catch(e){}
+  }
+  const gebuendelt=keepBuendeln(roh);
+  const notizen=[], kaputt=[];
+  gebuendelt.forEach(d=>{
+    const n=keepLesen(d.name,d.inhalt);
+    if(n.fehler) kaputt.push(d.name+" ("+n.fehler+")"); else notizen.push(n);
+  });
+  keepStand={gelesen:roh.length,gebuendelt:gebuendelt.length,notizen,kaputt};
+  openSheet(keepMaske(),true);
+}
+function keepAuswahl(){
+  if(!keepStand) return [];
+  return keepStand.notizen.filter(n=>!n.geloescht&&(keepOpt.archivMit||!n.archiviert));
+}
+function keepBericht(){
+  const alle=keepStand.notizen;
+  const genommen=keepAuswahl();
+  const archiviert=alle.filter(n=>n.archiviert&&!n.geloescht).length;
+  const geloescht=alle.filter(n=>n.geloescht).length;
+  const checklisten=genommen.filter(n=>n.liste.length);
+  const offenePunkte=checklisten.reduce((s,n)=>s+n.liste.filter(x=>!x.ab).length,0);
+  const etiketten=[...new Set(genommen.flatMap(n=>n.etiketten))];
+  const neueListen=etiketten.filter(e=>!Object.values(S.kategorien).some(k=>slug(k.n)===slug(e)));
+  const anhaenge=genommen.filter(n=>n.anhaenge).length;
+  const alsNotiz=genommen.length-(keepOpt.listenAlsAufgaben?checklisten.length:0);
+
+  return `<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
+      <b style="font-size:15px">${keepStand.gebuendelt} Notizen gelesen</b>
+      <p class="note" style="margin-top:8px">
+        ${archiviert} archiviert${keepOpt.archivMit?" (werden mitgenommen)":" (werden übersprungen)"}${geloescht?" · "+geloescht+" im Papierkorb, immer übersprungen":""}<br>
+        <b style="color:var(--ink)">${alsNotiz} werden zu Notizen</b>${keepOpt.listenAlsAufgaben&&checklisten.length?`<br><b style="color:var(--ink)">${checklisten.length} Checklisten mit ${offenePunkte} offenen Punkten werden zu Aufgaben</b>`:""}
+        ${neueListen.length?`<br>${neueListen.length} neue Liste${neueListen.length>1?"n":""}: ${neueListen.map(esc).join(", ")}`:""}
+        ${genommen.filter(n=>n.gepinnt).length?`<br>${genommen.filter(n=>n.gepinnt).length} waren angepinnt und bekommen einen Stern vor den Titel.`:""}
+        ${anhaenge?`<br>${anhaenge} Notizen hatten Anhänge – Bilder liegen im Takeout als eigene Dateien und lassen sich nicht mit übernehmen.`:""}
+        ${keepStand.kaputt.length?`<br>Nicht lesbar: ${keepStand.kaputt.slice(0,3).map(esc).join(", ")}`:""}
+      </p></div>
+
+    <label class="fl">Was übernommen wird</label>
+    <div class="chips" style="padding-bottom:4px">
+      <button class="chip" aria-pressed="${!keepOpt.archivMit}" onclick="keepSchalter('archivMit',false)">Ohne Archiv</button>
+      <button class="chip" aria-pressed="${keepOpt.archivMit}" onclick="keepSchalter('archivMit',true)">Archiv mitnehmen</button>
+    </div>
+    <div class="chips" style="padding-bottom:4px">
+      <button class="chip" aria-pressed="${keepOpt.listenAlsAufgaben}" onclick="keepSchalter('listenAlsAufgaben',!keepOpt.listenAlsAufgaben)">Checklisten als Aufgaben</button>
+      <button class="chip" aria-pressed="${keepOpt.etikettenAlsListen}" onclick="keepSchalter('etikettenAlsListen',!keepOpt.etikettenAlsListen)">Etiketten als Listen</button>
+    </div>
+    ${genommen.length?`<div class="sect"><h2>Vorschau</h2><span class="zahl">erste 5</span></div>
+      ${genommen.slice(0,5).map(n=>`<div class="notiz" style="cursor:default">
+        <b>${esc(n.titel||textAus(n.html).slice(0,50)||"Ohne Titel")}</b>
+        <p>${esc(textAus(n.html).slice(0,120)||(n.liste.length?n.liste.length+" Listenpunkte":"Leer"))}</p>
+        <span class="nm">${n.etiketten.map(e=>`<span class="tag">${esc(e)}</span>`).join("")}
+          ${n.liste.length?`<span class="tag tag-akz">${n.liste.length} Punkte</span>`:""}
+          ${n.archiviert?`<span class="tag tag-gold">war archiviert</span>`:""}
+          <span class="mini">${new Date(n.geaendert).toLocaleDateString("de-DE")}</span></span></div>`).join("")}`:
+      `<p class="note" style="margin-top:12px">Nach diesen Regeln bleibt nichts zum Importieren übrig.${!keepOpt.archivMit&&archiviert?" Alle gelesenen Notizen waren archiviert – schalte oben „Archiv mitnehmen“ ein, wenn du sie doch brauchst.":""}</p>`}
+
+    <button class="btn btn-primary btn-wide" style="margin-top:14px" ${genommen.length?"":"disabled"} onclick="keepUebernehmen()">
+      ${genommen.length?"Jetzt importieren":"Nichts zu importieren"}</button>`;
+}
+function keepSchalter(feld,wert){ keepOpt[feld]=wert; openSheet(keepMaske(),true); }
+
+function keepUebernehmen(){
+  const genommen=keepAuswahl();
+  if(!genommen.length) return;
+  /* Etiketten zu Listen machen */
+  const listeFuer={};
+  if(keepOpt.etikettenAlsListen){
+    [...new Set(genommen.flatMap(n=>n.etiketten))].forEach(e=>{
+      const da=Object.entries(S.kategorien).find(([,k])=>slug(k.n)===slug(e));
+      if(da){ listeFuer[e]=da[0]; return; }
+      const id="k"+id6(), pos=Object.keys(S.kategorien).length;
+      setPfad(S,"kategorien/"+id,{n:e,f:FARBEN[pos%FARBEN.length],art:"beides",pos});
+      listeFuer[e]=id;
+    });
+  }
+  /* Doppelte am Titel und Erstellzeitpunkt erkennen */
+  const vorhanden=new Set(Object.values(S.notizen||{}).map(n=>slug(n.titel||"")+"|"+(n.erstellt||0)));
+  let notizen=0, aufgaben=0, uebersprungen=0;
+  genommen.forEach(n=>{
+    const katId=listeFuer[n.etiketten[0]]||null;
+    if(keepOpt.listenAlsAufgaben&&n.liste.length){
+      const offene=n.liste.filter(x=>!x.ab);
+      offene.forEach(x=>{
+        setPfad(S,"aufgaben/a"+id6(),{t:x.t,wann:null,kat:katId,fertig:null,
+          erstellt:n.erstellt,pos:naechstePos(),notiz:n.titel?("Aus Google Notizen: "+n.titel):null});
+        aufgaben++;
+      });
+      if(offene.length) return;
+    }
+    const schluessel=slug(n.titel||"")+"|"+n.erstellt;
+    if(vorhanden.has(schluessel)){ uebersprungen++; return; }
+    vorhanden.add(schluessel);
+    let html=n.html;
+    if(n.liste.length) html=(html||"")+"<ul>"+n.liste.map(x=>"<li>"+(x.ab?"<s>":"")+esc(x.t)+(x.ab?"</s>":"")+"</li>").join("")+"</ul>";
+    setPfad(S,"notizen/n"+id6(),{
+      titel:(n.gepinnt?"★ ":"")+(n.titel||textAus(html).slice(0,60)||"Ohne Titel"),
+      html:html||"<p><br></p>", kat:katId, art:"frei",
+      archiv:n.archiviert&&keepOpt.archivMit, erstellt:n.erstellt, geaendert:n.geaendert
+    });
+    notizen++;
+  });
+  schreibenLokal();
+  if(basis()) senden("",S);
+  keepStand=null; closeSheet(); go("notizen");
+  hinweis(notizen+" Notizen"+(aufgaben?" und "+aufgaben+" Aufgaben":"")+" importiert"+(uebersprungen?", "+uebersprungen+" doppelte übersprungen":""));
+}
+
 /* ===== Gerüst, Einstellungen, Start ===== */
 const TABS=[
  ["heute","Heute",'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'],
@@ -882,7 +1253,8 @@ function render(){
   const [eb,ti]=TITEL[tab];
   document.getElementById("eyebrow").textContent=eb;
   document.getElementById("titel").textContent=ti;
-  document.getElementById("view").innerHTML={heute:vHeute,woche:vWoche,listen:vListen,notizen:vNotizen,mehr:vMehr}[tab]();
+  const inhalt={heute:vHeute,woche:vWoche,listen:vListen,notizen:vNotizen,mehr:vMehr}[tab]();
+  document.getElementById("view").innerHTML=(tab==="notizen"||tab==="mehr"?hinweisLeiste():"")+inhalt;
   nav();
 }
 function openSheet(html,behalten){
@@ -949,6 +1321,10 @@ function vMehr(){
       <p class="note" style="margin-top:11px">Beim ersten Verbinden werden beide Stände zusammengeführt: Was es nur auf einem Gerät gibt, bleibt erhalten; bei gleichen Einträgen gewinnt der jüngere. „Diesen Stand hochladen“ brauchst du deshalb nur, wenn du bewusst überschreiben willst.</p>
       <p class="note" style="margin-top:8px">Du kannst dasselbe Firebase-Projekt wie beim Küchenplan nutzen. Nimm aber einen <b>eigenen Code</b>, sonst vermischen sich die Daten beider Apps. Die vorhandenen Regeln passen unverändert.</p>
     </div>
+
+    <div class="sect"><h2>Umzug aus Google Notizen</h2></div>
+    <button class="btn btn-wide" onclick="keepImport()">Google-Notizen-Export einlesen</button>
+    <p class="note" style="margin-top:9px">Takeout-Archiv entpacken, Ordner „Keep“ auswählen. Archivierte Notizen bleiben außen vor, Etiketten werden zu Listen und Checklisten wahlweise zu Aufgaben.</p>
 
     <div class="sect"><h2>Sichern</h2></div>
     <div class="row-btns">
@@ -1022,7 +1398,7 @@ function shareAufnehmen(){
   if(!url&&!titel&&!text) return false;
   history.replaceState({},"",location.pathname);
   const inhalt=[titel,text,url].filter(Boolean).join("\n");
-  openSheet(`<div class="grab"></div><h2 style="font-size:19px">Geteiltes übernehmen</h2>
+  openSheet(`<div class="sheet-kopf"><h2>Geteiltes übernehmen</h2><button class="btn btn-ghost btn-s" onclick="closeSheet()">✕</button></div>
     <p class="note" style="margin:8px 0 12px">Als schnelle Aufgabe oder als Notiz mit dem vollen Text.</p>
     <textarea id="geteilt" rows="5">${esc(inhalt)}</textarea>
     <button class="btn btn-primary btn-wide" style="margin-top:10px" onclick="geteiltAlsAufgabe()">Als Aufgabe</button>
