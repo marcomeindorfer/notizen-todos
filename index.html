@@ -148,6 +148,7 @@ header h1{font-size:27px}
 .aktionen .ak-rot{color:var(--rot);border-color:color-mix(in srgb,var(--rot) 32%,var(--line-2))}
 .aktionen .ak-an{background:color-mix(in srgb,var(--akz) 12%,var(--card));color:var(--akz);border-color:var(--akz)}
 .fertig-knopf{margin-top:14px}
+.btn svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 /* Ziehen: Ablegezonen und Notizstreifen auf Heute */
 .zieht{pointer-events:none}
 [data-drop].drop-an{outline:2px dashed var(--akz);outline-offset:3px;border-radius:var(--r-s);background:color-mix(in srgb,var(--akz) 7%,transparent)}
@@ -1238,10 +1239,10 @@ function notizOeffnen(id){
       <button onclick="bildEinfuegen()" title="Bild einfügen">Bild</button>
     </div>
     <div class="editor" id="edit" contenteditable="true" data-leer="Schreib los …" oninput="notizMerken()">${sauberHtml(n.html)}</div>
-    <button class="btn btn-primary btn-wide fertig-knopf" onclick="notizSchliessen()">${ICON_FERTIG}&nbsp;Fertig</button>
+    <button class="btn btn-primary btn-wide fertig-knopf" onclick="notizSchliessen()">Fertig</button>
     <div class="aktionen">
       <button onclick="notizTeilen('${id}')">${ICON_TEILEN}Teilen</button>
-      <button class="${n.oben?"ak-an":"ak-akz"}" onclick="mut('notizen/${id}/oben',${!n.oben},false);notizOeffnen('${id}')">${ICON_NADEL}${n.oben?"Gelöst lassen":"Anheften"}</button>
+      <button class="${n.oben?"ak-an":"ak-akz"}" onclick="mut('notizen/${id}/oben',${!n.oben},false);notizOeffnen('${id}')">${ICON_NADEL}${n.oben?"Lösen":"Anheften"}</button>
       <button class="ak-gold" onclick="notizArchiv('${id}')">${ICON_ARCHIV}${n.archiv?"Zurückholen":"Archivieren"}</button>
       <button class="ak-rot" onclick="notizLoeschenAusEditor('${id}')">${ICON_WEG_N}Löschen</button>
     </div>
