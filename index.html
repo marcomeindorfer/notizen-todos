@@ -136,6 +136,29 @@ header h1{font-size:27px}
 .btn-s{padding:7px 11px;font-size:14px;border-radius:8px}
 .btn-ghost{background:transparent;border-color:transparent;color:var(--ink-3)}
 .row-btns{display:flex;gap:8px;flex-wrap:wrap}
+/* Aktionsleiste in Blättern: Symbol plus Wort, damit die Knöpfe unterscheidbar sind */
+.aktionen{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px;margin-top:14px}
+.aktionen button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  min-height:60px;padding:9px 4px;border:1px solid var(--line-2);border-radius:12px;background:var(--card);
+  color:var(--ink-2);font-size:12px;line-height:1.15;text-align:center}
+.aktionen button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.aktionen button:active{transform:scale(.97)}
+.aktionen .ak-akz{color:var(--akz);border-color:color-mix(in srgb,var(--akz) 32%,var(--line-2))}
+.aktionen .ak-gold{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 32%,var(--line-2))}
+.aktionen .ak-rot{color:var(--rot);border-color:color-mix(in srgb,var(--rot) 32%,var(--line-2))}
+.aktionen .ak-an{background:color-mix(in srgb,var(--akz) 12%,var(--card));color:var(--akz);border-color:var(--akz)}
+.fertig-knopf{margin-top:14px}
+/* Ziehen: Ablegezonen und Notizstreifen auf Heute */
+.zieht{pointer-events:none}
+[data-drop].drop-an{outline:2px dashed var(--akz);outline-offset:3px;border-radius:var(--r-s);background:color-mix(in srgb,var(--akz) 7%,transparent)}
+.morgenzone{min-height:52px;border:1px dashed var(--line-2);border-radius:var(--r-s);padding:6px;margin-bottom:10px}
+.morgenzone .leer{padding:12px 8px;text-align:center}
+.notizspur{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch}
+.nspur{flex:0 0 auto;width:170px;text-align:left;background:var(--card);border:1px solid var(--line);
+  border-left:3px solid var(--line-2);border-radius:var(--r-s);padding:10px 11px;min-height:64px}
+.nspur b{display:block;font-size:14px;font-weight:650;margin-bottom:3px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nspur span{font-size:12px;color:var(--ink-3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--card-2);color:var(--ink-2);white-space:nowrap}
 .tag-akz{background:var(--akz-bg);color:var(--akz)}
 .tag-gold{background:var(--gold-bg);color:var(--gold)}
@@ -567,9 +590,30 @@ function dndGriff(ev,containerId,art){
   griff.onpointerup=dndLoslassen;
   griff.onpointercancel=dndLoslassen;
 }
+/* Nach oben suchen, aber begrenzt – oberhalb des Körpers gibt es kein getAttribute mehr */
+function elternMit(el,attr,tiefe=12){
+  let n=el, i=0;
+  while(n&&typeof n.getAttribute==="function"&&!n.getAttribute(attr)&&i++<tiefe) n=n.parentNode;
+  return (n&&typeof n.getAttribute==="function"&&n.getAttribute(attr))?n:null;
+}
+function dropZoneAn(x,y){
+  if(!document.elementFromPoint) return null;
+  const el=document.elementFromPoint(x,y);
+  return el?elternMit(el,"data-drop"):null;
+}
 function dndBewegen(ev){
   const z=dndZustand; if(!z) return;
   z.zeile.style.transform="translateY("+(ev.clientY-z.startY)+"px)";
+  if(z.art==="aufgabe"){
+    const zone=dropZoneAn(ev.clientX,ev.clientY);
+    const wann=zone?zone.getAttribute("data-drop"):null;
+    const eigen=S.aufgaben[z.zeile.getAttribute("data-dnd")];
+    const fremd=zone&&eigen&&wann!==(eigen.wann||"");
+    if(z.zone&&z.zone!==zone) z.zone.classList.remove("drop-an");
+    z.zone=fremd?zone:null;
+    z.dropWann=fremd?wann:null;
+    if(z.zone) z.zone.classList.add("drop-an");
+  }
   const ohne=z.kinder.filter((_,i)=>i!==z.index);
   const rects=z.rects.filter((_,i)=>i!==z.index);
   let ziel=rects.filter(r=>(r.top+r.height/2)<ev.clientY).length;
@@ -586,6 +630,18 @@ function dndLoslassen(){
   dndZustand=null;
   z.zeile.style.transform="";
   z.kinder.forEach(k=>k.classList.remove("zieht","abwurf-vor","abwurf-nach"));
+  if(z.zone) z.zone.classList.remove("drop-an");
+  /* In eine fremde Ablegezone gezogen: Termin ändern statt umsortieren */
+  if(z.art==="aufgabe"&&z.dropWann!=null){
+    const id=z.zeile.getAttribute("data-dnd"), a=S.aufgaben[id];
+    if(a){
+      const vorher=a.wann;
+      verschieben(id,z.dropWann||null);
+      hinweis(a.t.slice(0,40)+" → "+(z.dropWann?datumText(z.dropWann):"ohne Termin"),
+              "Rückgängig",()=>mut("aufgaben/"+id+"/wann",vorher));
+      return;
+    }
+  }
   const ids=z.kinder.map(k=>k.getAttribute("data-dnd"));
   const gezogen=ids.splice(z.index,1)[0];
   ids.splice(z.ziel,0,gezogen);
@@ -595,6 +651,17 @@ function dndLoslassen(){
 /* Neue Reihenfolge festschreiben: gleichmäßige Abstände, damit später Platz zum Einschieben bleibt */
 function dndUebernehmen(ids,art){
   const feld=art==="notiz"?"notizen":"aufgaben";
+  /* Notizen stehen bei Zeitsortierung in mehreren Kästen. Damit die neue Ordnung
+     global stimmt, wird der Abschnitt in die vollständige Anzeigereihenfolge zurückgeschrieben. */
+  if(art==="notiz"&&document.querySelectorAll){
+    const alle=[...document.querySelectorAll('.notizreihe[data-dnd]')].map(k=>k.getAttribute("data-dnd"));
+    const start=alle.indexOf(ids[0]!==undefined?alle.find(x=>ids.includes(x)):null);
+    if(start>=0){
+      const vorher=alle.filter(x=>!ids.includes(x));
+      const kopf=alle.slice(0,start).filter(x=>!ids.includes(x));
+      ids=kopf.concat(ids,vorher.slice(kopf.length));
+    }
+  }
   const start=Date.now()*100;
   ids.forEach((id,i)=>{ if(S[feld][id]) setPfad(S,feld+"/"+id+"/pos",start+i*10); });
   if(art==="notiz") S.einst.notizSort="eigen";
@@ -623,6 +690,9 @@ function bestaetigungAb(){ bestaetigungFn=null; closeSheet(); }
 
 const ICON_STIFT='<svg viewBox="0 0 24 24"><path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17z"/><path d="M13.5 6.5l4 4"/></svg>';
 const ICON_WEG='<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>';
+const ICON_KOPIE='<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/></svg>';
+const ICON_TEILEN='<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg>';
+const ICON_FERTIG='<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 const ICON_WDH='<svg viewBox="0 0 24 24"><path d="M4 11a8 8 0 0 1 13.7-5.7L20 7"/><path d="M20 4v3h-3"/><path d="M20 13a8 8 0 0 1-13.7 5.7L4 17"/><path d="M4 20v-3h3"/></svg>';
 
 function aufZeile(a,opt={}){
@@ -637,26 +707,26 @@ function aufZeile(a,opt={}){
     else meta.push(`<span class="mini ${spaet?"spaet":""}">${spaet?"seit ":""}${datumText(a.wann)}</span>`);
   }
   if(a.wdh) meta.push(`<span class="mini">${WDH[a.wdh]}</span>`);
-  const griff=opt.sort?`<button class="griff" onpointerdown="dndGriff(event,'${opt.box}','aufgabe')" aria-label="Verschieben">${GRIFF}</button>`:"";
-  return `<div class="auf ${a.fertig?"fertig":""} ${spaet&&!a.fertig?"ueber":""}" data-dnd="${a.id}">
-    <button class="hak" id="hak_${a.id}" onclick="haken('${a.id}')" aria-label="${a.fertig?"Wieder öffnen":"Erledigt"}">
+  /* Der Griff ist immer da – Ziehen soll ohne Umschalten funktionieren.
+     Die ganze Zeile öffnet die Bearbeitung; Haken und Griff halten das Ereignis auf. */
+  const griff=opt.sort?`<button class="griff" onpointerdown="dndGriff(event,'${opt.box}','aufgabe')" onclick="event.stopPropagation()" aria-label="Verschieben">${GRIFF}</button>`:"";
+  return `<div class="auf ${a.fertig?"fertig":""} ${spaet&&!a.fertig?"ueber":""}" data-dnd="${a.id}" onclick="aufgabeOeffnen('${a.id}')">
+    <button class="hak" id="hak_${a.id}" onclick="event.stopPropagation();haken('${a.id}')" aria-label="${a.fertig?"Wieder öffnen":"Erledigt"}">
       <svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9"/></svg></button>
-    <div class="auf-txt" onclick="aufgabeOeffnen('${a.id}')">${esc(a.t)}
+    <div class="auf-txt">${esc(a.t)}
       ${meta.length?`<div class="auf-meta">${meta.join("")}</div>`:""}
       ${a.notiz?`<div class="auf-notiz">${esc(a.notiz)}</div>`:""}</div>
-    ${griff||`<span class="auf-akt">
-      <button onclick="aufgabeOeffnen('${a.id}')" aria-label="Bearbeiten">${ICON_STIFT}</button>
-      <button class="weg" onclick="aufgabeLoeschenFragen('${a.id}')" aria-label="Löschen">${ICON_WEG}</button></span>`}
+    ${griff}
   </div>`;
 }
 /* Eine Liste mit optionalen Sortierpfeilen ausgeben */
 let boxZaehler=0;
 function aufListeHtml(liste,opt={}){
   const box="box"+(++boxZaehler);
-  const zieh=sortAn&&liste.length>1;
+  const zieh=liste.length>0;
   return `<div id="${box}">`+liste.map(a=>aufZeile(a,{...opt,sort:zieh,box})).join("")+`</div>`;
 }
-const sortKnopf=()=>`<button class="btn btn-s${sortAn?" btn-primary":""}" onclick="sortAn=!sortAn;render()">${sortAn?"Sortieren beenden":"Sortieren"}</button>`;
+/* Der frühere Knopf „Sortieren“ ist entfallen: gezogen wird immer. */
 
 function schnellFeld(vorgabeWann,vorgabeKat){
   return `<div class="schnell">
@@ -672,6 +742,34 @@ function neuAnlegen(wann,katId){
   aufgabeAnlegen(t,wann||null,katId||null);
   /* Fokus zurückholen, damit man mehrere Aufgaben am Stück eintippen kann */
   const neu=document.getElementById("neu"); if(neu&&neu.focus)neu.focus();
+}
+
+/* ---------- Heute: schneller Zugriff auf Notizen ---------- */
+function heuteNotizen(){
+  const alle=Object.entries(S.notizen||{}).map(([id,n])=>({...n,id})).filter(n=>!n.archiv);
+  if(!alle.length) return "";
+  const zeit=n=>Math.max(n.geoeffnet||0,n.geaendert||0,n.erstellt||0);
+  const oben=alle.filter(n=>n.oben).sort((a,b)=>zeit(b)-zeit(a));
+  const rest=alle.filter(n=>!n.oben).sort((a,b)=>zeit(b)-zeit(a));
+  const liste=oben.concat(rest).slice(0,5);
+  return `<div class="sect"><h2>Notizen</h2><span class="zahl">${oben.length?oben.length+" angeheftet":"zuletzt genutzt"}</span>
+      <button class="btn btn-s" onclick="go('notizen')">Alle</button></div>
+    <div class="notizspur">${liste.map(n=>{
+      const k=n.kat?kat(n.kat):null;
+      return `<button class="nspur" onclick="notizOeffnen('${n.id}')" style="border-left-color:${k?k.f:"var(--line-2)"}">
+        <b>${n.oben?'<span style="color:var(--akz)">▲ </span>':""}${esc(n.titel||"Ohne Titel")}</b>
+        <span>${esc(textAus(n.html).slice(0,70)||"Leer")}</span></button>`;}).join("")}</div>`;
+}
+
+/* ---------- Heute: Vorschau auf morgen, zugleich Ablegezone ---------- */
+function morgenBlock(){
+  const m=morgen();
+  const liste=sortiert(aufListe().filter(a=>!a.fertig&&a.wann===m));
+  return `<div class="sect"><h2>Morgen</h2><span class="zahl">${liste.length}</span>
+      <button class="btn btn-s" onclick="schnellFuer('${m}')">Eintragen</button></div>
+    <div class="morgenzone" data-drop="${m}">
+      ${liste.length?aufListeHtml(liste):`<div class="leer">Noch nichts. Zieh eine Aufgabe am Griff hierher.</div>`}
+    </div>`;
 }
 
 /* ---------- Heute ---------- */
@@ -694,8 +792,11 @@ function vHeute(){
 
   return hinweisLeiste() + bogen + `<div style="margin-top:14px"></div>` + schnellFeld(heute(),null)
     + teil("Überfällig",ueberfaellig,{datum:true})
-    + (faellig.length?`<div class="sect"><h2>Für heute</h2><span class="zahl">${faellig.length}</span>${faellig.length>1?sortKnopf():""}</div>${aufListeHtml(faellig)}`:"")
+    + (faellig.length?`<div class="sect"><h2>Für heute</h2><span class="zahl">${faellig.length}</span></div>
+        <div data-drop="${heute()}">${aufListeHtml(faellig)}</div>`:`<div data-drop="${heute()}"></div>`)
     + nichts
+    + morgenBlock()
+    + heuteNotizen()
     + (fertig.length?`<div class="sect"><h2>Heute geschafft</h2><span class="zahl">${fertig.length}</span></div>
        ${fertig.map(a=>aufZeile(a,{})).join("")}
        <p class="note" style="margin-top:6px">Verschwindet um Mitternacht von allein.</p>`:"");
@@ -729,7 +830,7 @@ function vWoche(){
 
   const erledigtGes=alle.filter(a=>a.fertig&&tage.includes(a.wann)).length;
   return hinweisLeiste() + kopf
-    + `<div class="row-btns" style="margin-bottom:10px">${sortKnopf()}
+    + `<div class="row-btns" style="margin-bottom:10px">
         <button class="btn btn-s" onclick="wocheFertig=!wocheFertig;render()">${wocheFertig?"Erledigte ausblenden":"Erledigte einblenden"}${erledigtGes?" ("+erledigtGes+")":""}</button></div>`
     + bloecke
     + `<div class="sect"><h2>Diese Woche, ohne festen Tag</h2><span class="zahl">${wocheOffen.length}</span></div>`
@@ -760,8 +861,7 @@ function vListen(){
       ${k?`<i class="punkt" style="background:${k.f}"></i>`:""}
       <b>${k?esc(k.n):"Alle Listen"}</b>
       <span class="anz">${k?offenZahl(katFilter):alle.filter(a=>ohneDatum(a)).length} offen</span>
-      <span class="pfeil">▾</span></button>
-    ${sortKnopf()}</div>`;
+      <span class="pfeil">▾</span></button></div>`;
   const zeigen=katsSortiert.filter(([id])=>katFilter==="alle"||katFilter===id);
   const bloecke=zeigen.map(([id,k])=>{
     const drin=sortiert(alle.filter(a=>ohneDatum(a)&&a.kat===id));
@@ -850,10 +950,10 @@ function aufgabeOeffnen(id){
       <label class="fl" for="anotiz">Notiz dazu</label>
       <textarea id="anotiz" rows="3" placeholder="Details, Telefonnummer, Link …"
         oninput="mut('aufgaben/${id}/notiz',this.value.trim()||null,false)">${esc(b.notiz||"")}</textarea>
-      <div class="row-btns" style="margin-top:14px">
-        <button class="btn btn-primary" style="flex:1" onclick="closeSheet()">Fertig</button>
-        <button class="btn" onclick="verdoppeln('${id}')">Duplizieren</button>
-        <button class="btn" onclick="aufgabeLoeschenFragen('${id}',true)">Löschen</button>
+      <button class="btn btn-primary btn-wide fertig-knopf" onclick="closeSheet()">Fertig</button>
+      <div class="aktionen">
+        <button class="ak-akz" onclick="verdoppeln('${id}')">${ICON_KOPIE}Duplizieren</button>
+        <button class="ak-rot" onclick="aufgabeLoeschenFragen('${id}',true)">${ICON_WEG}Löschen</button>
       </div>`;
   };
   openSheet(body(),true);
@@ -908,7 +1008,7 @@ function katLoeschen(id){
 }
 
 /* ===== Notizen ===== */
-const NOTIZ_ARTEN={
+const NOTIZ_ARTEN_ENTFALLEN={
   frei:{n:"Leer",v:""},
   karte:{n:"Kartentext",v:"<p>Liebe/r …</p><p><br></p><p><br></p><p>Alles Liebe,<br>Marco</p>"},
   buch:{n:"Buch oder Podcast",v:"<h3>Quelle</h3><p>Titel, Autor, Folge</p><h3>Kernaussagen</h3><ul><li>&nbsp;</li></ul><h3>Zitate</h3><ul><li>&nbsp;</li></ul><h3>Was ich mitnehme</h3><p>&nbsp;</p>"},
@@ -1010,7 +1110,7 @@ function notizFilterZeile(){
   return `<button class="filterknopf" onclick="notizFilterWaehlen()">
       ${k?`<i class="punkt" style="background:${k.f}"></i>`:""}
       <b>${k?esc(k.n):"Alle Listen"}</b><span class="anz">${status} · ${anz} · ${sortKurz}</span><span class="pfeil">▾</span></button>
-    <button class="btn btn-s${sortAn?" btn-primary":""}" onclick="sortAn=!sortAn;render()" aria-label="Sortieren">${sortAn?"Fertig":"Sortieren"}</button>`;
+    `;
 }
 function notizAuswahl(){
   const treffer=notizenSuchen(notizSuche,notizFilter);
@@ -1021,7 +1121,7 @@ function notizTreffer(){
   if(!liste.length) return `<div class="leerzustand"><b>${notizSuche?"Nichts gefunden":(notizFilter==="archiv"?"Archiv ist leer":"Noch keine Notiz")}</b>
     ${notizSuche?"Andere Begriffe probieren, oder oben auf „Überall“ stellen, um das Archiv einzubeziehen.":"Mit dem Plus oben rechts legst du eine an."}</div>`;
   /* Bei eigener Reihenfolge oder Suche keine Zeitgruppen, sonst würde die Ordnung zerfallen */
-  const gruppieren=!notizSuche&&notizSortierung()!=="eigen"&&!sortAn;
+  const gruppieren=!notizSuche&&notizSortierung()!=="eigen";
   if(!gruppieren) return `<div id="nbox">`+liste.map(notizKarte).join("")+`</div>`;
   let letzte="", raus="";
   liste.forEach(n=>{
@@ -1036,7 +1136,7 @@ function notizKarte(n){
   const box=notizSuche?"nbox":("nbox_"+slug(zeitGruppe(n)));
   const bild=/<img/i.test(n.html||"");
   return `<div class="notizreihe" data-dnd="${n.id}" style="border-left-color:${k?k.f:"var(--line-2)"}">
-    ${sortAn?`<button class="griff" onpointerdown="dndGriff(event,'${box}','notiz')" aria-label="Verschieben">${GRIFF}</button>`:""}
+    <button class="griff" onpointerdown="dndGriff(event,'${box}','notiz')" aria-label="Verschieben">${GRIFF}</button>
     <button class="notiz" onclick="notizOeffnen('${n.id}')">
       <b>${n.oben?'<span style="color:var(--akz)">▲ </span>':""}${esc(n.titel||"Ohne Titel")}</b>
       <p>${notizSuche?ausschnitt(n,notizSuche):esc(textAus(n.html).slice(0,150)||"Leer")}</p>
@@ -1045,7 +1145,7 @@ function notizKarte(n){
         ${bild?`<span class="tag">Bild</span>`:""}
         <span class="mini">${new Date(n.geaendert||n.erstellt||Date.now()).toLocaleDateString("de-DE")}</span></span>
     </button>
-    ${sortAn?"":`<span class="notiz-akt">
+    ${`<span class="notiz-akt">
       <button onclick="notizAnheften('${n.id}')" aria-label="${n.oben?"Lösen":"Anheften"}" style="${n.oben?"color:var(--akz)":""}">${ICON_NADEL}</button>
       <button onclick="notizArchivListe('${n.id}')" aria-label="${n.archiv?"Zurückholen":"Archivieren"}">${ICON_ARCHIV}</button>
       <button onclick="notizLoeschenFragen('${n.id}')" aria-label="Löschen">${ICON_WEG_N}</button></span>`}
@@ -1101,17 +1201,14 @@ function notizLoeschenFragen(id){
 }
 
 /* ---------- Anlegen ---------- */
-function notizNeu(){
-  openSheet(`<div class="sheet-kopf"><h2>Neue Notiz</h2><button class="btn btn-ghost btn-s" onclick="closeSheet()">✕</button></div>
-    <p class="note" style="margin:8px 0 12px">Eine Vorlage spart das Sortieren hinterher.</p>
-    ${Object.entries(NOTIZ_ARTEN).map(([id,a])=>`<button class="btn btn-wide" style="margin-bottom:7px;text-align:left" onclick="notizAnlegen('${id}')">${a.n}</button>`).join("")}
-    <button class="btn btn-wide btn-ghost" style="margin-top:6px" onclick="closeSheet()">Abbrechen</button>`);
-}
-function notizAnlegen(art){
+/* Vorlagen sind entfallen: eine neue Notiz startet immer leer. */
+function notizNeu(){ notizAnlegen(); }
+function notizAnlegen(){
   const id="n"+id6();
-  mut("notizen/"+id,{titel:"",html:NOTIZ_ARTEN[art].v,kat:katFilter!=="alle"?katFilter:null,
-    art,archiv:false,erstellt:Date.now(),geaendert:Date.now(),pos:naechstePos()},false);
+  mut("notizen/"+id,{titel:"",html:"",kat:katFilter!=="alle"?katFilter:null,
+    art:"frei",archiv:false,erstellt:Date.now(),geaendert:Date.now(),pos:naechstePos()},false);
   closeSheet(); notizOeffnen(id);
+  setTimeout(()=>{const t=document.getElementById("ntitel"); if(t&&t.focus)t.focus();},80);
 }
 
 /* ---------- Editor ---------- */
@@ -1141,12 +1238,12 @@ function notizOeffnen(id){
       <button onclick="bildEinfuegen()" title="Bild einfügen">Bild</button>
     </div>
     <div class="editor" id="edit" contenteditable="true" data-leer="Schreib los …" oninput="notizMerken()">${sauberHtml(n.html)}</div>
-    <div class="row-btns" style="margin-top:14px">
-      <button class="btn btn-primary" style="flex:1" onclick="notizSchliessen()">Fertig</button>
-      <button class="btn" onclick="notizTeilen('${id}')">Teilen</button>
-      <button class="btn" onclick="mut('notizen/${id}/oben',${!n.oben},false);notizOeffnen('${id}')">${n.oben?"Lösen":"Anheften"}</button>
-      <button class="btn" onclick="notizArchiv('${id}')">${n.archiv?"Zurückholen":"Archivieren"}</button>
-      <button class="btn" onclick="notizLoeschenAusEditor('${id}')">Löschen</button>
+    <button class="btn btn-primary btn-wide fertig-knopf" onclick="notizSchliessen()">${ICON_FERTIG}&nbsp;Fertig</button>
+    <div class="aktionen">
+      <button onclick="notizTeilen('${id}')">${ICON_TEILEN}Teilen</button>
+      <button class="${n.oben?"ak-an":"ak-akz"}" onclick="mut('notizen/${id}/oben',${!n.oben},false);notizOeffnen('${id}')">${ICON_NADEL}${n.oben?"Gelöst lassen":"Anheften"}</button>
+      <button class="ak-gold" onclick="notizArchiv('${id}')">${ICON_ARCHIV}${n.archiv?"Zurückholen":"Archivieren"}</button>
+      <button class="ak-rot" onclick="notizLoeschenAusEditor('${id}')">${ICON_WEG_N}Löschen</button>
     </div>
     <p class="note" style="margin-top:10px" id="nstatus">Wird beim Tippen gespeichert.</p>`);
 }
