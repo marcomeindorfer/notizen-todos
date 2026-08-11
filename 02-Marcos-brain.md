@@ -1,8 +1,8 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 1.8**, Stand 10. August 2026. Datei rund 96 KB, davon 79 KB Skript,
-1449 Zeilen, 108 Funktionen.
+**Version 1.9**, Stand 11. August 2026. Datei rund 106 KB, 1870 Zeilen.
+Die Testreihen unter `tests/` prüfen 151 Punkte, Aufruf mit `./tests/run.sh`.
 
 Voraussetzung: Lies zuerst `00-Grundlagen-und-Infrastruktur.md`.
 
@@ -174,8 +174,20 @@ klein, versal, violett mit feiner Trennlinie – dadurch sieht man die Struktur 
 wäre der Browserspeicher nach etwa zwanzig Fotos voll. Gespeichert wird beim Tippen mit
 600 ms Verzögerung, Zeitstempel steht unter dem Editor.
 
-**Sicherheit:** `sauberHtml()` entfernt `<script>`-Blöcke und alle `on…`-Attribute, bevor
-HTML gespeichert oder angezeigt wird.
+**Sicherheit:** `sauberHtml()` läuft, bevor HTML gespeichert oder angezeigt wird. Es entfernt
+
+- ganze Blöcke, die in einer Notiz nichts zu suchen haben (`script`, `style`, `iframe`,
+  `object`, `embed`, `form`, `meta`, `base` …),
+- alle `on…`-Attribute – auch wenn sie mit `/` oder einem Umbruch statt eines Leerzeichens
+  abgetrennt sind (`<img/onerror=…>` kam vorher durch),
+- Adressen in `href`/`src`, die Code ausführen könnten. Erlaubt bleiben `http`, `https`,
+  `mailto`, `tel`, relative Adressen und eingefügte Bilder als `data:image/…;base64`.
+  Entities werden vor der Prüfung aufgelöst, sonst wäre `java&#115;cript:` erst im Browser
+  wieder ein Schema.
+
+Bis Version 1.8 fehlte alles außer `<script>` und den Leerzeichen-getrennten `on…`-Attributen.
+Der Inhalt kommt aus dem Editor, aus geteilten Seiten und aus dem Google-Import – überall
+kann fremdes HTML mitkommen.
 
 ---
 
@@ -286,4 +298,24 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
 - **`execCommand` ist veraltet.** Funktioniert in Chrome, könnte aber irgendwann
   wegfallen. Ersatz wäre eine eigene Bearbeitungslogik oder eine Bibliothek.
 - **Löschungen können beim Sync zurückkehren** – siehe Grundlagen, Abschnitt 5.
+
+## 12. Was in Version 1.9 behoben wurde
+
+- **Änderungen konnten sich selbst rückgängig machen.** Abhaken, Zurücknehmen, Anheften,
+  Archivieren, Verschieben, Liste wechseln, Wiederholung setzen – all das schrieb nur das
+  einzelne Feld, ohne einen Zeitstempel zu hinterlassen. Beim Zusammenführen gewann dann die
+  *alte* Fassung, weil sie durch ihr `fertig` den jüngeren Stempel trug. Jetzt geht jede
+  Änderung durch `aufAendern()` beziehungsweise `notizAendern()` und führt einen reinen
+  Abgleichsstempel `ts` mit. `geaendert` bleibt dem Inhalt vorbehalten, damit die Sortierung
+  „zuletzt geändert" weiter stimmt. `stempel()` nimmt jetzt den **jüngsten** aller Zeitstempel
+  statt des erstbesten.
+- **Kennungen und Positionen kollidierten unter Last.** `id6()` hatte nur vier Zufallszeichen
+  und `naechstePos()` zählte modulo 100 – bei einem Import mit hunderten Notizen in derselben
+  Millisekunde konnten Einträge einander überschreiben, und die eigene Reihenfolge kippte.
+  Beide zählen jetzt streng aufsteigend.
+- **Der HTML-Bereiniger hatte Lücken** – siehe Abschnitt 5.
+- **Die Warteschlange verlor Daten** und dauerhafte Verbindungsfehler blieben stumm –
+  siehe Grundlagen, Abschnitt 5.
+- **Archiviert/gelöscht/angepinnt** wurden im HTML-Rückfall des Google-Imports nur erkannt,
+  wenn die Klasse allein stand (`class="archived"`, aber nicht `class="note archived"`).
 - Denkbar: Erinnerungen, wiederkehrende Notizvorlagen, Export einzelner Notizen als PDF.

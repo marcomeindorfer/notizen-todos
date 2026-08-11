@@ -180,14 +180,37 @@ Die Liste der gemischten Felder wird **automatisch aus `leer()` abgeleitet**
 Eine handgepflegte Liste hatte `listen`, `extra`, `quellen` und `angebote` vergessen, die
 dadurch bei jedem Abgleich auf leer zurückgesetzt wurden.
 
+### Die Warteschlange (überarbeitet)
+
+Jede Änderung geht durch `einreihen()` in die Warteschlange und von dort der Reihe nach
+über `flush()` zur Datenbank. Drei Eigenschaften, die vorher fehlten und je einen echten
+Datenverlust verursacht haben:
+
+- **Ein Eintrag verlässt die Schlange erst nach bestätigtem Erfolg.** Vorher nahm `flush()`
+  die ganze Schlange heraus; brach die Verbindung beim zweiten Eintrag ab, waren alle
+  folgenden ersatzlos weg.
+- **Je Pfad wartet nur der jüngste Stand.** Vorher stauten sich hunderte überholte Fassungen
+  desselben Pfades, bis der Deckel bei 500 die ältesten verwarf – womöglich noch ungesendete
+  andere Pfade.
+- **Dauerhafte Fehler werden erkannt und gemeldet.** Bei 401/403 (Regeln) oder 404 (falsche
+  URL) hört die App auf zu senden und schreibt den Grund im Klartext unter „Mehr".
+
+### Zeitstempel bei jeder Änderung
+
+Beim Zusammenführen entscheidet der Zeitstempel, welche Fassung gewinnt. Wer nur ein
+einzelnes Feld schreibt, ohne einen zu hinterlassen, macht seine Änderung angreifbar: Die
+alte Fassung kann durch ein anderes Feld (etwa `fertig`) den jüngeren Stempel tragen und
+gewinnen. Deshalb führt **jede** Änderung einen reinen Abgleichsstempel `ts` mit, und
+`stempel()` nimmt den **jüngsten** aller Zeitstempel statt des erstbesten.
+
 ### Selbstheilung
 
 - Bricht die Verbindung ab, wird mit wachsendem Abstand neu versucht, gedeckelt bei
-  30 Sekunden.
+  30 Sekunden – außer bei einem dauerhaften Fehler, da hilft Wiederholen nicht.
 - Alle 30 Sekunden und beim Zurückkehren aus dem Hintergrund prüft `syncPruefen()`.
-- Fehlgeschlagene Schreibvorgänge landen in einer Warteschlange (`queue`) und werden
-  nachgeliefert.
-- Statuswerte: `lokal`, `verbindet`, `live`, `wartet`, `getrennt`.
+- Ereignisse aus der Leitung werden abgesichert gelesen: ein einzelnes kaputtes `put`
+  darf die Verbindung nicht lahmlegen.
+- Statuswerte: `lokal`, `verbindet`, `live`, `wartet`, `getrennt`, `verweigert`, `fehlt`.
 
 ### Bekannte Grenze
 
@@ -265,9 +288,17 @@ Beim Ziehen und Ablegen lief die Suche nach der Zeile bis zum `document`, das ke
 
 ## 7. Wie getestet wird
 
-Es gibt keinen Browser in der Entwicklungsumgebung. Getestet wird mit **Node.js und einem
-nachgebauten Browser**: `localStorage`, `document.getElementById`, `EventSource` und `fetch`
-werden durch Attrappen ersetzt, dann wird der Skriptteil der `index.html` ausgewertet.
+Getestet wird mit einem **nachgebauten Browser**: `localStorage`, `document.getElementById`,
+`EventSource` und `fetch` werden durch Attrappen ersetzt, dann wird der Skriptteil der
+`index.html` ausgewertet. Ausgeführt wird das mit **JavaScriptCore**, das auf jedem Mac unter
+`/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc` liegt – es muss
+nichts installiert werden. Aufruf: `./tests/run.sh`.
+
+**Der nachgebaute Browser ersetzt den echten nicht.** JavaScriptCore hat eine ungültige
+Zeichenklasse in einem regulären Ausdruck anstandslos geschluckt, während Chrome die ganze
+Datei mit einem `SyntaxError` verwarf – die App startete dort überhaupt nicht mehr, obwohl
+alle Prüfungen grün waren. Seitdem prüft eine Testreihe zusätzlich, dass keine wörtlichen
+Steuerzeichen im Quelltext stehen, und am Ende wird die App einmal im Browser geöffnet.
 
 Bewährt haben sich vier Arten von Prüfungen:
 
