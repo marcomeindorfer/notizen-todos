@@ -237,6 +237,36 @@ pre{font-family:var(--mono);font-size:12px;background:var(--card-2);border:1px s
 code{font-family:var(--mono);font-size:12.5px;background:var(--card-2);padding:2px 5px;border-radius:5px;word-break:break-all}
 input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--akz-hell);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Zeilenknöpfe: der kurze Weg in den Tag, ohne die Zeile zu überladen */
+.zeilentakt{display:flex;gap:6px;margin-top:7px}
+.ztakt{border:1px solid var(--line-2);background:var(--card-2);color:var(--ink-2);
+  border-radius:99px;padding:4px 11px;font-size:12px;font-weight:550;min-height:30px}
+.ztakt:active{transform:scale(.96)}
+.mini.liegt{color:var(--gold);font-weight:550}
+
+/* Schnelleingabe in Daumenreichweite: schwebt über der Navigationsleiste */
+.daumen{position:fixed;right:16px;bottom:calc(var(--nav-h) + 14px + env(safe-area-inset-bottom));
+  width:52px;height:52px;border-radius:50%;border:0;background:var(--akz);color:#fff;
+  font-size:26px;line-height:1;display:grid;place-items:center;z-index:41;
+  box-shadow:0 6px 18px rgba(24,16,40,.28)}
+.daumen:active{transform:scale(.94)}
+/* Solange ein Fenster offen ist, hat der Knopf nichts zu suchen */
+#sheet:not(:empty) + .daumen{display:none}
+@media (min-width:700px){.daumen{right:calc(50% - 320px)}}
+
+/* Wochentopf und Rückblick */
+.topfzeile{display:flex;align-items:center;gap:8px;background:var(--card-2);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:10px 12px;margin-bottom:7px;font-size:14.5px}
+.topfzeile .rest{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.rbtag{margin:12px 0 4px;font-size:12px;font-family:var(--mono);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3)}
+.rbzeile{display:flex;gap:8px;align-items:baseline;padding:4px 0;font-size:14px}
+.rbzeile s{color:var(--ink-3)}
+
+/* Verbindung zwischen Aufgabe und Notiz */
+.verweis{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--akz);
+  background:var(--card-2);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
 </style>
 </head>
 <body>
@@ -251,13 +281,14 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 </div>
 <nav id="nav"></nav>
 <div id="sheet"></div>
+<button class="daumen" id="daumen" onclick="daumenKnopf()" aria-label="Neu eintragen">+</button>
 <input type="file" id="bildwahl" accept="image/*" style="display:none">
 <input type="file" id="keepwahl" accept=".json,.html,application/json,text/html" multiple style="display:none">
 <script>
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="1.9";
+const VERSION="2.0";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -316,7 +347,7 @@ const STARTKAT=()=>({
 });
 const leer=()=>({aufgaben:{},notizen:{},kategorien:STARTKAT(),einst:{},version:VERSION});
 let S=leer();
-let cfg={db:"",hid:""};
+let cfg={db:"",hid:"",name:""};
 let tab="heute", es=null, syncState="lokal", queue=[];
 const SYNCTEXT={lokal:"nur auf diesem Gerät",verbindet:"verbindet …",live:"live verbunden",wartet:"wartet auf Verbindung",getrennt:"getrennt, versucht erneut",verweigert:"Zugriff verweigert",fehlt:"Datenbank nicht gefunden"};
 const SYNC_FEHLER={
@@ -324,7 +355,11 @@ const SYNC_FEHLER={
   fehlt:"Unter dieser Datenbank-URL antwortet niemand. Prüft die URL aus der Firebase-Konsole."};
 let katFilter="alle", notizSuche="", notizFilter="aktiv", wochenVersatz=0, offenAuf=null;
 let sortAn=false, aufSuche="", hinweisDaten=null, hinweisTimer=null, wocheFertig=true;
-const WDH={taeglich:"Täglich",woechentlich:"Wöchentlich",monatlich:"Monatlich"};
+const WDH={taeglich:"Täglich",zweitaeglich:"Alle 2 Tage",woechentlich:"Wöchentlich",monatlich:"Monatlich"};
+/* Bei „wöchentlich" darf der Wochentag festliegen, statt sich aus dem Abhaktag zu ergeben. */
+const WDH_SCHRITT={taeglich:1,zweitaeglich:2,woechentlich:7};
+/* Ab so vielen Tagen ohne Termin meldet sich eine gesammelte Aufgabe leise */
+const LIEGT_AB=14;
 
 /* Kurze Rückmeldung mit optionaler Rücknahme, statt Bestätigungsdialoge */
 function hinweis(text,aktionText,aktion){
@@ -567,18 +602,28 @@ function aufgabeAnlegen(rohtext,vorgabeWann,vorgabeKat){
   return id;
 }
 function naechsterTermin(a){
+  if(!a.wdh||(!WDH_SCHRITT[a.wdh]&&a.wdh!=="monatlich")) return null;
   const basis=/^\d{4}-/.test(a.wann||"")?ausIso(a.wann):ausIso(heute());
   const d=new Date(basis);
-  if(a.wdh==="taeglich")d.setDate(d.getDate()+1);
-  else if(a.wdh==="woechentlich")d.setDate(d.getDate()+7);
-  else if(a.wdh==="monatlich")d.setMonth(d.getMonth()+1);
-  else return null;
-  /* Läge der nächste Termin schon wieder in der Vergangenheit, weiterrücken */
-  while(iso(d)<heute()){
-    if(a.wdh==="taeglich")d.setDate(d.getDate()+1);
-    else if(a.wdh==="woechentlich")d.setDate(d.getDate()+7);
-    else d.setMonth(d.getMonth()+1);
+  const weiter=()=>{
+    if(a.wdh==="monatlich"){
+      /* Der 31. darf nicht in den übernächsten Monat rutschen: erst den Monatstag
+         merken, dann auf den letzten gültigen Tag des Zielmonats begrenzen. */
+      const tag=d.getDate();
+      d.setDate(1); d.setMonth(d.getMonth()+1);
+      const letzter=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+      d.setDate(Math.min(tag,letzter));
+    } else d.setDate(d.getDate()+WDH_SCHRITT[a.wdh]);
+  };
+  weiter();
+  /* Fester Wochentag schlägt den Rhythmus, sofern einer gewählt wurde */
+  if(a.wdh==="woechentlich"&&typeof a.wdhTag==="number"){
+    const abstand=(a.wdhTag-((d.getDay()+6)%7)+7)%7;
+    d.setDate(d.getDate()+abstand);
   }
+  /* Läge der nächste Termin schon wieder in der Vergangenheit, weiterrücken */
+  let schutz=0;
+  while(iso(d)<heute()&&schutz++<400) weiter();
   return iso(d);
 }
 function haken(id){
@@ -591,7 +636,9 @@ function haken(id){
   /* Kurz die Feier zeigen, dann erst neu zeichnen */
   const el=document.getElementById("hak_"+id);
   if(el&&el.classList){ el.classList.add("feier"); }
-  aufAendern(id,{fertig:Date.now()},false);
+  /* Wer abgehakt hat, wird nur festgehalten, wenn unter „Mehr" ein Name steht.
+     Ohne Namen bleibt die App wie bisher anonym. */
+  aufAendern(id,{fertig:Date.now(),von:(cfg.name||"").trim()||null},false);
   setTimeout(render,320);
 }
 function verschieben(id,wann){ aufAendern(id,{wann}); }
@@ -770,15 +817,31 @@ function aufZeile(a,opt={}){
     else meta.push(`<span class="mini ${spaet?"spaet":""}">${spaet?"seit ":""}${datumText(a.wann)}</span>`);
   }
   if(a.wdh) meta.push(`<span class="mini">${WDH[a.wdh]}</span>`);
+  /* Was lange ohne Termin im Vorrat liegt, sagt das leise selbst –
+     die ruhige Variante einer Erinnerung, ganz ohne Benachrichtigung. */
+  if(!a.fertig&&!a.wann&&a.erstellt){
+    const tage=Math.floor((Date.now()-a.erstellt)/TAG_MS);
+    if(tage>=LIEGT_AB) meta.push(`<span class="mini liegt">liegt seit ${tage} Tagen</span>`);
+  }
+  if(a.fertig&&a.von) meta.push(`<span class="mini">✓ ${esc(a.von)}</span>`);
   /* Der Griff ist immer da – Ziehen soll ohne Umschalten funktionieren.
      Die ganze Zeile öffnet die Bearbeitung; Haken und Griff halten das Ereignis auf. */
   const griff=opt.sort?`<button class="griff" onpointerdown="dndGriff(event,'${opt.box}','aufgabe')" onclick="event.stopPropagation()" aria-label="Verschieben">${GRIFF}</button>`:"";
+  /* Der häufigste Handgriff des Tages – aus dem Vorrat oder aus dem Überfälligen
+     in den Tag – soll ein Tipp sein, nicht drei. */
+  const schnellZiel=opt.schnell&&!a.fertig
+    ? `<div class="zeilentakt">
+         ${a.wann!==h?`<button class="ztakt" onclick="event.stopPropagation();verschieben('${a.id}','${h}')" aria-label="Auf heute">Heute</button>`:""}
+         ${a.wann!==morgen()?`<button class="ztakt" onclick="event.stopPropagation();verschieben('${a.id}','${morgen()}')" aria-label="Auf morgen">Morgen</button>`:""}
+       </div>`
+    : "";
   return `<div class="auf ${a.fertig?"fertig":""} ${spaet&&!a.fertig?"ueber":""}" data-dnd="${a.id}" onclick="aufgabeOeffnen('${a.id}')">
     <button class="hak" id="hak_${a.id}" onclick="event.stopPropagation();haken('${a.id}')" aria-label="${a.fertig?"Wieder öffnen":"Erledigt"}">
       <svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9"/></svg></button>
     <div class="auf-txt">${esc(a.t)}
       ${meta.length?`<div class="auf-meta">${meta.join("")}</div>`:""}
-      ${a.notiz?`<div class="auf-notiz">${esc(a.notiz)}</div>`:""}</div>
+      ${a.notiz?`<div class="auf-notiz">${esc(a.notiz)}</div>`:""}
+      ${schnellZiel}</div>
     ${griff}
   </div>`;
 }
@@ -807,6 +870,41 @@ function neuAnlegen(wann,katId){
   const neu=document.getElementById("neu"); if(neu&&neu.focus)neu.focus();
 }
 
+/* ---------- Schnelleingabe in Daumenreichweite ----------
+   Dasselbe Feld wie oben auf „Heute", nur erreichbar ohne die Hand zu wechseln.
+   Auf der Notizansicht legt derselbe Knopf eine Notiz an – das ist dort das,
+   was man erwartet. Nach dem Anlegen bleibt das Fenster offen, damit mehrere
+   Dinge am Stück hineingehen. */
+let schnellWohin="heute";
+const SCHNELL_ZIELE=[["heute","Heute"],["morgen","Morgen"],["woche","Diese Woche"],["sammeln","Nur sammeln"]];
+function daumenKnopf(){
+  if(tab==="notizen") return notizAnlegen();
+  schnellOeffnen();
+}
+function schnellOeffnen(){
+  const koerper=()=>`<div class="sheet-kopf"><h2>Schnell eintragen</h2>
+      <button class="btn btn-ghost btn-s" onclick="closeSheet()" aria-label="Schließen">✕</button></div>
+    <div class="schnell" style="margin-top:8px">
+      <input type="text" id="schnellfeld" placeholder="Aufgabe eintippen …"
+        onkeydown="if(event.key==='Enter')schnellAnlegen()">
+      <button class="btn btn-primary" onclick="schnellAnlegen()">+</button></div>
+    <div class="chips" style="padding-bottom:4px">
+      ${SCHNELL_ZIELE.map(([w,l])=>`<button class="chip" aria-pressed="${schnellWohin===w}"
+        onclick="schnellWohin='${w}';schnellOeffnen()">${l}</button>`).join("")}</div>
+    <p class="note" style="margin-top:10px">„morgen", „Freitag", „14.9." oder „#Geburt" mitschreiben – das schlägt die Auswahl hier.</p>`;
+  openSheet(koerper(),true);
+  setTimeout(()=>{const e=document.getElementById("schnellfeld"); if(e&&e.focus)e.focus();},60);
+}
+function schnellAnlegen(){
+  const el=document.getElementById("schnellfeld"); if(!el) return;
+  const t=el.value; if(!t.trim()) return;
+  el.value="";
+  const wann=schnellWohin==="heute"?heute():schnellWohin==="morgen"?morgen():schnellWohin==="woche"?"woche":null;
+  aufgabeAnlegen(t,wann,null);
+  hinweis("Eingetragen.");
+  const neu=document.getElementById("schnellfeld"); if(neu&&neu.focus)neu.focus();
+}
+
 /* ---------- Heute: schneller Zugriff auf Notizen ---------- */
 function heuteNotizen(){
   const alle=Object.entries(S.notizen||{}).map(([id,n])=>({...n,id})).filter(n=>!n.archiv);
@@ -822,6 +920,25 @@ function heuteNotizen(){
       return `<button class="nspur" onclick="notizOeffnen('${n.id}')" style="border-left-color:${k?k.f:"var(--line-2)"}">
         <b>${n.oben?'<span style="color:var(--akz)">▲ </span>':""}${esc(n.titel||"Ohne Titel")}</b>
         <span>${esc(textAus(n.html).slice(0,70)||"Leer")}</span></button>`;}).join("")}</div>`;
+}
+
+/* ---------- Heute: was diese Woche noch ansteht ----------
+   Der Topf „Diese Woche, ohne festen Tag" lebte bisher nur in der Wochenansicht.
+   Wer morgens auf „Heute" schaut, hat ihn dadurch nie gesehen. */
+function wochenTopf(){
+  const liste=sortiert(aufListe().filter(a=>!a.fertig&&a.wann==="woche"));
+  if(!liste.length) return "";
+  const zeigen=liste.slice(0,3), rest=liste.length-zeigen.length;
+  return `<div class="sect"><h2>Diese Woche noch</h2><span class="zahl">${liste.length}</span>
+      <button class="btn btn-s" onclick="go('woche')">Woche</button></div>
+    ${zeigen.map(a=>{
+      const k=a.kat?kat(a.kat):null;
+      return `<div class="topfzeile" onclick="aufgabeOeffnen('${a.id}')">
+        ${k?`<i class="punkt" style="background:${k.f}"></i>`:""}
+        <span>${esc(a.t)}</span>
+        <button class="ztakt rest" onclick="event.stopPropagation();verschieben('${a.id}','${heute()}')">Heute</button>
+      </div>`;}).join("")}
+    ${rest>0?`<p class="note" style="margin:2px 0 8px">und ${rest} weitere unter „Woche".</p>`:""}`;
 }
 
 /* ---------- Heute: Vorschau auf morgen, zugleich Ablegezone ---------- */
@@ -845,19 +962,24 @@ function vHeute(){
       <span>${new Date().getDate()}. ${MONATE[new Date().getMonth()].toUpperCase()} · ${kw()}</span></div>
     <div class="balken"><i style="width:${anteil}%"></i></div></div>`;
 
-  const teil=(titel,liste,opt)=>liste.length
-    ? `<div class="sect"><h2>${titel}</h2><span class="zahl">${liste.length}${liste.length>1&&opt&&opt.sortierbar?" · "+"":""}</span></div>${aufListeHtml(liste,opt)}`
-    : "";
-
   const nichts=!faellig.length&&!ueberfaellig.length&&!fertig.length
     ? `<div class="leerzustand"><b>Der Tag ist frei</b>Trag oben etwas ein oder hol dir unter Listen eine Aufgabe aus einem deiner Vorräte.
        <div style="margin-top:14px"><button class="btn" onclick="go('listen')">Zu den Listen</button></div></div>` : "";
 
+  /* Überfälliges lässt sich dort aufräumen, wo es auftaucht – statt drei
+     Ansichten weiter unter „Mehr". */
+  const ueberKopf=ueberfaellig.length
+    ? `<div class="sect"><h2>Überfällig</h2><span class="zahl">${ueberfaellig.length}</span>
+         <button class="btn btn-s" onclick="ueberfaelligHolen()">Alle auf heute</button></div>
+       ${aufListeHtml(ueberfaellig,{datum:true,schnell:true})}`
+    : "";
+
   return hinweisLeiste() + bogen + `<div style="margin-top:14px"></div>` + schnellFeld(heute(),null)
-    + teil("Überfällig",ueberfaellig,{datum:true})
+    + ueberKopf
     + (faellig.length?`<div class="sect"><h2>Für heute</h2><span class="zahl">${faellig.length}</span></div>
         <div data-drop="${heute()}">${aufListeHtml(faellig)}</div>`:`<div data-drop="${heute()}"></div>`)
     + nichts
+    + wochenTopf()
     + morgenBlock()
     + heuteNotizen()
     + (fertig.length?`<div class="sect"><h2>Heute geschafft</h2><span class="zahl">${fertig.length}</span></div>
@@ -931,7 +1053,7 @@ function vListen(){
     const notizZahl=Object.values(S.notizen||{}).filter(n=>n.kat===id&&!n.archiv).length;
     return `<div class="sect"><h2><i class="punkt" style="background:${k.f}"></i> ${esc(k.n)}</h2>
         <span class="zahl">${drin.length} offen${notizZahl?" · "+notizZahl+" Notizen":""}</span></div>
-      ${drin.length?aufListeHtml(drin):`<p class="note" style="margin-bottom:8px">Noch nichts gesammelt.</p>`}
+      ${drin.length?aufListeHtml(drin,{schnell:true}):`<p class="note" style="margin-bottom:8px">Noch nichts gesammelt.</p>`}
       <div class="schnell" style="margin-bottom:14px">
         <input type="text" id="neu_${id}" placeholder="In „${esc(k.n)}“ sammeln …"
           onkeydown="if(event.key==='Enter')sammeln('${id}')">
@@ -939,16 +1061,10 @@ function vListen(){
   }).join("");
 
   const ohneListe=sortiert(alle.filter(a=>ohneDatum(a)&&!a.kat));
-  if(aufSuche.trim()){
-    const q=normText(aufSuche);
-    const treffer=aufListe().filter(a=>normText(a.t).includes(q)||(a.notiz&&normText(a.notiz).includes(q)))
-      .sort((a,b)=>(a.fertig?1:0)-(b.fertig?1:0)||(b.erstellt||0)-(a.erstellt||0));
-    return hinweisLeiste()+sucheFeld()+`<div class="sect"><h2>Gefunden</h2><span class="zahl">${treffer.length}</span></div>`
-      +(treffer.length?treffer.map(a=>aufZeile(a,{datum:true})).join(""):`<div class="leerzustand"><b>Nichts gefunden</b>Gesucht wird in Aufgabentext und Notiz, auch im Erledigten.</div>`);
-  }
+  if(aufSuche.trim()) return hinweisLeiste()+sucheFeld()+`<div id="suchtreffer">${sucheTreffer()}</div>`;
   return hinweisLeiste() + sucheFeld() + chips + bloecke
     + (ohneListe.length&&katFilter==="alle"
-      ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${ohneListe.length}</span></div>${aufListeHtml(ohneListe)}`:"")
+      ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${ohneListe.length}</span></div>${aufListeHtml(ohneListe,{schnell:true})}`:"")
     + `<p class="note" style="margin-top:16px">Aufgaben hier haben bewusst kein Datum. Über das ···-Menü ziehst du sie in den Tag oder in die Woche.</p>`;
 }
 function listenFilterWaehlen(){
@@ -963,12 +1079,37 @@ function listenFilterWaehlen(){
     <button class="btn btn-wide" style="margin-top:14px" onclick="closeSheet();katVerwalten()">Listen verwalten</button>`);
 }
 function sucheFeld(){
-  return `<div class="schnell"><input type="search" id="asuche" placeholder="Alle Aufgaben durchsuchen …" value="${esc(aufSuche)}" oninput="aufSucheAendern(this.value)">
+  return `<div class="schnell"><input type="search" id="asuche" placeholder="Aufgaben und Notizen durchsuchen …" value="${esc(aufSuche)}" oninput="aufSucheAendern(this.value)">
     ${aufSuche?`<button class="btn" onclick="aufSuche='';render()">✕</button>`:""}</div>`;
 }
+/* Eine Suche über beides: für etwas, das „Marco's brain" heißt, ist die Trennung
+   zwischen Aufgaben- und Notizsuche die unpassendere Idee. */
+function sucheTreffer(){
+  const q=normText(aufSuche);
+  const aufgaben=aufListe().filter(a=>normText(a.t).includes(q)||(a.notiz&&normText(a.notiz).includes(q)))
+    .sort((a,b)=>(a.fertig?1:0)-(b.fertig?1:0)||(b.erstellt||0)-(a.erstellt||0));
+  const notizen=notizenSuchen(aufSuche,"alle");
+  if(!aufgaben.length&&!notizen.length)
+    return `<div class="leerzustand"><b>Nichts gefunden</b>Gesucht wird in Aufgaben samt Notizfeld – auch im Erledigten – und in allen Notizen samt Archiv.</div>`;
+  return (aufgaben.length?`<div class="sect"><h2>Aufgaben</h2><span class="zahl">${aufgaben.length}</span></div>`
+      +aufgaben.slice(0,40).map(a=>aufZeile(a,{datum:true})).join(""):"")
+    +(notizen.length?`<div class="sect"><h2>Notizen</h2><span class="zahl">${notizen.length}</span></div>`
+      +notizen.slice(0,20).map(n=>{
+        const k=n.kat?kat(n.kat):null;
+        return `<button class="nspur" style="display:block;width:100%;text-align:left;margin-bottom:7px;border-left-color:${k?k.f:"var(--line-2)"}"
+          onclick="notizOeffnen('${n.id}')">
+          <b>${n.archiv?'<span class="mini">Archiv · </span>':""}${esc(n.titel||"Ohne Titel")}</b>
+          <span>${ausschnitt(n,aufSuche)}</span></button>`;}).join(""):"");
+}
+/* Nur den Trefferblock austauschen: ein vollständiges Neuzeichnen bei jedem
+   Buchstaben lässt auf dem Handy die Tastatur zucken und den Cursor springen. */
 function aufSucheAendern(v){
-  aufSuche=v; render();
-  const e=document.getElementById("asuche"); if(e&&e.focus){e.focus(); if(e.setSelectionRange)try{e.setSelectionRange(v.length,v.length)}catch(x){}}
+  aufSuche=v;
+  const ziel=document.getElementById("suchtreffer");
+  if(ziel&&v.trim()){ ziel.innerHTML=sucheTreffer(); return; }
+  render();
+  const e=document.getElementById("asuche");
+  if(e&&e.focus){e.focus(); if(e.setSelectionRange)try{e.setSelectionRange(v.length,v.length)}catch(x){}}
 }
 function sammeln(katId){
   const el=document.getElementById("neu_"+katId); if(!el||!el.value.trim())return;
@@ -1009,10 +1150,19 @@ function aufgabeOeffnen(id){
         <button class="chip" aria-pressed="${!b.wdh}" onclick="aufAendern('${id}',{wdh:null},false);aufgabeOeffnen('${id}')">Einmalig</button>
         ${Object.entries(WDH).map(([w,l])=>`<button class="chip" aria-pressed="${b.wdh===w}" onclick="aufAendern('${id}',{wdh:'${w}'},false);aufgabeOeffnen('${id}')">${l}</button>`).join("")}
       </div>
-      ${b.wdh?`<p class="note" style="margin-top:4px">Beim Abhaken entsteht automatisch der nächste Termin.</p>`:""}
+      ${b.wdh==="woechentlich"?`<div class="chips" style="padding-bottom:4px;margin-top:6px">
+          <button class="chip" aria-pressed="${typeof b.wdhTag!=="number"}" onclick="aufAendern('${id}',{wdhTag:null},false);aufgabeOeffnen('${id}')">Gleicher Abstand</button>
+          ${TAGE_K.map((tk,i)=>`<button class="chip" aria-pressed="${b.wdhTag===i}" onclick="aufAendern('${id}',{wdhTag:${i}},false);aufgabeOeffnen('${id}')">${tk}</button>`).join("")}
+        </div>`:""}
+      ${b.wdh?`<p class="note" style="margin-top:4px">Beim Abhaken entsteht automatisch der nächste Termin.${b.wdh==="woechentlich"&&typeof b.wdhTag==="number"?" Immer "+TAGE[b.wdhTag]+"s.":""}</p>`:""}
       <label class="fl" for="anotiz">Notiz dazu</label>
       <textarea id="anotiz" rows="3" placeholder="Details, Telefonnummer, Link …"
         oninput="aufAendern('${id}',{notiz:this.value.trim()||null},false)">${esc(b.notiz||"")}</textarea>
+      <label class="fl">Notiz</label>
+      ${b.notizId&&S.notizen[b.notizId]
+        ? `<div class="row-btns"><button class="btn btn-s" style="flex:1" onclick="closeSheet();notizOeffnen('${b.notizId}')">„${esc((S.notizen[b.notizId].titel||"Ohne Titel").slice(0,40))}" öffnen</button>
+             <button class="btn btn-s btn-ghost" onclick="aufAendern('${id}',{notizId:null},false);aufgabeOeffnen('${id}')">Lösen</button></div>`
+        : `<button class="btn btn-s btn-wide" onclick="notizZuAufgabe('${id}')">Notiz dazu anlegen</button>`}
       <button class="btn btn-primary btn-wide fertig-knopf" onclick="closeSheet()">Fertig</button>
       <div class="aktionen">
         <button class="ak-akz" onclick="verdoppeln('${id}')">${ICON_KOPIE}Duplizieren</button>
@@ -1020,6 +1170,24 @@ function aufgabeOeffnen(id){
       </div>`;
   };
   openSheet(body(),true);
+}
+/* Aufgabe und Notiz gehören manchmal zusammen – ein Sprung in beide Richtungen
+   genügt dafür, ein ganzes Verknüpfungssystem braucht es nicht. */
+function notizZuAufgabe(id){
+  const a=S.aufgaben[id]; if(!a) return;
+  const nid="n"+id6();
+  mut("notizen/"+nid,{titel:a.t.slice(0,60),html:"",kat:a.kat||null,art:"frei",archiv:false,oben:false,
+    erstellt:Date.now(),geaendert:Date.now(),geoeffnet:Date.now(),pos:naechstePos(),ts:Date.now(),aufgabe:id},false);
+  aufAendern(id,{notizId:nid},false);
+  closeSheet(); notizOeffnen(nid);
+}
+function aufgabeZuNotiz(nid){
+  const n=S.notizen[nid]; if(!n) return;
+  const aid=aufgabeAnlegen(n.titel||textAus(n.html).slice(0,60)||"Ohne Titel",null,n.kat||null);
+  if(!aid) return;
+  aufAendern(aid,{notizId:nid},false);
+  notizAendern(nid,{aufgabe:aid},false);
+  hinweis("Aufgabe angelegt – liegt in deinen Listen.","Öffnen",()=>{notizSchliessen();aufgabeOeffnen(aid);});
 }
 function verdoppeln(id){
   const a=S.aufgaben[id]; if(!a)return;
@@ -1324,6 +1492,9 @@ function notizOeffnen(id){
       <button onclick="bildEinfuegen()" title="Bild einfügen">Bild</button>
     </div>
     <div class="editor" id="edit" contenteditable="true" data-leer="Schreib los …" oninput="notizMerken()">${sauberHtml(n.html)}</div>
+    ${n.aufgabe&&S.aufgaben[n.aufgabe]
+      ? `<div class="row-btns" style="margin-top:10px"><button class="btn btn-s" style="flex:1" onclick="notizSchliessen();aufgabeOeffnen('${n.aufgabe}')">Zugehörige Aufgabe öffnen</button></div>`
+      : `<button class="btn btn-s btn-wide" style="margin-top:10px" onclick="aufgabeZuNotiz('${id}')">Aufgabe daraus machen</button>`}
     <button class="btn btn-primary btn-wide fertig-knopf" onclick="notizSchliessen()">Fertig</button>
     <div class="aktionen">
       <button onclick="notizTeilen('${id}')">${ICON_TEILEN}Teilen</button>
@@ -1349,7 +1520,14 @@ function notizMerken(){
     const s2=document.getElementById("nstatus"); if(s2)s2.textContent="Gespeichert um "+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
   },600);
 }
-function notizSchliessen(){ clearTimeout(speicherTimer); notizMerkenSofort(); offeneNotiz=null; closeSheet(); }
+function notizSchliessen(){
+  clearTimeout(speicherTimer); notizMerkenSofort();
+  /* Wer eine Notiz anlegt und ohne Eingabe wieder schließt, soll keine leere
+     zurücklassen. Es geht nichts verloren – da war ja nichts. */
+  const id=offeneNotiz, n=id&&S.notizen[id];
+  offeneNotiz=null; closeSheet();
+  if(n&&!String(n.titel||"").trim()&&!textAus(n.html).trim()&&!n.aufgabe) mut("notizen/"+id,null);
+}
 function notizMerkenSofort(){
   const id=offeneNotiz; if(!id||!S.notizen[id]) return;
   const e=document.getElementById("edit"), t=document.getElementById("ntitel");
@@ -1698,7 +1876,28 @@ function rueckblick(){
   const alle=aufListe().filter(a=>a.fertig);
   return tage.map(d=>({d,n:alle.filter(a=>iso(new Date(a.fertig))===d).length}));
 }
+/* Zahlen allein tragen wenig. Einmal die Woche zu sehen, was tatsächlich
+   zusammenkam, ist die Belohnung, wegen der die App gebaut wurde. */
+function rueckblickListe(){
+  const grenze=Date.now()-7*TAG_MS;
+  const fertig=aufListe().filter(a=>a.fertig&&a.fertig>=grenze)
+    .sort((a,b)=>b.fertig-a.fertig);
+  if(!fertig.length) return `<p class="note">In den letzten sieben Tagen ist nichts abgehakt worden.</p>`;
+  const nachTag={};
+  fertig.forEach(a=>{const d=iso(new Date(a.fertig));(nachTag[d]=nachTag[d]||[]).push(a);});
+  return Object.entries(nachTag).map(([d,liste])=>`
+    <div class="rbtag">${esc(datumText(d))} · ${liste.length}</div>
+    ${liste.map(a=>{
+      const k=a.kat?kat(a.kat):null;
+      return `<div class="rbzeile">${k?`<i class="punkt" style="background:${k.f}"></i>`:""}
+        <s>${esc(a.t)}</s>${a.von?`<span class="mini">${esc(a.von)}</span>`:""}</div>`;}).join("")}`).join("");
+}
 
+function rueckblickZeigen(){
+  openSheet(`<div class="sheet-kopf"><h2>Die letzten sieben Tage</h2>
+      <button class="btn btn-ghost btn-s" onclick="closeSheet()" aria-label="Schließen">✕</button></div>
+    ${rueckblickListe()}`);
+}
 function vMehr(){
   const rb=rueckblick(), max=Math.max(1,...rb.map(x=>x.n));
   const offenGes=aufListe().filter(offen).length;
@@ -1715,7 +1914,8 @@ function vMehr(){
           <div class="mini" style="margin-top:5px">${TAGE_K[wochentag(x.d)]}</div>
           <div class="mini" style="font-family:var(--mono)">${x.n||""}</div></div>`).join("")}
       </div>
-      <p class="note" style="margin-top:10px">${rb.reduce((s,x)=>s+x.n,0)} Aufgaben erledigt · ${offenGes} noch offen</p></div>
+      <p class="note" style="margin-top:10px">${rb.reduce((s,x)=>s+x.n,0)} Aufgaben erledigt · ${offenGes} noch offen</p>
+      <button class="btn btn-s btn-wide" style="margin-top:10px" onclick="rueckblickZeigen()">Zeigen, was es war</button></div>
 
     <div class="sect"><h2>Listen</h2></div>
     <button class="btn btn-wide" onclick="katVerwalten()">Listen verwalten</button>
@@ -1733,6 +1933,10 @@ function vMehr(){
       ${basis()&&dauerfehler()?`<p class="note" style="color:var(--rot);font-weight:550;margin-top:6px">${SYNC_FEHLER[syncState]}</p>`:""}
       ${basis()?`<div class="row-btns" style="margin-top:8px"><button class="btn btn-s" onclick="versuche=0;verbinden();flush()">Neu verbinden</button>
         ${queue.length?`<button class="btn btn-s" onclick="flush()">Wartendes senden</button>`:""}</div>`:""}
+      <label class="fl" for="gname">Dein Name auf diesem Gerät (optional)</label>
+      <input type="text" id="gname" value="${esc(cfg.name||"")}" placeholder="leer lassen = anonym"
+        onchange="cfg.name=this.value.trim();schreibenLokal();render()">
+      <p class="note" style="margin-top:4px">Steht hier ein Name, wird beim Abhaken vermerkt, wer es war – sichtbar nur im Rückblick. Leer bleibt alles wie bisher.</p>
       <label class="fl" for="db">Datenbank-URL aus Firebase</label>
       <input type="url" id="db" value="${esc(cfg.db)}" placeholder="https://name-default-rtdb.europe-west1.firebasedatabase.app">
       <label class="fl" for="hid">Code für diese App</label>
