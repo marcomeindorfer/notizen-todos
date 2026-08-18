@@ -212,12 +212,35 @@ gewinnen. Deshalb führt **jede** Änderung einen reinen Abgleichsstempel `ts` m
   darf die Verbindung nicht lahmlegen.
 - Statuswerte: `lokal`, `verbindet`, `live`, `wartet`, `getrennt`, `verweigert`, `fehlt`.
 
-### Bekannte Grenze
+### Grabsteine: gelöscht bleibt gelöscht
 
-**Löschungen können zurückkehren.** Löschst du auf Gerät A etwas, während B offline ist,
-bringt B es beim Verbinden zurück – B weiß nur „ich habe hier etwas, das drüben fehlt".
-Die Alternative wären Grabsteine, die den Datenbestand dauerhaft aufblähen. Bewusste
-Entscheidung: Eine wiederauftauchende Aufgabe ist ärgerlich, eine verschwundene wäre schlimmer.
+Früher konnten Löschungen zurückkehren. Löschte man auf Gerät A etwas, während B offline
+war, brachte B es beim Verbinden zurück – B wusste nur „ich habe hier etwas, das drüben
+fehlt", und eine Abwesenheit kann gegen einen vorhandenen Eintrag nichts ausrichten. Genau
+so ist eine gelöschte Notiz mehrfach wieder aufgetaucht.
+
+Seitdem hinterlässt jedes Löschen eine Notiz über sich selbst, in `S.tot`:
+
+```
+tot: { "notizen:nab12cd": 1755500000000 }     Kennung mit Doppelpunkt, Zeitpunkt
+```
+
+- Der Schlüssel trägt statt `/` einen `:`, weil Firebase-Pfade sonst eine Ebene tiefer gingen.
+- Beim Zusammenführen fällt jeder Eintrag heraus, dessen Grabstein **echt jünger** ist als
+  sein jüngster Zeitstempel. Bei Gleichstand bleibt der Eintrag: fälschlich behalten ist der
+  harmlosere der beiden Irrtümer.
+- Ohne Grabstein wird nichts gelöscht – Einträge aus alten Fassungen tragen gar keinen
+  Zeitstempel, sonst wären sie alle betroffen.
+- Wird derselbe Eintrag wirklich wieder angelegt („Rückgängig"), bekommt er einen frischen
+  Stempel, ist damit jünger als der Grabstein, und der Grabstein wird gelöst und mitgeteilt.
+- Kommt trotzdem ein gelöschter Eintrag über die Leitung, wird er nicht aufgenommen, sondern
+  die Löschung geht noch einmal an die Gegenseite.
+- Nach **90 Tagen** räumt `totAufraeumen()` den Grabstein weg. Bis dahin hat ihn jedes Gerät
+  gesehen; der Datenbestand wächst also nicht dauerhaft.
+
+Wichtig für neuen Code: **Nie eine ganze Sammlung überschreiben, um darin zu löschen.**
+`mut("aufgaben", restOhneEinige)` erzeugt keinen Grabstein und überschreibt nebenbei alles,
+was das andere Gerät gerade angelegt hat. Einzeln löschen, dann stimmt beides.
 
 ---
 
@@ -284,6 +307,22 @@ und Dateien an.
 Beim Ziehen und Ablegen lief die Suche nach der Zeile bis zum `document`, das kein
 `getAttribute` besitzt. **Lösung:** Existenz der Methode prüfen und Tiefe begrenzen.
 
+### Ein Neuzeichnen mitten im Ziehen tauscht das Element unter dem Finger
+
+`render()` ersetzt `#view` vollständig. Läuft es während eines Zugs – weil eine Meldung
+ausläuft, das andere Gerät etwas schickt oder eine Minute vergeht –, hängt der Zug an einem
+Element, das nicht mehr im Dokument steht: Er lässt sich nicht mehr abschließen und
+hinterlässt Klassen an Zeilen, die es nicht mehr gibt. **Lösung:** `dndSperre` setzt
+`render()` für die Dauer des Zugs aus und merkt sich das Versäumte in `dndNachholen`.
+
+### Zwei Stellen, die denselben Namen ausrechnen, driften auseinander
+
+Der Griff einer Notiz nennt den Kasten, in dem gezogen wird. Die Kartenfunktion rechnete
+diesen Namen selbst noch einmal aus – und kam bei „Eigene Reihenfolge" auf `nbox_heute`,
+während die Liste dort ungruppiert in `nbox` steht. Der Griff zeigte ins Leere, Ziehen tat
+nichts mehr, und zwar genau ab dem ersten erfolgreichen Zug, weil der die Sortierung
+umstellt. **Lösung:** Der Kasten wird übergeben, nicht zweimal hergeleitet.
+
 ---
 
 ## 7. Wie getestet wird
@@ -332,6 +371,10 @@ Geschwindigkeit auf dem Gerät.
   kurze Rückfrage.
 - **Ehrliche Leermeldungen.** Wenn nichts gefunden wurde, steht das da, samt Grund – statt
   ersatzweise etwas Falsches anzuzeigen.
-- **Systemschriften.** Keine Webfonts, weil sie offline fehlen würden.
+- **Mitgelieferte Schriften.** Inter und Instrument Serif liegen als woff2 im Ordner
+  `fonts` und stehen im Service Worker, werden also mitinstalliert. Kein Aufruf nach außen,
+  offline vollständig da, auf jedem Gerät dasselbe Bild. Beide unter der SIL Open Font
+  License, siehe `fonts/LIZENZ.txt`. Wer die Dateien vergisst hochzuladen, bekommt die
+  Systemschrift – die App bleibt benutzbar, sieht aber anders aus.
 - **Dunkler Modus** über `prefers-color-scheme` in beiden Apps.
 - **Farben** über CSS-Variablen, nie fest im Markup.

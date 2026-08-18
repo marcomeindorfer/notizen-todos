@@ -377,4 +377,55 @@ t("Beide Fenster zeigen den Sprung zur Gegenseite", () => {
   wahr(/aufgabeOeffnen\('a/.test(document.getElementById("sheet").innerHTML), "Notiz verweist auf die Aufgabe");
 });
 
+/* Vom Ziehen selbst lässt sich ohne echtes Fenster nur das Ergebnis prüfen:
+   was nach dem Loslassen in den Positionen steht. Genau darauf kam es an. */
+gruppe("13 · Reihenfolge nach dem Ziehen");
+t("Die gezogene Reihenfolge steht anschließend in den Positionen", () => {
+  frisch();
+  const a = anlegen("Erste"), b = anlegen("Zweite"), c = anlegen("Dritte");
+  A.dndUebernehmen([c, a, b], "aufgabe");
+  gleich(A.sortiert(A.aufListe()).map(x => x.id), [c, a, b]);
+});
+t("Die Abstände lassen Platz zum späteren Einschieben", () => {
+  frisch();
+  const a = anlegen("Erste"), b = anlegen("Zweite");
+  A.dndUebernehmen([a, b], "aufgabe");
+  wahr(A.S.aufgaben[b].pos - A.S.aufgaben[a].pos >= 10, "zwischen zwei Zeilen bleibt Luft");
+});
+t("Jede bewegte Aufgabe bekommt einen frischen Abgleichstempel", () => {
+  frisch();
+  const a = anlegen("Erste"), b = anlegen("Zweite");
+  A.S.aufgaben[a].ts = 1700000000000;
+  A.dndUebernehmen([b, a], "aufgabe");
+  wahr(A.S.aufgaben[a].ts > 1700000000000, "sonst überschreibt das andere Gerät die neue Ordnung");
+});
+t("Eine gezogene Notiz schaltet auf die eigene Reihenfolge um", () => {
+  frisch();
+  A.S.notizen = {
+    n1: { titel: "A", erstellt: 1700000000000, pos: 100 },
+    n2: { titel: "B", erstellt: 1700000100000, pos: 200 }
+  };
+  gleich(A.notizSortierung(), "erstellt");
+  A.dndUebernehmen(["n2", "n1"], "notiz");
+  gleich(A.notizSortierung(), "eigen");
+  wahr(A.S.notizen.n2.pos < A.S.notizen.n1.pos, "die neue Ordnung gilt");
+});
+t("Unbekannte Kennungen bringen das Übernehmen nicht durcheinander", () => {
+  frisch();
+  const a = anlegen("Bleibt");
+  A.dndUebernehmen(["schon-weg", a], "aufgabe");
+  wahr(A.S.aufgaben[a], "die vorhandene Aufgabe steht noch");
+});
+t("Solange gezogen wird, zeichnet die App nicht neu", () => {
+  frisch();
+  A.tab = "heute"; A.render();
+  A.dndSperre = true;
+  document.getElementById("view").innerHTML = "unberührt";
+  A.render();
+  gleich(document.getElementById("view").innerHTML, "unberührt", "das Bild bleibt stehen");
+  A.dndSperre = false;
+  A.render();
+  wahr(document.getElementById("view").innerHTML !== "unberührt", "danach wird nachgeholt");
+});
+
 bilanz();

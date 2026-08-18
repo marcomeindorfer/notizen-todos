@@ -150,13 +150,32 @@ Beispiel: „Kinderwagen abholen morgen #Geburt" landet mit Datum in der richtig
 Nach dem Anlegen **bleibt der Fokus im Feld**, damit man mehrere Aufgaben am Stück eintippen kann.
 
 ### Ziehen und Ablegen
-Der Knopf „Sortieren" tauscht Stift und Papierkorb gegen einen Greifpunkt. Umgesetzt mit
-Pointer-Events und `touch-action:none` am Griff; beim Ziehen zeigt eine Linie das Ziel.
-Vorhanden in Heute, Woche, Listen und Notizen.
+Der Griff sitzt fest an der Zeile, Umschalten gibt es nicht. Umgesetzt mit Pointer-Events
+und `touch-action:none` am Griff. Vorhanden in Heute, Woche, Listen und Notizen.
+
+So verhält es sich:
+
+- **Erst ab acht Pixeln Weg ist es ein Zug.** Ein Antippen des Griffs verändert nichts mehr.
+  Vorher war jede Berührung sofort ein Zug – die häufigste Quelle versehentlicher Umsortierungen.
+- **Das Fenster hört mit**, nicht der Griff. Rutscht der Finger schneller, als das Bild
+  nachkommt, geht der Zug nicht mehr verloren.
+- **Die Nachbarn weichen sichtbar aus**, statt dass nur ein Strich das Ziel andeutet.
+- **Der Zielplatz wird an der Mitte der gezogenen Zeile gemessen**, nicht an der Fingerspitze.
+  Gerechnet wird gegen die Mitten, die die Nachbarn *während* des Zugs haben – unterhalb der
+  Lücke ist alles um eine Zeile aufgerückt. Ohne diese Verrechnung landete jede nach unten
+  gezogene Zeile eine Stelle zu früh.
+- **Am Bildrand rollt die Liste mit**, sonst kommt nichts weiter als einen Bildschirm.
+- **Escape bricht ab**, ebenso ein `pointercancel` des Systems; nichts wird übernommen.
+- **Während eines Zugs wird nicht neu gezeichnet** (`dndSperre`), das Versäumte danach
+  nachgeholt. Sonst tauscht ein `render()` das Element unter dem Finger aus.
+- **Der Klick unmittelbar nach dem Loslassen wird geschluckt**, damit die Zeile sich nicht
+  zusätzlich öffnet.
 
 Bei Notizen schaltet das Ablegen automatisch auf „Eigene Reihenfolge", weil manuelles Ordnen
-neben einer Datumssortierung sinnlos wäre. **Achtung:** Anzeige und Ablegen müssen dieselbe
-Sortierrichtung haben – ein früherer Fehler ließ gezogene Notizen ans andere Ende springen.
+neben einer Datumssortierung sinnlos wäre. Geschrieben wird die **sichtbare
+Gesamtreihenfolge**, nicht nur der bewegte Kasten – sonst zerfiele die Ordnung beim
+Umschalten. **Achtung:** Der Kasten, auf den der Griff zeigt, muss derselbe sein, in dem die
+Karte steht; siehe Grundlagen, Abschnitt 6.
 
 ### Kurze Wege in den Tag
 
@@ -189,8 +208,9 @@ ohne Bibliothek nicht ersetzbar.
 Werkzeugleiste nach Zweck geordnet: **Abschnitt, Text, Aufzählung, Nummerierte Liste**,
 dann Auszeichnung (fett, kursiv, durchgestrichen), dann Trennlinie und Bild.
 
-Schrift: moderne serifenlose Systemschrift, 17px, Zeilenhöhe 1,62. Abschnittsüberschriften
-klein, versal, violett mit feiner Trennlinie – dadurch sieht man die Struktur beim Überfliegen.
+Schrift: Inter, 16,5px, Zeilenhöhe 1,65. Abschnittsüberschriften in Instrument Serif, 22px,
+mit feiner Trennlinie darunter – dadurch sieht man die Struktur beim Überfliegen, ohne dass
+der Text laut wird.
 
 **Vorlagen** beim Anlegen, abgeleitet aus den tatsächlichen Anwendungsfällen:
 - *Leer*
@@ -296,18 +316,42 @@ nicht nur als Verknüpfung über „Zum Startbildschirm hinzufügen". Dafür bra
 
 ## 10. Gestaltung
 
-Eigene Farbwelt, bewusst anders als der Küchenplan:
+Eigene Farbwelt, bewusst anders als der Küchenplan: **Schiefer und Petrol**. Kühle,
+zurückgenommene Fläche, darauf genau ein Akzent. Jede Farbe trägt eine Bedeutung, es gibt
+keine Farbe zur Zierde.
 
 ```
---paper #F4F2ED   warmes Papierweiß
---ink   #1B1A18   fast schwarz
---akz   #4A2D6E   tiefes Violett
---gold  #9A6512   Akzent für Archiv und Hinweise
---erf   #136B54   Erfolg, Haken, Fortschritt
---rot   #9B3327   Überfällig, Löschen
+                    hell        dunkel
+--paper             #F4F6F7     #0E1214    Fläche
+--card              #FFFFFF     #171C1F    Karte
+--line              #E3E7E9     #252D31    Trennlinien
+--ink               #14181B     #E9EDEE    Text
+--ink-2 / --ink-3   #4C555B     #A3AEB3    zweite und dritte Textebene
+                    #79848A     #77848A
+--akz               #0E6E68     #4FC7BC    Petrol: alles Bedienbare
+--auf-akz           #FFFFFF     #04211F    Text auf der Akzentfläche
+--erf               #2C7A4C     #5CBE85    Moos: erledigt, Fortschritt
+--gold              #A0640B     #E0A54E    Bernstein: Archiv, wartet
+--rot               #B3382C     #E4857A    Ziegel: überfällig, löschen
 ```
 
-Icon: violettes Quadrat, drei Listenzeilen, oberste mit goldenem Haken.
+Statt harter Schatten trägt jede Karte nur `--schatten` (ein Pixel), Blätter und die
+gezogene Zeile `--schatten-hoch`. Die Navigationsleiste liegt mit `backdrop-filter` über dem
+Inhalt. Ecken: 16px für Flächen, 12px für Zeilen.
+
+**Listenfarben** kommen aus einer eigenen, gleich hellen Palette (`FARBEN`), damit acht
+Punkte nebeneinander ruhig bleiben. Wer noch die alten Vorgabefarben in seinen Listen hat,
+bekommt sie beim Laden über `FARBEN_ALT` auf die Entsprechung umgestellt – selbst gewählte
+Farben bleiben unberührt. Die Zuordnung ist in sich geschlossen, ein zweiter Durchlauf
+ändert nichts mehr.
+
+**Schrift:** Inter für alles Bediente, Instrument Serif für Titel, Blattüberschriften,
+Leermeldungen und Notizabschnitte. Der Wechsel von Grotesk zu Serife ersetzt das frühere
+Versal-Mono als Mittel der Gliederung; Mono steht nur noch in `pre` und `code`. Beide
+Schriften liegen im Ordner `fonts` und werden mitgeliefert – siehe Grundlagen, Abschnitt 8.
+
+Icon: petrolfarbenes Quadrat, drei Listenzeilen, oberste mit mintfarbenem Haken. Erzeugt
+mit einem kurzen Pillow-Skript, damit die drei PNG-Größen aus einer Quelle kommen.
 
 **Antippflächen:** Der Abhak-Kreis misst optisch 26 Pixel, seine Trefferfläche wurde über
 ein Pseudoelement (`inset: -9px`) auf gut 44 Pixel erweitert. Die Zeilenknöpfe haben
@@ -327,7 +371,9 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
 - **Keine Verknüpfung** zwischen Aufgabe und Notiz.
 - **`execCommand` ist veraltet.** Funktioniert in Chrome, könnte aber irgendwann
   wegfallen. Ersatz wäre eine eigene Bearbeitungslogik oder eine Bibliothek.
-- **Löschungen können beim Sync zurückkehren** – siehe Grundlagen, Abschnitt 5.
+- **Gezogen wird nur innerhalb eines Kastens.** Eine Notiz aus „Diese Woche" lässt sich
+  nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch – dafür gibt es
+  die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
 ## 12. Was in Version 2.0 dazugekommen ist
 

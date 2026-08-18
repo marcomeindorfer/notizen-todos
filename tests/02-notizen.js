@@ -187,4 +187,37 @@ t("Löschen entfernt die Notiz, Rücknahme holt sie zurück", () => {
   wahr(A.S.notizen[id], "wieder da");
 });
 
+/* Der Griff nennt den Kasten, in dem gezogen wird. Nennt er einen, den es nicht
+   gibt, passiert beim Ziehen schlicht nichts – und genau das war der Fall,
+   sobald einmal auf die eigene Reihenfolge umgestellt war. */
+gruppe("Der Griff zeigt auf den richtigen Kasten");
+const kaesten = html => [...html.matchAll(/<div id="(nbox[^"]*)">/g)].map(m => m[1]);
+const griffZiele = html => [...html.matchAll(/dndGriff\(event,'([^']+)'/g)].map(m => m[1]);
+t("Bei eigener Reihenfolge steht die Liste in genau einem Kasten", () => {
+  frisch();
+  notiz({ titel: "Eins" }); notiz({ titel: "Zwei" });
+  A.mut("einst/notizSort", "eigen", false);
+  const html = A.notizTreffer();
+  gleich(kaesten(html), ["nbox"]);
+  gleich([...new Set(griffZiele(html))], ["nbox"], "jeder Griff zeigt dorthin");
+});
+t("Bei zeitlicher Sortierung zeigt jeder Griff auf seine eigene Zeitgruppe", () => {
+  frisch();
+  notiz({ titel: "Heute" });
+  notiz({ titel: "Vor einem Jahr", erstellt: Date.now() - 400 * 86400000, geaendert: Date.now() - 400 * 86400000 });
+  A.mut("einst/notizSort", "erstellt", false);
+  const html = A.notizTreffer();
+  const boxen = kaesten(html), ziele = griffZiele(html);
+  wahr(boxen.length > 1, "mehrere Zeitgruppen");
+  gleich(ziele.filter(z => !boxen.includes(z)), [], "kein Griff zeigt ins Leere");
+});
+t("Auch in der Suche zeigen die Griffe auf den Trefferkasten", () => {
+  frisch();
+  notiz({ titel: "Steuerbüro" });
+  A.notizSuche = "steuer";
+  const html = A.notizTreffer();
+  A.notizSuche = "";
+  gleich([...new Set(griffZiele(html))], kaesten(html));
+});
+
 bilanz();

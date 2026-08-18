@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F4F2ED">
+<meta name="theme-color" content="#F4F6F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1214" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Marco's brain</title>
@@ -11,72 +12,101 @@
 <meta name="googlebot" content="noindex, nofollow">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%234A2D6E'/><path d='M15 20l4 4 7-9' stroke='%23E8A84A' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M30 20h18M30 32h18M30 44h12' stroke='%23F4F2ED' stroke-width='5' stroke-linecap='round'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%230E6E68'/><path d='M15 20l4 4 7-9' stroke='%234FC7BC' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M30 20h18M30 32h18M30 44h12' stroke='%23F4F6F7' stroke-width='5' stroke-linecap='round'/></svg>">
 <style>
+/* Schriften liegen im Ordner „fonts" und werden mit ausgeliefert – so sieht die
+   App auf jedem Gerät gleich aus und funktioniert ohne Netz. Beide stehen unter
+   der SIL Open Font License 1.1, siehe fonts/LIZENZ.txt */
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 700;font-display:swap;
+  src:url("fonts/inter-latin.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 700;font-display:swap;
+  src:url("fonts/inter-latin-ext.woff2") format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+@font-face{font-family:"Instrument Serif";font-style:normal;font-weight:400;font-display:swap;
+  src:url("fonts/instrumentserif-latin.woff2") format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}
+@font-face{font-family:"Instrument Serif";font-style:normal;font-weight:400;font-display:swap;
+  src:url("fonts/instrumentserif-latin-ext.woff2") format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
+
+/* Schiefer und Petrol: kühle, ruhige Fläche, genau ein Akzent.
+   Farbe trägt hier Bedeutung – Petrol ist bedienbar, Moos ist erledigt,
+   Bernstein wartet, Ziegel ist endgültig. Alles andere bleibt neutral. */
 :root{
-  --paper:#F4F2ED; --card:#FFFFFF; --card-2:#EDEAE3; --karte-hoch:#FBFAF8;
-  --ink:#1B1A18; --ink-2:#5C5850; --ink-3:#8E8981;
-  --line:#E0DCD3; --line-2:#CBC5B9;
-  --akz:#4A2D6E; --akz-bg:#EDE7F4; --akz-hell:#7B5AA6;
-  --gold:#9A6512; --gold-bg:#F8EEDA;
-  --erf:#136B54; --erf-bg:#E1F0EA;
-  --rot:#9B3327; --rot-bg:#F8E7E4;
-  --r:14px; --r-s:10px;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
-  --mono:ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
-  --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --paper:#F4F6F7; --card:#FFFFFF; --card-2:#EDF1F2; --karte-hoch:#FFFFFF;
+  --ink:#14181B; --ink-2:#4C555B; --ink-3:#79848A;
+  --line:#E3E7E9; --line-2:#CFD6D9;
+  --akz:#0E6E68; --akz-bg:#E1F0EE; --akz-hell:#3E9B93; --auf-akz:#FFFFFF;
+  --gold:#A0640B; --gold-bg:#FAEEDB;
+  --erf:#2C7A4C; --erf-bg:#E2F0E7;
+  --rot:#B3382C; --rot-bg:#FAE8E5;
+  --schatten:0 1px 2px rgba(16,26,30,.05);
+  --schatten-hoch:0 10px 30px rgba(16,26,30,.14);
+  --r:16px; --r-s:12px; --r-xs:9px;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
+  --serif:"Instrument Serif","Iowan Old Style",Palatino,Georgia,serif;
   --nav-h:64px;
 }
 @media (prefers-color-scheme:dark){:root{
-  --paper:#151417; --card:#1F1E23; --card-2:#292731; --karte-hoch:#242229;
-  --ink:#EDEAE4; --ink-2:#A9A3B0; --ink-3:#7C7686;
-  --line:#332F3A; --line-2:#443F4E;
-  --akz:#B79BE0; --akz-bg:#2A2138; --akz-hell:#9A7CCB;
-  --gold:#DFAE60; --gold-bg:#33280F;
-  --erf:#69C7A6; --erf-bg:#132E26;
-  --rot:#E29187; --rot-bg:#33201D;}}
+  --paper:#0E1214; --card:#171C1F; --card-2:#1F262A; --karte-hoch:#1C2226;
+  --ink:#E9EDEE; --ink-2:#A3AEB3; --ink-3:#77848A;
+  --line:#252D31; --line-2:#364247;
+  --akz:#4FC7BC; --akz-bg:#12302E; --akz-hell:#6FD8CE; --auf-akz:#04211F;
+  --gold:#E0A54E; --gold-bg:#32250F;
+  --erf:#5CBE85; --erf-bg:#12291C;
+  --rot:#E4857A; --rot-bg:#331B18;
+  --schatten:0 1px 2px rgba(0,0,0,.4);
+  --schatten-hoch:0 12px 34px rgba(0,0,0,.55);}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
-body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:16px;line-height:1.45;
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:16px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-optical-sizing:auto;
   overscroll-behavior-y:none;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom))}
 #app{max-width:600px;margin:0 auto;padding:0 16px}
-h1,h2,h3{margin:0;font-weight:650;letter-spacing:-.015em}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.014em}
 button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* Zahlen sollen in Spalten stehen, nicht wackeln */
+.zahl,.anz,.mini,.sync,.badge,.bogen-kopf span,.tagblock-h span{font-variant-numeric:tabular-nums}
 
-header{padding:20px 0 10px}
-.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
-header h1{font-size:27px}
+header{padding:22px 0 10px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--akz);margin-bottom:3px}
+header h1{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing:-.012em;line-height:1.08}
 .hd-zeile{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.sync{font-family:var(--mono);font-size:11px;color:var(--ink-3);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.sync{font-size:11px;font-weight:500;color:var(--ink-3);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+  background:var(--card);border:1px solid var(--line);border-radius:99px;padding:4px 9px}
 .sync i{width:7px;height:7px;border-radius:99px;background:var(--ink-3)}
 .sync.on i{background:var(--erf)} .sync.off i{background:var(--gold)}
 
 /* Tagesbogen: der Fortschritt des Tages als durchgehende Linie */
-.bogen{margin:14px 0 4px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
-.bogen-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
-.bogen-kopf b{font-size:15px}
-.bogen-kopf span{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);letter-spacing:.04em}
-.balken{height:8px;border-radius:99px;background:var(--card-2);overflow:hidden;display:flex}
-.balken i{display:block;height:100%;background:var(--erf);transition:width .45s cubic-bezier(.3,1.2,.5,1)}
-.bogen.voll{border-color:var(--erf);background:var(--erf-bg)}
+.bogen{margin:14px 0 4px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 17px;box-shadow:var(--schatten)}
+.bogen-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:11px}
+.bogen-kopf b{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.bogen-kopf span{font-size:11px;font-weight:500;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase}
+.balken{height:6px;border-radius:99px;background:var(--card-2);overflow:hidden;display:flex}
+.balken i{display:block;height:100%;background:var(--erf);border-radius:99px;transition:width .45s cubic-bezier(.3,1.2,.5,1)}
+.bogen.voll{border-color:color-mix(in srgb,var(--erf) 40%,var(--line));background:var(--erf-bg)}
+.bogen.voll .bogen-kopf b{color:var(--erf)}
 
-.sect{margin:22px 0 9px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.sect h2{font-size:12px;font-family:var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
-.sect .zahl{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.sect{margin:24px 0 10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sect h2{font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.sect .zahl{font-size:11.5px;color:var(--ink-3);font-weight:500}
 
 /* Aufgabenzeile */
-.auf{display:flex;align-items:flex-start;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-s);padding:12px 13px;margin-bottom:7px}
-.auf.fertig{background:transparent;border-color:transparent;padding-top:7px;padding-bottom:7px}
+.auf{display:flex;align-items:flex-start;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-s);
+  padding:12px 13px;margin-bottom:7px;box-shadow:var(--schatten);transition:border-color .15s,background .15s}
+.auf.fertig{background:transparent;border-color:transparent;box-shadow:none;padding-top:7px;padding-bottom:7px}
 .auf.ueber{border-left:3px solid var(--rot)}
-.hak{width:26px;height:26px;flex:none;border-radius:50%;border:1.8px solid var(--line-2);background:transparent;display:grid;place-items:center;padding:0;position:relative}
+.hak{width:26px;height:26px;flex:none;border-radius:50%;border:1.8px solid var(--line-2);background:transparent;display:grid;place-items:center;padding:0;position:relative;transition:background .18s,border-color .18s}
 /* Der Kreis bleibt klein, die Trefferfläche wächst auf gut 44px – sonst trifft man ihn unterwegs nicht */
 .hak::before{content:"";position:absolute;inset:-9px;border-radius:50%}
 .hak svg{width:15px;height:15px;stroke:var(--card);stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round;
   stroke-dasharray:22;stroke-dashoffset:22}
 .auf.fertig .hak{background:var(--erf);border-color:var(--erf)}
 .auf.fertig .hak svg{stroke-dashoffset:0;transition:stroke-dashoffset .28s ease .06s}
-.auf-txt{flex:1;min-width:0;font-size:15.5px;line-height:1.35;word-break:break-word}
+.auf-txt{flex:1;min-width:0;font-size:15.5px;line-height:1.38;letter-spacing:-.006em;word-break:break-word}
 .auf.fertig .auf-txt{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
 .auf-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px}
 .auf-akt{display:flex;align-items:center;gap:2px;flex:none;align-self:center}
@@ -86,16 +116,11 @@ header h1{font-size:27px}
 .auf-notiz{margin-top:5px;font-size:12.5px;color:var(--ink-3);line-height:1.45;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   border-left:2px solid var(--line-2);padding-left:8px}
-.griff{flex:none;align-self:center;border:0;background:transparent;color:var(--ink-3);padding:6px 4px;touch-action:none;cursor:grab;display:grid;place-items:center}
+.griff{flex:none;align-self:center;border:0;background:transparent;color:var(--ink-3);padding:8px 5px;touch-action:none;cursor:grab;display:grid;place-items:center;border-radius:8px}
 .griff svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-linecap:round}
-.zieht{opacity:.94;box-shadow:0 8px 22px rgba(15,12,20,.22);position:relative;z-index:5}
-.abwurf-vor{box-shadow:inset 0 3px 0 var(--akz)}
-.abwurf-nach{box-shadow:inset 0 -3px 0 var(--akz)}
-.sortpfeil{display:flex;flex-direction:column;gap:1px;flex:none;align-self:center}
-.sortpfeil button{border:1px solid var(--line-2);background:var(--card);width:30px;height:22px;padding:0;font-size:11px;line-height:1;border-radius:6px}
-.sortpfeil button[disabled]{opacity:.35}
+.griff:active{cursor:grabbing;background:var(--card-2);color:var(--akz)}
 .punkt{width:8px;height:8px;border-radius:99px;flex:none;display:inline-block}
-.mini{font-size:11.5px;color:var(--ink-3)}
+.mini{font-size:11.5px;color:var(--ink-3);font-weight:450}
 .mini.spaet{color:var(--rot);font-weight:600}
 
 @keyframes puls{0%{transform:scale(1);opacity:.55}70%{transform:scale(2.1);opacity:0}100%{opacity:0}}
@@ -109,29 +134,30 @@ header h1{font-size:27px}
 .schnell{display:flex;gap:8px;margin-bottom:6px}
 .schnell input{flex:1}
 .filterzeile{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-.filterknopf{flex:1;display:flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:var(--card);
-  border-radius:var(--r-s);padding:10px 13px;font-size:14.5px;text-align:left;min-width:0}
+.filterknopf{flex:1;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);
+  border-radius:var(--r-s);padding:11px 13px;font-size:14.5px;text-align:left;min-width:0;box-shadow:var(--schatten)}
 .filterknopf b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .filterknopf .pfeil{margin-left:auto;color:var(--ink-3);font-size:12px}
-.filterknopf .anz{font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
+.filterknopf .anz{font-size:11.5px;color:var(--ink-3)}
 .wahlzeile{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:transparent;
   border:0;border-bottom:1px solid var(--line);padding:13px 4px;font-size:15.5px}
 .wahlzeile:last-child{border-bottom:0}
 .wahlzeile[aria-pressed="true"]{color:var(--akz);font-weight:600}
-.wahlzeile .anz{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--ink-3)}
-.gruppe{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
-  margin:18px 0 8px;display:flex;align-items:center;gap:10px}
+.wahlzeile .anz{margin-left:auto;font-size:12px;color:var(--ink-3)}
+.gruppe{font-size:11px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);
+  margin:20px 0 9px;display:flex;align-items:center;gap:10px}
 .gruppe::after{content:"";flex:1;height:1px;background:var(--line)}
 .chips{display:flex;gap:7px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
-.chip{border:1px solid var(--line-2);background:var(--card);border-radius:99px;padding:7px 13px;font-size:14px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
-.chip[aria-pressed="true"]{background:var(--akz);color:#fff;border-color:var(--akz)}
-@media (prefers-color-scheme:dark){.chip[aria-pressed="true"]{color:#17131F}}
+.chip{border:1px solid var(--line-2);background:var(--card);border-radius:99px;padding:7px 13px;font-size:14px;font-weight:500;
+  white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:background .14s,color .14s,border-color .14s}
+.chip[aria-pressed="true"]{background:var(--akz);color:var(--auf-akz);border-color:var(--akz)}
+.chip[aria-pressed="true"] .punkt{box-shadow:0 0 0 1.5px var(--auf-akz)}
 
-.btn{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-s);padding:11px 14px;font-weight:550;transition:transform .1s}
+.btn{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-s);padding:11px 14px;font-weight:550;
+  letter-spacing:-.005em;transition:transform .1s,background .14s,border-color .14s}
 .btn:active{transform:scale(.97)}
-.btn-primary{background:var(--akz);border-color:var(--akz);color:#fff}
-@media (prefers-color-scheme:dark){.btn-primary{color:#17131F}}
+.btn-primary{background:var(--akz);border-color:var(--akz);color:var(--auf-akz);box-shadow:0 1px 2px color-mix(in srgb,var(--akz) 30%,transparent)}
 .btn-wide{width:100%;display:block;text-align:center;padding:14px;font-size:16px}
 .btn-s{padding:7px 11px;font-size:14px;border-radius:8px}
 .btn-ghost{background:transparent;border-color:transparent;color:var(--ink-3)}
@@ -149,55 +175,62 @@ header h1{font-size:27px}
 .aktionen .ak-an{background:color-mix(in srgb,var(--akz) 12%,var(--card));color:var(--akz);border-color:var(--akz)}
 .fertig-knopf{margin-top:14px}
 .btn svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-/* Ziehen: Ablegezonen und Notizstreifen auf Heute */
-.zieht{pointer-events:none}
-[data-drop].drop-an{outline:2px dashed var(--akz);outline-offset:3px;border-radius:var(--r-s);background:color-mix(in srgb,var(--akz) 7%,transparent)}
-.morgenzone{min-height:52px;border:1px dashed var(--line-2);border-radius:var(--r-s);padding:6px;margin-bottom:10px}
+/* ---------- Ziehen und Ablegen ----------
+   Die gezogene Zeile hebt ab, die anderen weichen aus. Beides läuft über
+   transform, damit nichts umbricht und der Finger nicht springt. */
+.dnd-laeuft{cursor:grabbing;-webkit-user-select:none;user-select:none}
+.dnd-weicht{transition:transform .16s cubic-bezier(.2,.8,.3,1)}
+.zieht{pointer-events:none;position:relative;z-index:30;cursor:grabbing;
+  box-shadow:var(--schatten-hoch);border-color:var(--akz)!important;
+  background:var(--karte-hoch);border-radius:var(--r-s);
+  transition:box-shadow .16s ease,transform 0s}
+[data-drop].drop-an{outline:2px dashed var(--akz);outline-offset:3px;border-radius:var(--r-s);background:color-mix(in srgb,var(--akz) 8%,transparent)}
+.morgenzone{min-height:52px;border:1px dashed var(--line-2);border-radius:var(--r-s);padding:6px;margin-bottom:10px;transition:border-color .15s,background .15s}
 .morgenzone .leer{padding:12px 8px;text-align:center}
 .notizspur{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch}
 .nspur{flex:0 0 auto;width:170px;text-align:left;background:var(--card);border:1px solid var(--line);
-  border-left:3px solid var(--line-2);border-radius:var(--r-s);padding:10px 11px;min-height:64px}
-.nspur b{display:block;font-size:14px;font-weight:650;margin-bottom:3px;
+  border-left:3px solid var(--line-2);border-radius:var(--r-s);padding:11px 12px;min-height:64px;box-shadow:var(--schatten)}
+.nspur b{display:block;font-size:14px;font-weight:600;margin-bottom:3px;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .nspur span{font-size:12px;color:var(--ink-3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--card-2);color:var(--ink-2);white-space:nowrap}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:550;letter-spacing:.01em;padding:3px 9px;border-radius:7px;background:var(--card-2);color:var(--ink-2);white-space:nowrap}
 .tag-akz{background:var(--akz-bg);color:var(--akz)}
 .tag-gold{background:var(--gold-bg);color:var(--gold)}
 .tag-erf{background:var(--erf-bg);color:var(--erf)}
 
 /* Wochenspalten */
-.tagblock{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:9px;overflow:hidden}
-.tagblock.heute{border-color:var(--akz);border-width:1.5px}
-.tagblock-h{display:flex;align-items:baseline;justify-content:space-between;padding:10px 13px;background:var(--card-2)}
+.tagblock{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:9px;overflow:hidden;box-shadow:var(--schatten)}
+.tagblock.heute{border-color:var(--akz)}
+.tagblock-h{display:flex;align-items:baseline;justify-content:space-between;padding:11px 14px;background:var(--card-2)}
 .tagblock.heute .tagblock-h{background:var(--akz-bg)}
-.tagblock-h b{font-size:14.5px}
+.tagblock-h b{font-size:14.5px;font-weight:600}
 .tagblock.heute .tagblock-h b{color:var(--akz)}
-.tagblock-h span{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.06em}
+.tagblock-h span{font-size:10.5px;font-weight:500;color:var(--ink-3);letter-spacing:.06em}
 .tagblock .auf{border:0;border-radius:0;margin:0;border-top:1px solid var(--line);background:transparent}
 .tagblock .leer{padding:11px 13px;font-size:13.5px;color:var(--ink-3);border-top:1px solid var(--line)}
 
 /* Notizen */
 .notizreihe{display:flex;align-items:stretch;background:var(--card);border:1px solid var(--line);
-  border-left-width:4px;border-radius:var(--r);margin-bottom:8px;overflow:hidden}
+  border-left-width:4px;border-radius:var(--r);margin-bottom:8px;overflow:hidden;box-shadow:var(--schatten)}
 .notiz{background:transparent;border:0;padding:13px 14px;flex:1;min-width:0;text-align:left;display:block}
 .notiz-akt{display:flex;flex-direction:column;justify-content:center;gap:2px;padding-right:6px}
 .notiz-akt button{border:0;background:transparent;color:var(--ink-3);padding:10px 8px;display:grid;place-items:center;min-height:40px}
 .notiz-akt svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.notiz b{display:block;font-size:15.5px;line-height:1.3;margin-bottom:4px}
+.notiz b{display:block;font-size:15.5px;font-weight:600;letter-spacing:-.008em;line-height:1.3;margin-bottom:4px}
 .notiz p{margin:0;font-size:13.5px;color:var(--ink-2);line-height:1.5;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .notiz .nm{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .notiz mark{background:var(--gold-bg);color:var(--gold);padding:0 2px;border-radius:3px}
 .werkzeug{display:flex;gap:4px;flex-wrap:wrap;padding:8px 0;position:sticky;top:0;background:var(--paper);z-index:2;border-bottom:1px solid var(--line)}
-.werkzeug button{border:1px solid var(--line-2);background:var(--card);border-radius:8px;min-width:38px;height:36px;padding:0 9px;font-size:14px}
+.werkzeug button{border:1px solid var(--line-2);background:var(--card);border-radius:8px;min-width:38px;height:36px;padding:0 9px;font-size:14px;font-weight:500}
 .werkzeug button b{font-weight:700}
 .werkzeug button s{text-decoration:line-through}
-.editor{min-height:46vh;padding:14px 2px;font-size:17px;line-height:1.62;outline:none;
-  font-family:var(--sans);letter-spacing:-.005em;color:var(--ink)}
+.editor{min-height:46vh;padding:14px 2px;font-size:16.5px;line-height:1.65;outline:none;
+  font-family:var(--sans);letter-spacing:-.006em;color:var(--ink)}
 .editor p{margin:0 0 10px}
 .editor:empty::before{content:attr(data-leer);color:var(--ink-3)}
-.editor h3{font-family:var(--sans);font-size:15px;font-weight:650;letter-spacing:.02em;text-transform:uppercase;
-  color:var(--akz);margin:22px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+.editor h3{font-family:var(--serif);font-size:22px;font-weight:400;letter-spacing:0;text-transform:none;
+  color:var(--ink);margin:24px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .editor h3:first-child{margin-top:4px}
 .editor b,.editor strong{font-weight:650}
 .editor ul,.editor ol{padding-left:22px;margin:8px 0}
@@ -206,50 +239,55 @@ header h1{font-size:27px}
 .editor hr{border:0;border-top:1px solid var(--line-2);margin:18px 0}
 .editor a{color:var(--akz)}
 
-nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;z-index:40;padding-bottom:env(safe-area-inset-bottom)}
-nav button{flex:1;border:0;background:transparent;height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink-3);font-size:10.5px}
+nav{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--card) 88%,transparent);
+  -webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px);
+  border-top:1px solid var(--line);display:flex;z-index:40;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:transparent;height:var(--nav-h);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink-3);font-size:10.5px;font-weight:500;letter-spacing:.01em}
 nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 nav button[aria-current="page"]{color:var(--akz);font-weight:600}
-.badge{position:absolute;transform:translate(15px,-11px);background:var(--akz);color:#fff;font-family:var(--mono);font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:99px;display:grid;place-items:center;padding:0 4px}
-@media (prefers-color-scheme:dark){.badge{color:#17131F}}
+.badge{position:absolute;transform:translate(15px,-11px);background:var(--akz);color:var(--auf-akz);font-size:10px;font-weight:700;min-width:17px;height:17px;border-radius:99px;display:grid;place-items:center;padding:0 4px}
 
-.sheet{position:fixed;inset:0;background:rgba(15,12,20,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
-.sheet-in{background:var(--paper);width:100%;max-width:520px;max-height:88vh;overflow-y:auto;border-radius:18px;
-  padding:18px 16px 20px;box-shadow:0 18px 50px rgba(15,12,20,.28)}
-@media (max-height:560px){.sheet{align-items:flex-end;padding:0}.sheet-in{max-height:96vh;border-radius:18px 18px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}}
+.sheet{position:fixed;inset:0;background:color-mix(in srgb,var(--ink) 45%,transparent);
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+  z-index:50;display:flex;align-items:center;justify-content:center;padding:16px;animation:rein .16s ease}
+.sheet-in{background:var(--paper);width:100%;max-width:520px;max-height:88vh;overflow-y:auto;border-radius:20px;
+  border:1px solid var(--line);padding:18px 16px 20px;box-shadow:var(--schatten-hoch)}
+@media (max-height:560px){.sheet{align-items:flex-end;padding:0}.sheet-in{max-height:96vh;border-radius:20px 20px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom))}}
 .grab{width:38px;height:4px;border-radius:99px;background:var(--line-2);margin:0 auto 14px}
 .sheet-kopf{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
-.sheet-kopf h2{font-size:18px}
+.sheet-kopf h2{font-family:var(--serif);font-size:24px;font-weight:400;letter-spacing:-.01em}
 .hinweis{display:flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);border-radius:var(--r-s);
-  padding:11px 13px;margin-bottom:12px;font-size:14px;animation:rein .2s ease}
+  padding:12px 14px;margin-bottom:12px;font-size:14px;box-shadow:var(--schatten);animation:rein .2s ease}
 .hinweis span{flex:1}
 .hinweis button{border:0;background:transparent;color:var(--paper);font-weight:650;text-decoration:underline;padding:2px 4px}
 .leerzustand{text-align:center;padding:40px 20px;color:var(--ink-3)}
-.leerzustand b{display:block;color:var(--ink);font-size:16.5px;margin-bottom:5px}
+.leerzustand b{display:block;font-family:var(--serif);font-weight:400;color:var(--ink);font-size:22px;margin-bottom:6px}
 .note{font-size:13px;color:var(--ink-3);line-height:1.55}
 input[type=text],input[type=search],input[type=url],input[type=date],select,textarea{
   font-family:inherit;font-size:16px;width:100%;padding:12px 13px;border:1px solid var(--line-2);
-  border-radius:var(--r-s);background:var(--card);color:var(--ink)}
-label.fl{display:block;font-size:13px;color:var(--ink-2);margin:12px 0 5px;font-weight:550}
-.liste-zeile{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-s);padding:11px 13px;margin-bottom:7px}
+  border-radius:var(--r-s);background:var(--card);color:var(--ink);transition:border-color .14s,box-shadow .14s}
+input[type=text]:focus,input[type=search]:focus,input[type=url]:focus,textarea:focus{
+  border-color:var(--akz);box-shadow:0 0 0 3px color-mix(in srgb,var(--akz) 14%,transparent);outline:none}
+label.fl{display:block;font-size:12.5px;color:var(--ink-2);margin:14px 0 5px;font-weight:600;letter-spacing:.01em}
+.liste-zeile{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-s);padding:11px 13px;margin-bottom:7px;box-shadow:var(--schatten)}
 .liste-zeile b{font-size:15px;font-weight:600}
 pre{font-family:var(--mono);font-size:12px;background:var(--card-2);border:1px solid var(--line);border-radius:var(--r-s);padding:11px;overflow-x:auto;line-height:1.5}
 code{font-family:var(--mono);font-size:12.5px;background:var(--card-2);padding:2px 5px;border-radius:5px;word-break:break-all}
-input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--akz-hell);outline-offset:2px}
+input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--akz);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 /* Zeilenknöpfe: der kurze Weg in den Tag, ohne die Zeile zu überladen */
 .zeilentakt{display:flex;gap:6px;margin-top:7px}
-.ztakt{border:1px solid var(--line-2);background:var(--card-2);color:var(--ink-2);
+.ztakt{border:1px solid var(--line);background:var(--card-2);color:var(--ink-2);
   border-radius:99px;padding:4px 11px;font-size:12px;font-weight:550;min-height:30px}
 .ztakt:active{transform:scale(.96)}
 .mini.liegt{color:var(--gold);font-weight:550}
 
 /* Schnelleingabe in Daumenreichweite: schwebt über der Navigationsleiste */
 .daumen{position:fixed;right:16px;bottom:calc(var(--nav-h) + 14px + env(safe-area-inset-bottom));
-  width:52px;height:52px;border-radius:50%;border:0;background:var(--akz);color:#fff;
-  font-size:26px;line-height:1;display:grid;place-items:center;z-index:41;
-  box-shadow:0 6px 18px rgba(24,16,40,.28)}
+  width:54px;height:54px;border-radius:18px;border:0;background:var(--akz);color:var(--auf-akz);
+  font-size:26px;font-weight:400;line-height:1;display:grid;place-items:center;z-index:41;
+  box-shadow:0 6px 20px color-mix(in srgb,var(--akz) 40%,transparent),0 2px 6px rgba(16,26,30,.18)}
 .daumen:active{transform:scale(.94)}
 /* Solange ein Fenster offen ist, hat der Knopf nichts zu suchen */
 #sheet:not(:empty) + .daumen{display:none}
@@ -257,16 +295,16 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 
 /* Wochentopf und Rückblick */
 .topfzeile{display:flex;align-items:center;gap:8px;background:var(--card-2);border:1px solid var(--line);
-  border-radius:var(--r-s);padding:10px 12px;margin-bottom:7px;font-size:14.5px}
-.topfzeile .rest{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-3)}
-.rbtag{margin:12px 0 4px;font-size:12px;font-family:var(--mono);letter-spacing:.1em;
+  border-radius:var(--r-s);padding:11px 13px;margin-bottom:7px;font-size:14.5px}
+.topfzeile .rest{margin-left:auto;font-size:11.5px;color:var(--ink-3)}
+.rbtag{margin:14px 0 4px;font-size:11.5px;font-weight:600;letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink-3)}
 .rbzeile{display:flex;gap:8px;align-items:baseline;padding:4px 0;font-size:14px}
 .rbzeile s{color:var(--ink-3)}
 
 /* Verbindung zwischen Aufgabe und Notiz */
 .verweis{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--akz);
-  background:var(--card-2);border:1px solid var(--line);border-radius:99px;padding:3px 10px}
+  background:var(--akz-bg);border:1px solid color-mix(in srgb,var(--akz) 22%,transparent);border-radius:99px;padding:3px 10px}
 </style>
 </head>
 <body>
@@ -288,12 +326,18 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="2.0";
+const VERSION="2.1";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
 const MONATE=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
-const FARBEN=["#4A2D6E","#136B54","#9A6512","#9B3327","#2A6478","#7A3B62","#4C6B18","#5C5850"];
+/* Listenfarben aus derselben Familie wie das übrige Bild: gedeckt, gleich hell,
+   damit acht Punkte nebeneinander nicht schreien. */
+const FARBEN=["#0E6E68","#2C6E9B","#5A57A8","#8A4C74","#A0640B","#2C7A4C","#B3382C","#5B6770"];
+/* Wer die App vor der Auffrischung genutzt hat, hat noch die alten Vorgabefarben
+   in den Listen stehen. Genau diese – und nur diese – werden einmalig ersetzt. */
+const FARBEN_ALT={"#4A2D6E":"#0E6E68","#136B54":"#2C7A4C","#9A6512":"#A0640B","#9B3327":"#B3382C",
+  "#2A6478":"#2C6E9B","#7A3B62":"#8A4C74","#4C6B18":"#5A57A8","#5C5850":"#5B6770"};
 
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 /* Der Zähler macht die Kennung auch dann eindeutig, wenn hunderte Einträge in
@@ -340,12 +384,12 @@ const istHeuteFertig=a=>a.fertig&&iso(new Date(a.fertig))===heute();
 
 /* ---------- Zustand ---------- */
 const STARTKAT=()=>({
-  k_all:{n:"Allgemein",f:"#5C5850",art:"beides",pos:0},
-  k_geb:{n:"Geburt",f:"#7A3B62",art:"beides",pos:1},
-  k_arb:{n:"Arbeit",f:"#2A6478",art:"beides",pos:2},
-  k_idee:{n:"Ideen",f:"#9A6512",art:"beides",pos:3}
+  k_all:{n:"Allgemein",f:"#5B6770",art:"beides",pos:0},
+  k_geb:{n:"Geburt",f:"#8A4C74",art:"beides",pos:1},
+  k_arb:{n:"Arbeit",f:"#2C6E9B",art:"beides",pos:2},
+  k_idee:{n:"Ideen",f:"#A0640B",art:"beides",pos:3}
 });
-const leer=()=>({aufgaben:{},notizen:{},kategorien:STARTKAT(),einst:{},version:VERSION});
+const leer=()=>({aufgaben:{},notizen:{},kategorien:STARTKAT(),einst:{},tot:{},version:VERSION});
 let S=leer();
 let cfg={db:"",hid:"",name:""};
 let tab="heute", es=null, syncState="lokal", queue=[];
@@ -382,8 +426,20 @@ function lesenLokal(){
   try{const v=localStorage.getItem(KEY); if(v)S={...leer(),...JSON.parse(v)};}catch(e){}
   try{const c=localStorage.getItem(KEY+".cfg"); if(c)cfg={...cfg,...JSON.parse(c)};}catch(e){}
   try{const q=localStorage.getItem(KEY+".q"); if(q)queue=JSON.parse(q);}catch(e){}
-  ["aufgaben","notizen","kategorien","einst"].forEach(f=>{if(!S[f]||typeof S[f]!=="object")S[f]={};});
+  ["aufgaben","notizen","kategorien","einst","tot"].forEach(f=>{if(!S[f]||typeof S[f]!=="object")S[f]={};});
   if(!Object.keys(S.kategorien).length)S.kategorien=STARTKAT();
+  farbenAuffrischen();
+  totAufraeumen();
+}
+/* Beim Umstieg auf das neue Farbbild: Listen, die noch eine alte Vorgabefarbe
+   tragen, bekommen deren Entsprechung. Selbst gewählte Farben bleiben, wie sie
+   sind. Die Zuordnung ist in sich geschlossen – ein zweiter Durchlauf ändert
+   nichts mehr –, deshalb darf sie auch nach jedem Abgleich wieder laufen. */
+function farbenAuffrischen(){
+  Object.entries(S.kategorien||{}).forEach(([id,k])=>{
+    const neu=k&&FARBEN_ALT[String(k.f||"").toUpperCase()];
+    if(neu) S.kategorien[id]={...k,f:neu};
+  });
 }
 function schreibenLokal(){
   try{
@@ -450,8 +506,48 @@ function senden(pfad,wert){
   einreihen(pfad,wert); schreibenLokal(); flush();
   return true;
 }
+/* ---------- Grabsteine: gelöscht bleibt gelöscht ----------
+   Eine Löschung ist auf beiden Geräten nur eine Abwesenheit. Beim
+   Zusammenführen gewinnt aber jeder Eintrag, den es irgendwo noch gibt – eine
+   Abwesenheit kann gegen ihn nichts ausrichten. Genau daran ist eine gelöschte
+   Notiz vom anderen Gerät zurückgekommen. Deshalb hinterlässt jedes Löschen
+   jetzt eine Notiz über sich selbst: Kennung und Zeitpunkt. Wer den Eintrag
+   später wieder sieht, weiß, dass er älter ist als seine Löschung, und lässt
+   ihn liegen. Wird derselbe Eintrag danach wirklich wieder angelegt – etwa über
+   „Rückgängig" –, trägt er einen neueren Stempel und der Grabstein fällt. */
+const TOT_HALTEN=90*TAG_MS;
+const EINTRAGSPFAD=/^(aufgaben|notizen|kategorien)\/([^/]+)$/;
+const totSchluessel=pfad=>pfad.replace("/",":");
+const totZeit=pfad=>+(S.tot||{})[totSchluessel(pfad)]||0;
+/* Gilt der Eintrag als gelöscht? Nur wenn es überhaupt einen Grabstein gibt –
+   Einträge aus alten Fassungen tragen gar keinen Zeitstempel, und ohne diese
+   Bedingung wäre jeder von ihnen gelöscht. Die Löschung muss außerdem echt
+   jünger sein als die letzte Änderung: bei Gleichstand – zwei Vorgänge in
+   derselben Millisekunde – bleibt der Eintrag. Etwas fälschlich zu behalten ist
+   der harmlosere der beiden Irrtümer. */
+const istTot=(pfad,eintrag)=>{const t=totZeit(pfad); return t>0&&t>stempel(eintrag);};
+function grabstein(pfad,wert,verschicken=true){
+  const m=EINTRAGSPFAD.exec(pfad); if(!m) return;
+  const k=totSchluessel(pfad);
+  if(!S.tot||typeof S.tot!=="object") S.tot={};
+  if(wert===null){
+    const t=Date.now(); S.tot[k]=t;
+    if(verschicken) senden("tot/"+k,t);
+  } else if(S.tot[k]!=null){
+    delete S.tot[k];
+    if(verschicken) senden("tot/"+k,null);
+  }
+}
+/* Nach drei Monaten hat jedes Gerät die Löschung gesehen – dann darf der
+   Grabstein selbst verschwinden, sonst wächst er ewig mit. */
+function totAufraeumen(){
+  const grenze=Date.now()-TOT_HALTEN;
+  Object.entries(S.tot||{}).forEach(([k,t])=>{
+    if(+t<grenze){ delete S.tot[k]; if(basis()) senden("tot/"+k,null); }
+  });
+}
 function mut(pfad,wert,neuZeichnen=true){
-  setPfad(S,pfad,wert); schreibenLokal(); senden(pfad,wert);
+  setPfad(S,pfad,wert); grabstein(pfad,wert); schreibenLokal(); senden(pfad,wert);
   if(neuZeichnen) render();
 }
 /* Jede Änderung an einem Eintrag muss einen Zeitstempel mitführen: beim
@@ -480,22 +576,46 @@ const stempel=v=>{
 function zusammenfuehren(fern){
   const vorher=JSON.stringify(S);
   const neu={...leer()};
+  /* Zuerst die Grabsteine beider Seiten: sie entscheiden mit, was überhaupt
+     zurückkommen darf. Je Kennung zählt der jüngste Löschzeitpunkt. */
+  const tot={...((fern&&fern.tot)||{})};
+  Object.entries(S.tot||{}).forEach(([k,t])=>{ if(+t>+(tot[k]||0)) tot[k]=+t; });
+  neu.tot=tot;
+  S.tot=tot;                                   /* damit istTot gleich den vollen Stand sieht */
   ["aufgaben","notizen","kategorien"].forEach(f=>{
     const lokal=S[f]||{}, entfernt=(fern&&fern[f])||{};
-    const raus={...entfernt};
-    Object.entries(lokal).forEach(([k,v])=>{
-      const r=entfernt[k];
-      if(!r||stempel(v)>stempel(r)) raus[k]=v;
+    const raus={};
+    new Set([...Object.keys(entfernt),...Object.keys(lokal)]).forEach(k=>{
+      const v=lokal[k], r=entfernt[k];
+      const sieger=(v&&(!r||stempel(v)>stempel(r)))?v:r;
+      if(!sieger) return;
+      if(istTot(f+"/"+k,sieger)) return;       /* seit der Löschung nicht angefasst – bleibt fort */
+      raus[k]=sieger;
     });
     neu[f]=raus;
   });
   neu.einst={...((fern&&fern.einst)||{}),...(S.einst||{})};
-  S=neu; schreibenLokal();
-  /* Alles, was die Gegenseite noch nicht kennt, hochschieben */
-  const fernText=JSON.stringify({aufgaben:(fern&&fern.aufgaben)||{},notizen:(fern&&fern.notizen)||{},kategorien:(fern&&fern.kategorien)||{}});
-  const neuText=JSON.stringify({aufgaben:neu.aufgaben,notizen:neu.notizen,kategorien:neu.kategorien});
-  if(fernText!==neuText) senden("",S);
+  S=neu; farbenAuffrischen(); schreibenLokal();
+  /* Alles, was die Gegenseite noch nicht kennt, hochschieben – dazu gehören
+     ausdrücklich auch die Grabsteine und die dadurch entfernten Einträge. */
+  const auszug=z=>JSON.stringify({aufgaben:(z&&z.aufgaben)||{},notizen:(z&&z.notizen)||{},
+    kategorien:(z&&z.kategorien)||{},tot:(z&&z.tot)||{}});
+  if(auszug(fern)!==auszug(neu)) senden("",S);
   if(vorher!==JSON.stringify(S)) render();
+}
+
+/* Was von außen hereinkommt, geht durch dieselbe Prüfung wie ein Abgleich:
+   Ein Eintrag, der hier längst gelöscht ist und seither nicht angefasst wurde,
+   wird nicht wieder aufgenommen – stattdessen bekommt die Gegenseite die
+   Löschung noch einmal geschickt, denn offenbar kennt sie sie nicht. */
+function fernSetzen(pfad,daten){
+  const rein=String(pfad||"").replace(/^\//,"");
+  if(EINTRAGSPFAD.test(rein)){
+    if(daten===null){ grabstein(rein,null,false); setPfad(S,rein,null); return; }
+    if(istTot(rein,daten)){ senden(rein,null); return; }
+    grabstein(rein,daten);
+  }
+  setPfad(S,rein,daten);
 }
 
 /* ---------- Verbindung mit Selbstheilung ---------- */
@@ -513,12 +633,12 @@ function verbinden(){
       /* Jedes vollständige Update wird zusammengeführt, nie blind übernommen.
          Stimmen beide Stände überein, entsteht dabei kein weiterer Schreibvorgang. */
       if(d.path==="/"||d.path===""){ erstesPut=false; zusammenfuehren(d.data); return; }
-      setPfad(S,d.path,d.data); schreibenLokal(); render();
+      fernSetzen(d.path,d.data); schreibenLokal(); render();
     });
     es.addEventListener("patch",e=>{
       let d; try{ d=JSON.parse(e.data); }catch(err){ return; }
       if(!d||typeof d!=="object") return;
-      Object.entries(d.data||{}).forEach(([k,v])=>setPfad(S,(d.path==="/"?"":d.path)+"/"+k,v));
+      Object.entries(d.data||{}).forEach(([k,v])=>fernSetzen((d.path==="/"?"":d.path)+"/"+k,v));
       schreibenLokal(); render();
     });
     es.addEventListener("keep-alive",()=>zustandSetzen("live"));
@@ -662,7 +782,10 @@ function aufgabeLoeschenFragen(id,ausDialog){
 function aufgabeLoeschen(id){
   const kopie=S.aufgaben[id]; if(!kopie) return;
   mut("aufgaben/"+id,null,false);
-  hinweis("„"+kopie.t.slice(0,34)+(kopie.t.length>34?"…":"")+"“ gelöscht","Rückgängig",()=>mut("aufgaben/"+id,kopie));
+  /* Beim Zurückholen ein frischer Stempel: sonst wäre der wiederhergestellte
+     Eintrag älter als sein eigener Grabstein und flöge gleich wieder hinaus. */
+  hinweis("„"+kopie.t.slice(0,34)+(kopie.t.length>34?"…":"")+"“ gelöscht","Rückgängig",
+    ()=>mut("aufgaben/"+id,{...kopie,ts:Date.now()}));
 }
 
 /* Was gehört in welchen Topf? */
@@ -676,30 +799,50 @@ function topfHeute(){
   };
 }
 
-/* ===== Ziehen und Ablegen ===== */
-let dndZustand=null;
+/* ===== Ziehen und Ablegen =====
+   Vier Dinge haben das Ziehen bisher unberechenbar gemacht, alle vier sind hier
+   behoben:
+   1. Jede Berührung des Griffs war sofort ein Zug. Ein Antippen beim Scrollen
+      hat dadurch die Reihenfolge verändert. Jetzt gilt erst als Zug, was sich
+      auch bewegt – acht Pixel weit.
+   2. Die Bewegung hing am Griff. Rutschte der Finger schneller als das Bild
+      nachkam, ging der Zug verloren. Jetzt hört das Fenster mit.
+   3. Ein Neuzeichnen mitten im Zug – etwa weil eine Meldung ausläuft oder das
+      andere Gerät etwas schickt – hat die gezogene Zeile unter dem Finger
+      ausgetauscht. Während eines Zugs wird nicht mehr gezeichnet, das
+      Versäumte danach nachgeholt.
+   4. Der Zielplatz wurde an der Fingerspitze gemessen. Wo man die Zeile
+      angefasst hat, verschob damit das Ergebnis. Jetzt zählt die Mitte der
+      gezogenen Zeile.
+   Dazu neu: am Bildrand rollt die Liste mit, die Nachbarn machen sichtbar Platz,
+   und Escape bricht ab. */
+const DND_SCHWELLE=8;      /* so viele Pixel Weg, bevor aus Berühren ein Ziehen wird */
+const DND_RAND=76;         /* ab diesem Abstand zum Bildrand rollt die Liste mit */
+const DND_TEMPO=16;        /* höchstens so viele Pixel je Bild */
+let dndZustand=null;       /* der laufende Zug, sonst null */
+let dndSperre=false;       /* solange gezogen wird: nicht neu zeichnen */
+let dndNachholen=false;    /* ein unterdrücktes Neuzeichnen wartet */
+let dndKlickSperre=0;      /* der Klick unmittelbar nach dem Loslassen zählt nicht */
 
 function dndGriff(ev,containerId,art){
-  if(ev.button&&ev.button!==0) return;
-  const griff=ev.currentTarget;
-  const box=document.getElementById(containerId);
-  if(!box) return;
-  /* Nach oben suchen, bis die Zeile gefunden ist – notfalls abbrechen,
-     denn oberhalb des Körpers gibt es kein getAttribute mehr */
-  let zeile=griff, tiefe=0;
-  while(zeile&&typeof zeile.getAttribute==="function"&&!zeile.getAttribute("data-dnd")&&tiefe++<12) zeile=zeile.parentNode;
-  if(!zeile||typeof zeile.getAttribute!=="function"||!zeile.getAttribute("data-dnd")) return;
-  if(ev.preventDefault) ev.preventDefault();
+  if(dndZustand) dndAufraeumen();                       /* ein hängengebliebener Zug endet hier */
+  if(ev.button&&ev.button!==0) return;                  /* nur die linke Taste */
+  const box=document.getElementById(containerId); if(!box) return;
+  const zeile=elternMit(ev.currentTarget,"data-dnd"); if(!zeile) return;
   const kinder=[...box.children].filter(k=>k.getAttribute&&k.getAttribute("data-dnd"));
-  dndZustand={box,zeile,art,containerId,kinder,
-    rects:kinder.map(k=>k.getBoundingClientRect()),
-    startY:ev.clientY, index:kinder.indexOf(zeile), ziel:kinder.indexOf(zeile)};
-  zeile.classList.add("zieht");
-  try{ griff.setPointerCapture(ev.pointerId); }catch(e){}
-  griff.onpointermove=dndBewegen;
-  griff.onpointerup=dndLoslassen;
-  griff.onpointercancel=dndLoslassen;
+  const index=kinder.indexOf(zeile); if(index<0) return;
+  if(ev.preventDefault) ev.preventDefault();
+  dndZustand={art,box,zeile,kinder,index,ziel:index,aktiv:false,
+    griff:ev.currentTarget, pid:ev.pointerId, rollen:0,
+    startX:ev.clientX, startSeite:ev.clientY+versatzY(),
+    zeigerX:ev.clientX, zeigerY:ev.clientY,
+    rects:null, schritt:0, zone:null, dropWann:null};
+  addEventListener("pointermove",dndBewegen,{passive:false});
+  addEventListener("pointerup",dndLoslassen,true);
+  addEventListener("pointercancel",dndAbbrechen,true);
+  addEventListener("keydown",dndTaste,true);
 }
+const versatzY=()=>(typeof scrollY==="number"?scrollY:0);
 /* Nach oben suchen, aber begrenzt – oberhalb des Körpers gibt es kein getAttribute mehr */
 function elternMit(el,attr,tiefe=12){
   let n=el, i=0;
@@ -711,74 +854,187 @@ function dropZoneAn(x,y){
   const el=document.elementFromPoint(x,y);
   return el?elternMit(el,"data-drop"):null;
 }
+/* Erst hier wird gemessen: bis zur Schwelle kann sich das Bild noch bewegen.
+   Gemessen wird in Seitenkoordinaten, damit Mitrollen nichts verzerrt. */
+function dndStarten(){
+  const z=dndZustand; if(!z||z.aktiv) return;
+  const oben=versatzY();
+  z.rects=z.kinder.map(k=>{
+    const r=k.getBoundingClientRect();
+    return {top:r.top+oben, hoehe:r.height, mitte:r.top+oben+r.height/2};
+  });
+  const eigen=z.rects[z.index];
+  /* Der Schritt ist die Höhe der Zeile samt Abstand zur nächsten – so weit
+     rücken die Nachbarn, wenn sie Platz machen. */
+  const luecke=z.rects.length>1?Math.max(0,z.rects[1].top-(z.rects[0].top+z.rects[0].hoehe)):0;
+  z.schritt=eigen.hoehe+luecke;
+  z.aktiv=true; dndSperre=true; dndNachholen=false;
+  z.zeile.classList.add("zieht");
+  z.kinder.forEach((k,i)=>{ if(i!==z.index) k.classList.add("dnd-weicht"); });
+  if(document.body&&document.body.classList) document.body.classList.add("dnd-laeuft");
+  try{ z.griff.setPointerCapture(z.pid); }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate(8); }catch(e){}
+  dndRollen();
+}
 function dndBewegen(ev){
   const z=dndZustand; if(!z) return;
-  z.zeile.style.transform="translateY("+(ev.clientY-z.startY)+"px)";
-  if(z.art==="aufgabe"){
-    const zone=dropZoneAn(ev.clientX,ev.clientY);
-    const wann=zone?zone.getAttribute("data-drop"):null;
-    const eigen=S.aufgaben[z.zeile.getAttribute("data-dnd")];
-    const fremd=zone&&eigen&&wann!==(eigen.wann||"");
-    if(z.zone&&z.zone!==zone) z.zone.classList.remove("drop-an");
-    z.zone=fremd?zone:null;
-    z.dropWann=fremd?wann:null;
-    if(z.zone) z.zone.classList.add("drop-an");
+  z.zeigerX=ev.clientX; z.zeigerY=ev.clientY;
+  if(!z.aktiv){
+    const weg=Math.max(Math.abs(ev.clientY+versatzY()-z.startSeite),Math.abs(ev.clientX-z.startX));
+    if(weg<DND_SCHWELLE) return;
+    dndStarten();
   }
-  const ohne=z.kinder.filter((_,i)=>i!==z.index);
-  const rects=z.rects.filter((_,i)=>i!==z.index);
-  let ziel=rects.filter(r=>(r.top+r.height/2)<ev.clientY).length;
+  if(ev.cancelable&&ev.preventDefault) ev.preventDefault();
+  dndZeichnen();
+}
+function dndZeichnen(){
+  const z=dndZustand; if(!z||!z.aktiv) return;
+  const dy=z.zeigerY+versatzY()-z.startSeite;
+  z.zeile.style.transform="translateY("+dy+"px)";
+  if(z.art==="aufgabe") dndZonePruefen();
+  /* Zielplatz aus der Mitte der gezogenen Zeile: wo der Finger sie gepackt hat,
+     darf das Ergebnis nicht verschieben.
+     Verglichen wird mit den Mitten, die die Nachbarn während des Zugs
+     tatsächlich haben – alles unterhalb der gezogenen Zeile ist um eine Zeile
+     aufgerückt, weil deren Platz ja frei ist. Ohne diese Verrechnung landete
+     eine nach unten gezogene Zeile stets eine Stelle zu früh. */
+  const mitte=z.rects[z.index].mitte+dy;
+  let ziel=0;
+  z.kinder.forEach((k,i)=>{
+    if(i===z.index) return;
+    const m=i>z.index?z.rects[i].mitte-z.schritt:z.rects[i].mitte;
+    if(m<mitte) ziel++;
+  });
   if(ziel===z.ziel) return;
   z.ziel=ziel;
-  z.kinder.forEach(k=>k.classList.remove("abwurf-vor","abwurf-nach"));
-  if(ohne.length){
-    if(ziel<ohne.length) ohne[ziel].classList.add("abwurf-vor");
-    else ohne[ohne.length-1].classList.add("abwurf-nach");
-  }
+  dndLueckeZeigen();
 }
-function dndLoslassen(){
+/* Die Nachbarn zwischen alter und neuer Position rücken um eine Zeile weiter –
+   die Lücke wandert sichtbar mit, statt nur als Strich zu erscheinen. */
+function dndLueckeZeigen(){
+  const z=dndZustand; if(!z) return;
+  z.kinder.forEach((k,i)=>{
+    if(i===z.index) return;
+    let v=0;
+    if(i>z.index&&i<=z.ziel) v=-z.schritt;
+    else if(i<z.index&&i>=z.ziel) v=z.schritt;
+    k.style.transform=v?"translateY("+v+"px)":"";
+  });
+}
+function dndZonePruefen(){
+  const z=dndZustand; if(!z) return;
+  const zone=dropZoneAn(z.zeigerX,z.zeigerY);
+  const eigen=S.aufgaben[z.zeile.getAttribute("data-dnd")];
+  const wann=zone?zone.getAttribute("data-drop"):null;
+  const fremd=!!(zone&&eigen&&wann!==(eigen.wann||""));
+  const neu=fremd?zone:null;
+  if(z.zone&&z.zone!==neu) z.zone.classList.remove("drop-an");
+  if(neu&&neu!==z.zone) neu.classList.add("drop-an");
+  z.zone=neu; z.dropWann=fremd?wann:null;
+}
+/* Am oberen und unteren Rand rollt die Liste mit, sonst kommt eine Aufgabe nie
+   weiter als einen Bildschirm weit. */
+function dndRollen(){
+  const z=dndZustand; if(!z||!z.aktiv) return;
+  if(typeof requestAnimationFrame!=="function") return;
+  const hoehe=(typeof innerHeight==="number"?innerHeight:0)||600;
+  let d=0;
+  if(z.zeigerY<DND_RAND) d=-Math.ceil((DND_RAND-z.zeigerY)/DND_RAND*DND_TEMPO);
+  else if(z.zeigerY>hoehe-DND_RAND) d=Math.ceil((z.zeigerY-(hoehe-DND_RAND))/DND_RAND*DND_TEMPO);
+  if(d&&typeof scrollBy==="function"){ scrollBy(0,d); dndZeichnen(); }
+  z.rollen=requestAnimationFrame(dndRollen);
+}
+function dndTaste(ev){ if(ev&&ev.key==="Escape") dndAbbrechen(); }
+function dndAbbrechen(){
+  const war=!!(dndZustand&&dndZustand.aktiv);
+  dndAufraeumen();
+  if(war) render();
+}
+/* Alles zurück auf Anfang – wird aus jedem Ende heraus aufgerufen, damit keine
+   Klasse, kein Zuhörer und kein Bildlauf hängen bleibt. */
+function dndAufraeumen(){
   const z=dndZustand; if(!z) return;
   dndZustand=null;
+  removeEventListener("pointermove",dndBewegen);
+  removeEventListener("pointerup",dndLoslassen,true);
+  removeEventListener("pointercancel",dndAbbrechen,true);
+  removeEventListener("keydown",dndTaste,true);
+  if(z.rollen&&typeof cancelAnimationFrame==="function") cancelAnimationFrame(z.rollen);
+  try{ z.griff.releasePointerCapture(z.pid); }catch(e){}
   z.zeile.style.transform="";
-  z.kinder.forEach(k=>k.classList.remove("zieht","abwurf-vor","abwurf-nach"));
+  z.zeile.classList.remove("zieht");
+  z.kinder.forEach(k=>{ k.classList.remove("dnd-weicht"); k.style.transform=""; });
   if(z.zone) z.zone.classList.remove("drop-an");
+  if(document.body&&document.body.classList) document.body.classList.remove("dnd-laeuft");
+  dndSperre=false;
+  if(dndNachholen){ dndNachholen=false; render(); }
+}
+function dndLoslassen(ev){
+  const z=dndZustand; if(!z) return;
+  if(!z.aktiv){ dndAufraeumen(); return; }          /* nur berührt, nicht gezogen */
+  if(ev&&ev.cancelable&&ev.preventDefault) ev.preventDefault();
+  const art=z.art, index=z.index, ziel=z.ziel, dropWann=z.dropWann;
+  const id=z.zeile.getAttribute("data-dnd");
+  const ids=z.kinder.map(k=>k.getAttribute("data-dnd"));
+  dndKlickSperre=Date.now()+350;
+  dndAufraeumen();
   /* In eine fremde Ablegezone gezogen: Termin ändern statt umsortieren */
-  if(z.art==="aufgabe"&&z.dropWann!=null){
-    const id=z.zeile.getAttribute("data-dnd"), a=S.aufgaben[id];
+  if(art==="aufgabe"&&dropWann!=null){
+    const a=S.aufgaben[id];
     if(a){
       const vorher=a.wann;
-      verschieben(id,z.dropWann||null);
-      hinweis(a.t.slice(0,40)+" → "+(z.dropWann?datumText(z.dropWann):"ohne Termin"),
+      verschieben(id,dropWann||null);
+      hinweis(a.t.slice(0,40)+" → "+(dropWann?datumText(dropWann):"ohne Termin"),
               "Rückgängig",()=>aufAendern(id,{wann:vorher}));
       return;
     }
   }
-  const ids=z.kinder.map(k=>k.getAttribute("data-dnd"));
-  const gezogen=ids.splice(z.index,1)[0];
-  ids.splice(z.ziel,0,gezogen);
-  if(z.index!==z.ziel) dndUebernehmen(ids,z.art);
-  else render();
+  if(index===ziel){ render(); return; }              /* wieder am selben Platz */
+  const gezogen=ids.splice(index,1)[0];
+  ids.splice(ziel,0,gezogen);
+  dndUebernehmen(ids,art);
 }
+/* Ein Klick, der aus einem Zug hervorgeht, darf die Zeile nicht auch noch
+   öffnen. Genau einer wird geschluckt, und nur direkt nach dem Loslassen. */
+if(typeof addEventListener!=="undefined") addEventListener("click",ev=>{
+  if(!dndKlickSperre) return;
+  const frisch=Date.now()<dndKlickSperre;
+  dndKlickSperre=0;
+  if(!frisch) return;
+  if(ev.stopPropagation) ev.stopPropagation();
+  if(ev.preventDefault) ev.preventDefault();
+},true);
+
 /* Neue Reihenfolge festschreiben: gleichmäßige Abstände, damit später Platz zum Einschieben bleibt */
 function dndUebernehmen(ids,art){
   const feld=art==="notiz"?"notizen":"aufgaben";
-  /* Notizen stehen bei Zeitsortierung in mehreren Kästen. Damit die neue Ordnung
-     global stimmt, wird der Abschnitt in die vollständige Anzeigereihenfolge zurückgeschrieben. */
-  if(art==="notiz"&&document.querySelectorAll){
-    const alle=[...document.querySelectorAll('.notizreihe[data-dnd]')].map(k=>k.getAttribute("data-dnd"));
-    const start=alle.indexOf(ids[0]!==undefined?alle.find(x=>ids.includes(x)):null);
-    if(start>=0){
-      const vorher=alle.filter(x=>!ids.includes(x));
-      const kopf=alle.slice(0,start).filter(x=>!ids.includes(x));
-      ids=kopf.concat(ids,vorher.slice(kopf.length));
-    }
+  const folge=art==="notiz"?notizFolgeGlobal(ids):ids;
+  const jetzt=Date.now(), start=jetzt*100;
+  const geaendert=[];
+  folge.forEach((id,i)=>{
+    const e=S[feld][id]; if(!e) return;
+    const pos=start+i*10;
+    if(e.pos===pos) return;
+    setPfad(S,feld+"/"+id,{...e,pos,ts:jetzt});
+    geaendert.push(id);
+  });
+  if(art==="notiz"&&(!S.einst||S.einst.notizSort!=="eigen")){
+    setPfad(S,"einst/notizSort","eigen"); senden("einst/notizSort","eigen");
   }
-  const start=Date.now()*100;
-  ids.forEach((id,i)=>{ if(S[feld][id]) setPfad(S,feld+"/"+id,{...S[feld][id],pos:start+i*10,ts:Date.now()}); });
-  if(art==="notiz") S.einst.notizSort="eigen";
   schreibenLokal();
-  ids.forEach(id=>{ if(S[feld][id]) senden(feld+"/"+id,S[feld][id]); });
-  if(art==="notiz") senden("einst/notizSort","eigen");
+  geaendert.forEach(id=>senden(feld+"/"+id,S[feld][id]));
   render();
+}
+/* Notizen stehen bei zeitlicher Sortierung in mehreren Kästen. Damit die neue
+   Ordnung auch global stimmt, wird die sichtbare Gesamtreihenfolge genommen und
+   nur der bewegte Abschnitt darin ersetzt – Platz für Platz. */
+function notizFolgeGlobal(ids){
+  if(!document.querySelectorAll) return ids;
+  const alle=[...document.querySelectorAll(".notizreihe[data-dnd]")].map(k=>k.getAttribute("data-dnd"));
+  if(!alle.length) return ids;
+  const drin=new Set(ids);
+  let i=0;
+  return alle.map(x=>drin.has(x)?(i<ids.length?ids[i++]:x):x);
 }
 const GRIFF='<svg viewBox="0 0 24 24"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="2.6"/></svg>';
 
@@ -1231,9 +1487,10 @@ function katLoeschen(id){
   const auf=aufListe().filter(a=>a.kat===id).length;
   const not=Object.values(S.notizen||{}).filter(n=>n.kat===id).length;
   if(!confirm("Liste löschen?"+(auf+not?` ${auf} Aufgaben und ${not} Notizen bleiben erhalten, verlieren aber die Zuordnung.`:"")))return;
-  aufListe().filter(a=>a.kat===id).forEach(a=>setPfad(S,"aufgaben/"+a.id+"/kat",null));
-  Object.entries(S.notizen||{}).forEach(([nid,n])=>{if(n.kat===id)setPfad(S,"notizen/"+nid+"/kat",null);});
-  mut("aufgaben",S.aufgaben,false); mut("notizen",S.notizen,false);
+  /* Nur die betroffenen Einträge anfassen – ein Rundumschlag auf alle Aufgaben
+     und Notizen würde alles überschreiben, was das andere Gerät gerade tut. */
+  aufListe().filter(a=>a.kat===id).forEach(a=>aufAendern(a.id,{kat:null},false));
+  Object.entries(S.notizen||{}).forEach(([nid,n])=>{if(n.kat===id)notizAendern(nid,{kat:null},false);});
   mut("kategorien/"+id,null,false);
   openSheet(katBody(),true);
 }
@@ -1376,18 +1633,23 @@ function notizTreffer(){
     ${notizSuche?"Andere Begriffe probieren, oder oben auf „Überall“ stellen, um das Archiv einzubeziehen.":"Mit dem Plus oben rechts legst du eine an."}</div>`;
   /* Bei eigener Reihenfolge oder Suche keine Zeitgruppen, sonst würde die Ordnung zerfallen */
   const gruppieren=!notizSuche&&notizSortierung()!=="eigen";
-  if(!gruppieren) return `<div id="nbox">`+liste.map(notizKarte).join("")+`</div>`;
+  if(!gruppieren) return `<div id="nbox">`+liste.map(n=>notizKarte(n,"nbox")).join("")+`</div>`;
   let letzte="", raus="";
   liste.forEach(n=>{
     const g=zeitGruppe(n);
     if(g!==letzte){ raus+=(letzte?`</div>`:"")+`<div class="gruppe">${g}</div><div id="nbox_${slug(g)}">`; letzte=g; }
-    raus+=notizKarte(n);
+    raus+=notizKarte(n,"nbox_"+slug(g));
   });
   return raus+(letzte?`</div>`:"");
 }
-function notizKarte(n){
+/* Der Kasten wird übergeben, nicht ein zweites Mal ausgerechnet. Vorher stand in
+   der Karte immer „nbox_<Zeitgruppe>", auch wenn die Liste bei eigener
+   Reihenfolge gar nicht gruppiert war und schlicht „nbox" hieß. Der Griff zeigte
+   dann auf einen Kasten, den es nicht gab – und Ziehen tat nichts mehr, und zwar
+   ab dem Augenblick, in dem man das erste Mal etwas gezogen hatte. */
+function notizKarte(n,box){
   const k=n.kat?kat(n.kat):null;
-  const box=notizSuche?"nbox":("nbox_"+slug(zeitGruppe(n)));
+  box=box||"nbox";
   const bild=/<img/i.test(n.html||"");
   return `<div class="notizreihe" data-dnd="${n.id}" style="border-left-color:${k?k.f:"var(--line-2)"}">
     <button class="griff" onpointerdown="dndGriff(event,'${box}','notiz')" aria-label="Verschieben">${GRIFF}</button>
@@ -1450,7 +1712,7 @@ function notizLoeschenFragen(id){
   bestaetigen("Notiz löschen?","„"+(n.titel||"Ohne Titel").slice(0,60)+"“","Löschen",()=>{
     const kopie=n;
     mut("notizen/"+id,null);
-    hinweis("Notiz gelöscht","Rückgängig",()=>mut("notizen/"+id,kopie));
+    hinweis("Notiz gelöscht","Rückgängig",()=>mut("notizen/"+id,{...kopie,ts:Date.now()}));
   });
 }
 
@@ -1542,7 +1804,7 @@ function notizLoeschenAusEditor(id){
   clearTimeout(speicherTimer); offeneNotiz=null;
   bestaetigen("Notiz löschen?","„"+(n.titel||"Ohne Titel").slice(0,60)+"“","Löschen",()=>{
     mut("notizen/"+id,null);
-    hinweis("Notiz gelöscht","Rückgängig",()=>mut("notizen/"+id,n));
+    hinweis("Notiz gelöscht","Rückgängig",()=>mut("notizen/"+id,{...n,ts:Date.now()}));
   });
 }
 async function notizTeilen(id){
@@ -1851,6 +2113,10 @@ function nav(){
 function go(t){tab=t;render();scrollTo(0,0);}
 const TITEL={heute:["Heute",APP_NAME],woche:["Überblick","Woche"],listen:["Vorräte","Listen"],notizen:["Sammlung","Notizen"],mehr:["Einstellungen","Mehr"]};
 function render(){
+  /* Während eines Zugs bleibt das Bild stehen. Würde hier neu gezeichnet,
+     hinge der Finger an einem Element, das es nicht mehr gibt. Nachgeholt wird
+     es, sobald der Zug vorbei ist. */
+  if(dndSperre){ dndNachholen=true; return; }
   const [eb,ti]=TITEL[tab];
   document.getElementById("eyebrow").textContent=eb;
   document.getElementById("titel").textContent=ti;
@@ -1969,8 +2235,11 @@ function altesAufraeumen(){
   const weg=aufListe().filter(a=>a.fertig&&a.fertig<grenze);
   if(!weg.length){alert("Nichts zum Aufräumen – alles Erledigte ist jünger als 30 Tage.");return;}
   if(!confirm(weg.length+" erledigte Aufgaben endgültig löschen?"))return;
-  const rest={...S.aufgaben}; weg.forEach(a=>delete rest[a.id]);
-  mut("aufgaben",rest);
+  /* Einzeln löschen statt die ganze Sammlung zu überschreiben: nur so entsteht
+     je Aufgabe ein Grabstein, und nur so bleibt stehen, was das andere Gerät
+     inzwischen angelegt hat. */
+  weg.forEach(a=>mut("aufgaben/"+a.id,null,false));
+  render();
 }
 function ueberfaelligHolen(){
   const {ueberfaellig}=topfHeute();

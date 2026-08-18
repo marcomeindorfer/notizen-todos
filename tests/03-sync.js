@@ -184,4 +184,86 @@ t("Der erste vollständige Stand wird zusammengeführt, nicht übernommen", () =
   wahr(A.S.aufgaben.lokal && A.S.aufgaben.fern, "beide Seiten vereint");
 });
 
+/* Der Fehler, wegen dem es die Grabsteine gibt: Eine gelöschte Notiz stand nach
+   dem nächsten Abgleich wieder da, weil das andere Gerät sie noch kannte und
+   eine Löschung dort nur als Abwesenheit ankam. */
+gruppe("Gelöscht bleibt gelöscht");
+t("Eine gelöschte Notiz kommt beim Abgleich nicht zurück", () => {
+  frisch();
+  const alt = { titel: "Weg damit", erstellt: 1700000000000, geaendert: 1700000000000, ts: 1700000000000 };
+  A.S.notizen = { n1: alt };
+  A.mut("notizen/n1", null, false);
+  wahr(!A.S.notizen.n1, "erst einmal gelöscht");
+  A.zusammenfuehren({ notizen: { n1: alt } });
+  wahr(!A.S.notizen.n1, "und bleibt es auch nach dem Abgleich");
+});
+t("Dasselbe gilt für Aufgaben", () => {
+  frisch();
+  const alt = { t: "Weg", erstellt: 1700000000000, ts: 1700000000000 };
+  A.S.aufgaben = { a1: alt };
+  A.mut("aufgaben/a1", null, false);
+  A.zusammenfuehren({ aufgaben: { a1: alt } });
+  wahr(!A.S.aufgaben.a1);
+});
+t("Ein Grabstein wird selbst weitergereicht", () => {
+  frisch();
+  A.S.notizen = { n1: { titel: "Weg", erstellt: 1700000000000, ts: 1700000000000 } };
+  netz.calls = [];
+  A.mut("notizen/n1", null, false);
+  drainMicrotasks();
+  wahr(netz.calls.some(c => /\/tot\/notizen:n1\.json/.test(c.url) && c.method === "PUT"), "Grabstein ging hinaus");
+  wahr(netz.calls.some(c => /\/notizen\/n1\.json/.test(c.url) && c.method === "DELETE"), "und die Löschung auch");
+});
+t("Wird die Notiz danach wirklich wieder angelegt, bleibt sie", () => {
+  frisch();
+  const alt = { titel: "Doch behalten", erstellt: 1700000000000, ts: 1700000000000 };
+  A.S.notizen = { n1: alt };
+  A.mut("notizen/n1", null, false);
+  A.mut("notizen/n1", { ...alt, ts: Date.now() }, false);   /* „Rückgängig" */
+  wahr(A.S.notizen.n1, "ist wieder da");
+  A.zusammenfuehren({ notizen: { n1: alt } });
+  wahr(A.S.notizen.n1, "und überlebt den Abgleich");
+});
+t("Ein neuer Eintrag mit gleicher Kennung wird nicht mitgelöscht", () => {
+  frisch();
+  A.S.aufgaben = { a1: { t: "Alt", erstellt: 1700000000000, ts: 1700000000000 } };
+  A.mut("aufgaben/a1", null, false);
+  A.zusammenfuehren({ aufgaben: { a1: { t: "Neu von drüben", erstellt: Date.now(), ts: Date.now() } } });
+  wahr(A.S.aufgaben.a1 && A.S.aufgaben.a1.t === "Neu von drüben", "jünger als der Grabstein, also bleibt er");
+});
+t("Ein Löschereignis der Gegenseite hinterlässt auch hier einen Grabstein", () => {
+  frisch();
+  A.S.notizen = { n9: { titel: "Weg", erstellt: 1700000000000, ts: 1700000000000 } };
+  A.verbinden();
+  letzteQuelle().feuern("put", { path: "/notizen/n9", data: null });
+  wahr(!A.S.notizen.n9, "sofort fort");
+  A.zusammenfuehren({ notizen: { n9: { titel: "Weg", erstellt: 1700000000000, ts: 1700000000000 } } });
+  wahr(!A.S.notizen.n9, "und kommt auch später nicht zurück");
+});
+t("Ein Eintrag, den die Gegenseite trotz Löschung schickt, wird zurückgewiesen", () => {
+  frisch();
+  const alt = { titel: "Weg", erstellt: 1700000000000, ts: 1700000000000 };
+  A.S.notizen = { n1: alt };
+  A.mut("notizen/n1", null, false);
+  A.verbinden();
+  netz.calls = [];
+  letzteQuelle().feuern("put", { path: "/notizen/n1", data: alt });
+  wahr(!A.S.notizen.n1, "nicht wieder aufgenommen");
+  drainMicrotasks();
+  wahr(netz.calls.some(c => /\/notizen\/n1\.json/.test(c.url) && c.method === "DELETE"),
+       "die Gegenseite bekommt die Löschung noch einmal");
+});
+t("Alte Grabsteine werden nach drei Monaten aufgeräumt", () => {
+  frisch();
+  A.S.tot = { "notizen:alt": Date.now() - 100 * 86400000, "notizen:neu": Date.now() - 3 * 86400000 };
+  A.totAufraeumen();
+  wahr(!A.S.tot["notizen:alt"], "der alte ist fort");
+  wahr(A.S.tot["notizen:neu"], "der junge bleibt");
+});
+t("Einträge ohne jeden Zeitstempel überleben den Abgleich", () => {
+  frisch();
+  A.zusammenfuehren({ notizen: { n_alt: { titel: "Aus einer alten Fassung" } } });
+  wahr(A.S.notizen.n_alt, "keine Löschung ohne Grabstein");
+});
+
 bilanz();
