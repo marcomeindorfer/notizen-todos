@@ -1,8 +1,8 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.3**, Stand 27. August 2026. Datei rund 148 KB, 2486 Zeilen.
-Die Testreihen unter `tests/` prüfen 214 Punkte, Aufruf mit `./tests/run.sh`.
+**Version 2.5**, Stand 27. August 2026. Datei rund 176 KB, 2994 Zeilen.
+Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
 
 Voraussetzung: Lies zuerst `00-Grundlagen-und-Infrastruktur.md`.
 
@@ -54,8 +54,11 @@ S = {
   ts: zeitstempel,            // reiner Abgleichsstempel, siehe Grundlagen Abschnitt 5
   notiz: "Telefon 0170…"|null,
   notizId: "n…"|null,         // verbundene Notiz
-  wdh: "taeglich"|"zweitaeglich"|"woechentlich"|"monatlich"|null,
-  wdhTag: 0..6|null           // fester Wochentag, nur bei "woechentlich"
+  wdh: "taeglich"|"zweitaeglich"|"woechentlich"|"monatlich"|"jaehrlich"|"eigen"|null,
+  wdhZahl: 1..99,             // nur bei "eigen"
+  wdhEinheit: "tag"|"woche"|"monat"|"jahr",   // nur bei "eigen"
+  wdhTag: 0..6|null,          // fester Wochentag, wenn der Rhythmus in Wochen zählt
+  asana: "1209876…"|null      // Kennung aus einem Asana-Import, siehe Abschnitt 10
 }
 ```
 
@@ -134,7 +137,7 @@ gruppiert: Angeheftet, Heute, Diese Woche, Diesen Monat, Monatsnamen, Jahre.
 
 ### Mehr
 Rückblick der letzten sieben Tage als Balken, Listenverwaltung, Aufräumfunktionen,
-Sync, Sicherung, Zurücksetzen, Versionsnummer.
+Sync, Import aus Asana, Sicherung, Zurücksetzen, Versionsnummer.
 
 ---
 
@@ -204,13 +207,37 @@ Kurze Rückfrage in einem kompakten Blatt, danach zusätzlich sieben Sekunden la
 Rücknahme-Leiste. Gilt für Aufgaben und Notizen gleichermaßen.
 
 ### Wiederholungen
-Täglich, **alle 2 Tage**, wöchentlich, monatlich. Beim Abhaken entsteht automatisch der
-nächste Termin. Lag die Aufgabe lange, springt der Folgetermin so weit vor, dass er in der
-Zukunft liegt - statt fünf verpasste Wochen nachzuliefern.
 
-Bei „wöchentlich" lässt sich ein **fester Wochentag** wählen; ohne Wahl bleibt es beim
-Abstand von sieben Tagen. Bei „monatlich" wird der Monatstag auf den letzten gültigen Tag
-des Zielmonats begrenzt - der 31. Januar führt zum 28. Februar, nicht zum 3. März.
+Sechs Rhythmen: **Täglich, Alle 2 Tage, Wöchentlich, Monatlich, Jährlich** und
+**Benutzerdefiniert**. Unter der Haube ist jeder davon nur eine Zahl und eine Einheit -
+`wdhSchritt()` führt alles darauf zurück, die benannten sind bequeme Namen für die
+häufigen Fälle. Benutzerdefiniert macht beides frei einstellbar: `wdhZahl` (1 bis 99) mal
+`wdhEinheit` (Tage, Wochen, Monate, Jahre).
+
+Beim Abhaken entsteht der nächste Termin (`naechsterTermin()`), die abgehakte Fassung
+bleibt im Erledigten stehen. Die Kalenderrechnung merkt sich den Monatstag und begrenzt
+ihn auf den letzten gültigen Tag des Zielmonats: **der 31. Januar wird zum 28. Februar,
+der 29. Februar zum 28. Februar des Folgejahres** - und rutscht nicht in den übernächsten
+Monat. Läge der errechnete Termin schon wieder in der Vergangenheit, rückt die Rechnung
+weiter, bis sie in der Zukunft ankommt.
+
+Zählt der Rhythmus in Wochen, darf zusätzlich der **Wochentag festliegen** (`wdhTag`),
+statt sich aus dem Abhaktag zu ergeben. Das gilt für „Wöchentlich" wie für „alle 2 Wochen".
+
+**Beim Anlegen** lässt sich der Rhythmus auf drei Wegen setzen:
+
+1. **Mitschreiben.** `eingabeDeuten()` versteht `täglich`, `wöchentlich`, `monatlich`,
+   `jährlich`, `jeden Tag`, `jede Woche`, `jedes Jahr`, `alle 3 Wochen` und
+   `jeden Montag` - letzteres setzt Rhythmus, Wochentag und ersten Termin in einem Zug.
+   Runde Angaben werden zum passenden Namen: „alle 1 Woche" ist „Wöchentlich",
+   „alle 2 Tage" ist „Alle 2 Tage".
+2. **Im Blatt „Schnell eintragen"** eine zweite Chipreihe mit den vier gebräuchlichen
+   Rhythmen. Mitgeschriebenes schlägt die Auswahl - wer tippt, meint es.
+3. **Im Blatt der Aufgabe**, dort auch die benutzerdefinierte Zahl und Einheit.
+
+Ein Rhythmus ohne Termin hätte keinen Anker; er **beginnt heute**. Und bleibt nach dem
+Deuten kein Text übrig - jemand hat nur „Jährlich" getippt -, gilt das Wort als Text und
+die Deutung fällt weg. Eine Aufgabe stillschweigend zu verschlucken wäre schlimmer.
 
 ---
 
@@ -367,7 +394,85 @@ nicht nur als Verknüpfung über „Zum Startbildschirm hinzufügen". Dafür bra
 
 ---
 
-## 10. Aufräumen und Sicherung
+## 10. Import aus Asana
+
+Unter „Mehr → Asana-Export (CSV) einlesen". In Asana das Projekt öffnen,
+**Exportieren/Drucken → CSV**; mehrere Projekte auf einmal gehen auch.
+
+**Der CSV-Leser ist ein richtiger Leser**, kein `split(",")`. Asana schreibt Beschreibungen
+mit Kommas, Zeilenumbrüchen und verdoppelten Anführungszeichen in ein einziges Feld -
+daran zerbricht jede naive Trennung. `csvLesen()` läuft zeichenweise durch und kennt den
+Zustand „innerhalb von Anführungszeichen". Ein vorangestelltes Byte-Order-Mark fällt weg,
+sonst hieße die erste Spalte nicht „Task ID".
+
+**Spalten werden über ihre Namen gefunden**, nicht über ihre Stelle: Asana benennt sie je
+nach Sprache und Exportalter unterschiedlich, und Exporte enthalten Spalten, die hier
+niemanden interessieren. Was fehlt, fehlt eben.
+
+| Asana | Marco's brain |
+|---|---|
+| Name | Text der Aufgabe |
+| Notes | `notiz` an der Aufgabe |
+| Due Date | `wann` |
+| Completed At | `fertig` |
+| Created At | `erstellt` |
+| Section/Column, Projects oder Tags | Liste, wahlweise |
+| Parent task | `eltern` - wird zur Unteraufgabe |
+| Task ID | `asana`, damit ein zweiter Durchlauf nichts doppelt anlegt |
+
+**„Parent task"** enthält je nach Export die Kennung, den Namen oder `Name (Kennung)`.
+Alle drei werden aufgelöst, der volle Name zuerst - eine Aufgabe darf „Angebot (2)" heißen.
+Was sich nicht auflösen lässt, wird eine gewöhnliche Aufgabe statt einer verwaisten.
+Enkel hängen sich an den obersten Vorfahren, denn diese App kennt genau eine Ebene; ein
+Zähler bricht dabei auch einen Ring auf.
+
+Erst werden alle Kennungen vergeben, dann geschrieben - sonst zeigte eine Unteraufgabe auf
+eine Hauptaufgabe, die es noch nicht gibt.
+
+### Drei Schalter, ein Bericht
+
+Vor dem Import steht da, was passieren wird:
+
+- **Erledigte** weglassen (Vorgabe) oder mitnehmen.
+- **Liste kommt aus** Abschnitt (Vorgabe), Projekt, Etikett oder keiner. Fehlende Listen
+  werden angelegt, vorhandene über `slug()` wiedererkannt.
+- **Termine, die schon vorbei sind**, landen im Sammeln (Vorgabe) oder bleiben überfällig.
+  Ohne diesen Schalter kippt ein alter Asana-Rückstau als roter Berg in „Überfällig".
+
+Abschnittszeilen, die manche Exporte als eigene Zeile mitführen (`Type: section`), sind
+keine Aufgaben und werden übersprungen.
+
+### Aussortieren vor dem Import
+
+Ein Projektexport bringt regelmäßig Zeilen mit, die hier nichts verloren haben. Deshalb
+steht zwischen Lesen und Übernehmen eine Auswahl. Was `asanaMoeglich()` nach den Schaltern
+übrig lässt, steht als Liste da - Themen zuerst, ihre Punkte eingerückt darunter, damit zu
+sehen ist, was zusammengehört. **Antippen sortiert aus oder holt zurück.** In `asanaWahl`
+steht nur, was ausdrücklich abgewählt ist; die Vorgabe ist, dass alles mitkommt.
+
+Die Kopplung folgt derselben Regel wie überall in dieser App (`asanaSetzen()`):
+
+- Ein **Thema aussortieren** nimmt seine Punkte mit - allein wären sie zusammenhanglos.
+- Einen **Punkt zurückholen** holt sein Thema mit.
+- Ein **Thema zurückholen** holt seine Punkte *nicht* mit: wer sie einzeln abgewählt hat,
+  hat das so gemeint.
+
+Daneben **Alle** und **Keine** und, für lange Exporte, **Nacheinander durchgehen**
+(`asanaDurchgehen()`): eine Aufgabe je Blatt, zwei Knöpfe, Fortschrittsbalken, „‹ Zurück"
+für den letzten Griff und „Rest übernehmen" zum Abkürzen. Wer zweihundert Zeilen
+mitbringt, will sie nicht in einer Liste suchen, sondern durchgereicht bekommen. Das Blatt
+zeigt dabei den aktuellen Stand: was schon abgewählt ist, steht als „zurzeit aussortiert" da.
+
+Die Kennungen in den `onclick`-Attributen wären eine Falle - sie können aus einem
+Dateinamen mit Apostroph stammen und den JavaScript-String zerbrechen. Übergeben wird
+deshalb die Stelle in der Liste, nicht die Kennung.
+
+**Aussortiert heißt: kommt nicht in diese App.** In Asana ändert sich nichts, und das steht
+auch so im Blatt. Die App hat keinen Zugriff auf Asana und soll auch keinen vortäuschen.
+
+---
+
+## 11. Aufräumen und Sicherung
 
 - **Erledigtes älter als 30 Tage löschen** - ein Knopf unter „Mehr".
 - **Überfälliges auf heute ziehen** - schiebt alles Liegengebliebene in den heutigen Tag.
@@ -378,7 +483,7 @@ nicht nur als Verknüpfung über „Zum Startbildschirm hinzufügen". Dafür bra
 
 ---
 
-## 11. Gestaltung
+## 12. Gestaltung
 
 Eigene Farbwelt, bewusst anders als der Küchenplan: **Schiefer und Petrol**. Kühle,
 zurückgenommene Fläche, darauf genau ein Akzent. Jede Farbe trägt eine Bedeutung, es gibt
@@ -427,18 +532,34 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
 
 ---
 
-## 12. Bekannte Grenzen und offene Ideen
+## 13. Bekannte Grenzen und offene Ideen
 
 - **Kein Erinnerungssystem.** Keine Benachrichtigungen, keine Weckzeiten. Wäre technisch
   über die Notification API möglich, ist aber bewusst nicht gebaut.
-- **Keine Verknüpfung** zwischen Aufgabe und Notiz.
 - **`execCommand` ist veraltet.** Funktioniert in Chrome, könnte aber irgendwann
   wegfallen. Ersatz wäre eine eigene Bearbeitungslogik oder eine Bibliothek.
 - **Gezogen wird nur innerhalb eines Kastens.** Eine Notiz aus „Diese Woche" lässt sich
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 13. Was in Version 2.3 dazugekommen ist
+## 14. Was in Version 2.5 dazugekommen ist
+
+**Auswahl vor dem Asana-Import**, siehe Abschnitt 10: eine Liste zum Abhaken und ein
+Modus, der Aufgabe für Aufgabe fragt. Nicht alles, was in einem Projektexport steht,
+gehört hierher.
+
+## 15. Was in Version 2.4 dazugekommen ist
+
+1. **Import aus Asana**, siehe Abschnitt 10. Unteraufgaben aus „Parent task" hängen sich
+   direkt in die Struktur aus 2.3 ein.
+2. **Jährlich und Benutzerdefiniert** als Rhythmen, und der Rhythmus lässt sich **beim
+   Anlegen** angeben - mitgeschrieben („alle 3 Wochen", „jeden Montag") oder über eine
+   Chipreihe im Blatt „Schnell eintragen". Siehe Abschnitt 4.
+3. **Das Gewählte wird herangeholt.** Die Reiterzeilen im Blatt rollen waagerecht;
+   „Benutzerdefiniert" ist der sechste Rhythmus und stand damit außerhalb des Bildes.
+   `chipsHeranholen()` rollt beim Öffnen das Gewählte in die Mitte.
+
+## 16. Was in Version 2.3 dazugekommen ist
 
 **Unteraufgaben**, siehe Abschnitt 8. Dazu drei Dinge, die dabei aufgefallen sind:
 
@@ -453,7 +574,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
 3. **`topfHeute()` liefert jetzt Gruppen und flache Listen.** Wer die Zahl braucht, nimmt
    `faelligFlach`/`ueberFlach`; wer zeichnet, nimmt `faellig`/`ueberfaellig`.
 
-## 14. Was in Version 2.2 geändert wurde
+## 17. Was in Version 2.2 geändert wurde
 
 1. **Doppelte Feldnamen beseitigt.** Das Blatt „Aufgabe für …" trug ein Eingabefeld mit der
    Kennung `neu` - dieselbe, die „Heute" und „Woche" schon auf der Seite dahinter benutzen.
@@ -485,7 +606,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
 11. **Der Google-Notizen-Import ist entfallen**, siehe Abschnitt 7.
 12. **Einzahl und Mehrzahl** werden auseinandergehalten: „1 Notiz" statt „1 Notizen".
 
-## 15. Was in Version 2.0 dazugekommen ist
+## 18. Was in Version 2.0 dazugekommen ist
 
 Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neuerungen.js`):
 
@@ -511,7 +632,7 @@ Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neu
     Namen bleibt alles anonym wie bisher. Bewusst abschaltbar, weil eine Buchführung
     übereinander auch belasten kann.
 
-## 16. Was in Version 1.9 behoben wurde
+## 19. Was in Version 1.9 behoben wurde
 
 - **Änderungen konnten sich selbst rückgängig machen.** Abhaken, Zurücknehmen, Anheften,
   Archivieren, Verschieben, Liste wechseln, Wiederholung setzen - all das schrieb nur das

@@ -327,29 +327,6 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 .usheet.fertig .t{color:var(--ink-3);text-decoration:line-through}
 .usheet .weg{border:0;background:transparent;color:var(--ink-3);padding:6px 7px;font-size:14px}
 
-/* Auswahl vor dem Asana-Import: eine Zeile je Aufgabe, antippbar */
-.awahl{display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;
-  background:var(--card);border:1px solid var(--line);border-radius:var(--r-s);
-  padding:10px 12px;margin-bottom:6px;box-shadow:var(--schatten);transition:opacity .14s,border-color .14s}
-.awahl.unter{width:calc(100% - 18px);margin-left:18px}
-.awahl .ahak{width:20px;height:20px;flex:none;margin-top:1px;border-radius:6px;
-  border:1.6px solid var(--line-2);display:grid;place-items:center;font-size:12px;line-height:1;color:transparent}
-.awahl[aria-pressed="true"] .ahak{background:var(--akz);border-color:var(--akz);color:var(--auf-akz)}
-.awahl.aus{opacity:.45;border-style:dashed}
-.awahl.aus b{text-decoration:line-through}
-.awahl .atxt{flex:1;min-width:0}
-.awahl b{display:block;font-size:14.5px;font-weight:600;line-height:1.3}
-.awahl .anot{display:block;font-size:12.5px;color:var(--ink-3);margin-top:3px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.awahl .nm{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-/* Die Karte beim Durchgehen: eine Aufgabe, groß genug zum Entscheiden */
-.adurch{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
-  padding:15px 16px;margin-top:12px;box-shadow:var(--schatten)}
-.adurch b{display:block;font-family:var(--serif);font-size:21px;font-weight:400;line-height:1.2;margin-top:4px}
-.adurch .nm{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.adurch.aus{opacity:.55;border-style:dashed}
-.adurch.aus b{text-decoration:line-through}
-
 /* Der eigene Rhythmus: Zahl und Einheit in einer Zeile */
 .wdh-eigen{display:flex;align-items:center;gap:9px;margin-top:8px;flex-wrap:wrap}
 .wdh-eigen input{width:78px;flex:none;text-align:center}
@@ -416,7 +393,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="2.5";
+const VERSION="2.4";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -2456,9 +2433,6 @@ function asanaEltern(liste){
 
 /* ---------- Oberfläche ---------- */
 let asanaStand=null;
-/* Was von Hand aussortiert wurde. Vorgabe ist: alles kommt mit; hier steht nur,
-   was ausdrücklich abgewählt ist. */
-let asanaWahl={};
 const asanaOpt={erledigteMit:false,listeAus:"abschnitt",alteTermine:true};
 const ASANA_QUELLE={abschnitt:"Abschnitt",projekt:"Projekt",etikett:"Etikett",keine:"Keine"};
 
@@ -2493,43 +2467,11 @@ async function asanaDateienLesen(dateien){
     }catch(e){ kaputt.push(f.name+" (nicht lesbar)"); }
   }
   asanaStand={dateien:liste.length,aufgaben,kaputt,eltern:asanaEltern(aufgaben)};
-  asanaWahl={};
   openSheet(asanaMaske(),true);
-}
-/* Was nach den Schaltern überhaupt in Frage kommt - die Grundlage der Handauswahl */
-function asanaMoeglich(){
-  if(!asanaStand) return [];
-  const alle=asanaStand.aufgaben.filter(a=>asanaOpt.erledigteMit||!a.fertig);
-  /* Themen zuerst, ihre Punkte gleich darunter: nur so ist zu sehen, was
-     zusammengehört, wenn man ein Thema aussortiert. */
-  const kinder=k=>alle.filter(x=>asanaStand.eltern[x.schluessel]===k);
-  const raus=[];
-  alle.filter(a=>!asanaStand.eltern[a.schluessel]).forEach(a=>{ raus.push(a); kinder(a.schluessel).forEach(x=>raus.push(x)); });
-  /* Punkte, deren Thema durch die Schalter herausgefallen ist, stehen für sich */
-  alle.forEach(a=>{ if(raus.indexOf(a)<0) raus.push(a); });
-  return raus;
 }
 function asanaAuswahl(){
-  return asanaMoeglich().filter(a=>asanaWahl[a.schluessel]!==false);
-}
-const asanaDrin=a=>asanaWahl[a.schluessel]!==false;
-/* Ein Punkt ohne sein Thema wäre zusammenhanglos, ein Thema ohne seine Punkte
-   ist in Ordnung. Deshalb zieht das Abwählen nach unten und das Anwählen nach
-   oben - beides genau eine Ebene weit, mehr gibt es nicht. */
-function asanaSetzen(schluessel,an){
-  if(!asanaStand) return;
-  asanaWahl[schluessel]=an;
-  if(!an) asanaStand.aufgaben.forEach(x=>{ if(asanaStand.eltern[x.schluessel]===schluessel) asanaWahl[x.schluessel]=false; });
-  else { const oben=asanaStand.eltern[schluessel]; if(oben) asanaWahl[oben]=true; }
-}
-function asanaUm(i){
-  const a=asanaMoeglich()[i]; if(!a) return;
-  asanaSetzen(a.schluessel,asanaWahl[a.schluessel]===false);
-  openSheet(asanaMaske(),true);
-}
-function asanaAlle(an){
-  asanaMoeglich().forEach(a=>{ asanaWahl[a.schluessel]=an; });
-  openSheet(asanaMaske(),true);
+  if(!asanaStand) return [];
+  return asanaStand.aufgaben.filter(a=>asanaOpt.erledigteMit||!a.fertig);
 }
 /* Woraus die Liste entsteht - und ob dabei überhaupt etwas herauskommt */
 const asanaListenName=a=>({abschnitt:a.abschnitt,projekt:a.projekt,etikett:a.etikett,keine:""})[asanaOpt.listeAus]||"";
@@ -2545,10 +2487,8 @@ function asanaBericht(){
   const namen=[...new Set(genommen.map(asanaListenName).filter(Boolean))];
   const neueListen=namen.filter(e=>!Object.values(S.kategorien).some(k=>slug(k.n)===slug(e)));
 
-  const moeglich=asanaMoeglich();
-  const aussortiert=moeglich.length-genommen.length;
   return `<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
-      <b style="font-size:15px">${genommen.length} von ${moeglich.length} ausgewählt${aussortiert?", "+aussortiert+" aussortiert":""}</b>
+      <b style="font-size:15px">${alle.length} ${alle.length===1?"Aufgabe":"Aufgaben"} aus ${asanaStand.dateien} ${asanaStand.dateien===1?"Datei":"Dateien"}</b>
       <p class="note" style="margin-top:8px">
         <b style="color:var(--ink)">${genommen.length-doppelt} werden übernommen</b>${doppelt?", "+doppelt+" schon vorhanden und übersprungen":""}<br>
         ${erledigt} erledigt${asanaOpt.erledigteMit?(erledigt===1?" (kommt mit)":" (kommen mit)"):(erledigt===1?" (bleibt draußen)":" (bleiben draußen)")}<br>
@@ -2573,85 +2513,24 @@ function asanaBericht(){
       <button class="chip" aria-pressed="${asanaOpt.alteTermine}" onclick="asanaSchalter('alteTermine',true)">Ins Sammeln</button>
       <button class="chip" aria-pressed="${!asanaOpt.alteTermine}" onclick="asanaSchalter('alteTermine',false)">Als überfällig</button>
     </div>
-    ${moeglich.length?`<div class="sect"><h2>Was übernommen wird</h2><span class="zahl">${genommen.length} von ${moeglich.length}</span></div>
-      <div class="row-btns" style="margin-bottom:10px">
-        <button class="btn btn-s" onclick="asanaAlle(true)">Alle</button>
-        <button class="btn btn-s" onclick="asanaAlle(false)">Keine</button>
-        <button class="btn btn-s btn-primary" style="flex:1" onclick="asanaDurchgehen(0)">Nacheinander durchgehen</button>
-      </div>
-      <p class="note" style="margin:0 0 10px">Antippen sortiert eine Aufgabe aus oder holt sie zurück.
-        Aussortiert heißt: kommt nicht in diese App - in Asana ändert sich nichts.</p>
-      ${moeglich.map((a,i)=>asanaWahlzeile(a,i)).join("")}`
+    ${genommen.length?`<div class="sect"><h2>Vorschau</h2><span class="zahl">erste 5</span></div>
+      ${genommen.slice(0,5).map(a=>{
+        const oben=asanaStand.eltern[a.schluessel];
+        const eltern=oben?asanaStand.aufgaben.find(x=>x.schluessel===oben):null;
+        const l=asanaListenName(a);
+        return `<div class="notiz" style="cursor:default">
+          <b>${esc(a.t)}</b>
+          ${a.notiz?`<p>${esc(a.notiz.slice(0,110))}</p>`:""}
+          <span class="nm">${l?`<span class="tag">${esc(l)}</span>`:""}
+            ${eltern?`<span class="tag tag-akz">↳ ${esc(eltern.t.slice(0,28))}</span>`:""}
+            ${a.faellig?`<span class="mini">${datumText(a.faellig)}</span>`:`<span class="mini">ohne Termin</span>`}
+            ${a.fertig?`<span class="tag tag-erf">erledigt</span>`:""}</span></div>`;}).join("")}`
       :`<p class="note" style="margin-top:12px">Nach diesen Regeln bleibt nichts übrig.</p>`}
 
     <button class="btn btn-primary btn-wide" style="margin-top:14px" ${genommen.length?"":"disabled"} onclick="asanaUebernehmen()">
-      ${genommen.length?"Jetzt übernehmen ("+genommen.length+")":"Nichts ausgewählt"}</button>`;
+      ${genommen.length?"Jetzt übernehmen":"Nichts zu übernehmen"}</button>`;
 }
 function asanaSchalter(feld,wert){ asanaOpt[feld]=wert; openSheet(asanaMaske(),true); }
-
-/* Eine Zeile der Auswahl. Punkte stehen eingerückt unter ihrem Thema. */
-function asanaWahlzeile(a,i){
-  const oben=asanaStand.eltern[a.schluessel];
-  const l=asanaListenName(a);
-  const drin=asanaDrin(a);
-  return `<button class="awahl ${drin?"":"aus"} ${oben?"unter":""}" onclick="asanaUm(${i})"
-      aria-pressed="${drin}" aria-label="${drin?"Aussortieren":"Zurückholen"}">
-    <span class="ahak">✓</span>
-    <span class="atxt"><b>${esc(a.t)}</b>
-      ${a.notiz?`<span class="anot">${esc(a.notiz.slice(0,90))}</span>`:""}
-      <span class="nm">${l?`<span class="tag">${esc(l)}</span>`:""}
-        ${a.faellig?`<span class="mini">${datumText(a.faellig)}</span>`:`<span class="mini">ohne Termin</span>`}
-        ${a.fertig?`<span class="tag tag-erf">erledigt</span>`:""}</span></span>
-  </button>`;
-}
-
-/* ---------- Nacheinander durchgehen ----------
-   Eine Aufgabe, zwei Knöpfe. Wer zweihundert Zeilen aus Asana mitbringt, will
-   sie nicht in einer Liste suchen, sondern durchgereicht bekommen. Entschieden
-   wird beim Tippen; „Zurück" nimmt den letzten Griff wieder auf. */
-function asanaDurchgehen(i){
-  const liste=asanaMoeglich();
-  if(!liste.length){ openSheet(asanaMaske(),true); return; }
-  if(i>=liste.length){
-    const drin=asanaAuswahl().length;
-    openSheet(asanaMaske(),true);
-    hinweis("Durchgegangen: "+drin+" übernommen, "+(liste.length-drin)+" aussortiert");
-    return;
-  }
-  if(i<0) i=0;
-  const a=liste[i], oben=asanaStand.eltern[a.schluessel];
-  const eltern=oben?asanaStand.aufgaben.find(x=>x.schluessel===oben):null;
-  const l=asanaListenName(a);
-  const drin=asanaDrin(a);
-  openSheet(`<div class="sheet-kopf"><h2>Übernehmen?</h2>
-      <button class="btn btn-ghost btn-s" onclick="asanaDurchgehen(${liste.length})" aria-label="Durchgehen beenden">✕</button></div>
-    <p class="note" style="margin:2px 0 6px">${i+1} von ${liste.length}</p>
-    <div class="ubalken"><i style="width:${Math.round(i/liste.length*100)}%"></i></div>
-    <div class="adurch ${drin?"":"aus"}">
-      ${eltern?`<span class="mini">↳ gehört zu ${esc(eltern.t.slice(0,40))}</span>`:""}
-      ${drin?"":`<span class="mini" style="color:var(--rot);font-weight:600">zurzeit aussortiert</span>`}
-      <b>${esc(a.t)}</b>
-      ${a.notiz?`<p class="note" style="margin:8px 0 0;white-space:pre-wrap">${esc(a.notiz.slice(0,320))}</p>`:""}
-      <span class="nm" style="margin-top:10px">${l?`<span class="tag">${esc(l)}</span>`:""}
-        ${a.faellig?`<span class="tag tag-akz">${datumText(a.faellig)}</span>`:`<span class="tag">ohne Termin</span>`}
-        ${a.fertig?`<span class="tag tag-erf">in Asana erledigt</span>`:""}</span>
-    </div>
-    <div class="row-btns" style="margin-top:14px">
-      <button class="btn" style="flex:1;color:var(--rot);border-color:color-mix(in srgb,var(--rot) 34%,var(--line-2))"
-        onclick="asanaEntscheiden(${i},false)">Aussortieren</button>
-      <button class="btn btn-primary" style="flex:1" onclick="asanaEntscheiden(${i},true)">Übernehmen</button>
-    </div>
-    <div class="row-btns" style="margin-top:8px">
-      ${i>0?`<button class="btn btn-s btn-ghost" style="flex:1" onclick="asanaDurchgehen(${i-1})">‹ Zurück</button>`:""}
-      <button class="btn btn-s btn-ghost" style="flex:1" onclick="asanaDurchgehen(${liste.length})">Rest übernehmen</button>
-    </div>`,true);
-}
-function asanaEntscheiden(i,an){
-  const liste=asanaMoeglich();
-  const a=liste[i]; if(!a) return;
-  asanaSetzen(a.schluessel,an);
-  asanaDurchgehen(i+1);
-}
 
 function asanaUebernehmen(){
   const genommen=asanaAuswahl();
