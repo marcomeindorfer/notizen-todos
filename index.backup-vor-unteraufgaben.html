@@ -125,8 +125,8 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing
 
 @keyframes puls{0%{transform:scale(1);opacity:.55}70%{transform:scale(2.1);opacity:0}100%{opacity:0}}
 @keyframes hupf{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
-.hak.feier,.uhak.feier{animation:hupf .34s ease}
-.hak.feier::after,.uhak.feier::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--erf);animation:puls .55s ease-out}
+.hak.feier{animation:hupf .34s ease}
+.hak.feier::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--erf);animation:puls .55s ease-out}
 @keyframes rein{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .auf{animation:rein .18s ease}
 
@@ -283,50 +283,6 @@ input[type=date]::-webkit-calendar-picker-indicator{opacity:.9;cursor:pointer}
 input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--akz);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-/* Unteraufgaben: genau eine Ebene, eingerückt an einer Linie.
-   Die Zeile bleibt eine Zeile - der Block hängt in der Textspalte, damit Haken,
-   Griff und Ablegezonen der Hauptaufgabe unverändert weiterarbeiten. */
-.unter{margin-top:9px;padding-left:11px;border-left:2px solid var(--line-2)}
-.auf.aufgeklappt > .griff,.auf.aufgeklappt > .auf-akt{align-self:flex-start;margin-top:3px}
-.uzeile{display:flex;align-items:flex-start;gap:9px;padding:5px 0}
-.uhak{width:20px;height:20px;flex:none;border-radius:50%;border:1.6px solid var(--line-2);background:transparent;
-  display:grid;place-items:center;padding:0;position:relative;transition:background .18s,border-color .18s}
-.uhak::before{content:"";position:absolute;inset:-11px;border-radius:50%}
-.uhak svg{width:12px;height:12px;stroke:var(--card);stroke-width:2.8;fill:none;stroke-linecap:round;stroke-linejoin:round;
-  stroke-dasharray:22;stroke-dashoffset:22}
-.uzeile.fertig .uhak,.usheet.fertig .uhak{background:var(--erf);border-color:var(--erf)}
-.uzeile.fertig .uhak svg,.usheet.fertig .uhak svg{stroke-dashoffset:0;transition:stroke-dashoffset .28s ease .06s}
-.utxt{flex:1;min-width:0;font-size:14.5px;line-height:1.36;letter-spacing:-.004em;word-break:break-word}
-.uzeile.fertig .utxt{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
-.ugriff{flex:none;align-self:center;border:0;background:transparent;color:var(--ink-3);padding:7px 3px;
-  touch-action:none;cursor:grab;display:grid;place-items:center;border-radius:7px}
-.ugriff svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-linecap:round}
-.ugriff:active{cursor:grabbing;color:var(--akz)}
-.uneu{display:flex;gap:6px;margin-top:7px;padding-left:13px}
-.uneu input{padding:8px 11px;border-radius:9px}   /* Schriftgröße bleibt bei 16px, sonst zoomt iOS beim Fokus */
-.uneu button{padding:7px 12px;font-size:14px;border-radius:9px;flex:none}
-/* Der Fortschritt sitzt in der Metazeile und ist zugleich der Schalter zum Aufklappen */
-.ufort{border:1px solid color-mix(in srgb,var(--akz) 24%,transparent);background:var(--akz-bg);color:var(--akz);
-  border-radius:99px;padding:2px 10px;font-size:11.5px;font-weight:650;display:inline-flex;align-items:center;gap:5px;min-height:26px}
-.ufort.voll{color:var(--erf);background:var(--erf-bg);border-color:color-mix(in srgb,var(--erf) 26%,transparent)}
-.ufort .pf{display:inline-block;font-size:10px;transition:transform .16s}
-.ufort[aria-expanded="true"] .pf{transform:rotate(90deg)}
-/* Kopfzeile: die Hauptaufgabe als Zusammenhang, nicht als eigene Aufgabe */
-.ukopf{display:flex;align-items:center;gap:7px;margin:14px 0 5px;padding:0 3px}
-.ukopf svg{width:15px;height:15px;flex:none;stroke:var(--ink-3);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.ukopf button{border:0;background:transparent;padding:3px 0;font-size:12.5px;font-weight:650;color:var(--ink-2);
-  min-width:0;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ukopf .zahl{margin-left:auto;font-size:11.5px;color:var(--ink-3);white-space:nowrap}
-/* Unteraufgaben im Blatt: Fortschritt und Liste zum Bearbeiten */
-.ubalken{height:5px;border-radius:99px;background:var(--card-2);overflow:hidden;margin:1px 0 9px}
-.ubalken i{display:block;height:100%;background:var(--erf);border-radius:99px;transition:width .4s cubic-bezier(.3,1.2,.5,1)}
-.usheet{display:flex;align-items:center;gap:9px;padding:9px 2px;border-bottom:1px solid var(--line)}
-.usheet:last-child{border-bottom:0}
-.usheet .t{flex:1;min-width:0;border:0;background:transparent;padding:0;font-size:15px;color:inherit;
-  text-align:left;word-break:break-word}
-.usheet.fertig .t{color:var(--ink-3);text-decoration:line-through}
-.usheet .weg{border:0;background:transparent;color:var(--ink-3);padding:6px 7px;font-size:14px}
-
 /* Kleiner Sprungknopf, der neben einer Überschrift Platz findet */
 .ikon{border:1px solid var(--line-2);background:var(--card-2);color:var(--ink-2);border-radius:9px;
   padding:5px 7px;line-height:0;display:inline-grid;place-items:center;align-self:center;flex:none;
@@ -387,7 +343,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="2.3";
+const VERSION="2.2";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -734,54 +690,6 @@ const aufListe=()=>Object.entries(S.aufgaben||{}).map(([id,a])=>({id,...a}));
 const offen=a=>!a.fertig;
 const sortiert=arr=>arr.sort((a,b)=>(a.pos||0)-(b.pos||0)||(a.erstellt||0)-(b.erstellt||0));
 
-/* ---------- Unteraufgaben ----------
-   Eine Aufgabe wird zur Unteraufgabe, indem sie in `eltern` die Kennung ihrer
-   Hauptaufgabe trägt. Sonst bleibt sie eine ganz gewöhnliche Aufgabe: eigener
-   Termin, eigene Liste, eigene Wiederholung, eigene Notiz, eigener Haken.
-
-   Genau eine Ebene. Enkel wären in einer Zeile nicht mehr zu lesen und beim
-   Ziehen nicht mehr vorherzusagen; `aufgabeAnlegen()` und `unterordnen()`
-   weisen sie deshalb ab.
-
-   Zeigt `eltern` ins Leere - die Hauptaufgabe wurde auf dem anderen Gerät
-   gelöscht -, gilt der Eintrag wieder als Hauptaufgabe. Das heilt sich von
-   selbst und braucht keinen Aufräumlauf und keine Grabsteinpflege. */
-const istUnter=a=>{
-  const e=a&&a.eltern&&a.eltern!==a.id?S.aufgaben[a.eltern]:null;
-  return !!(e&&!e.eltern);
-};
-const kinderVon=id=>sortiert(aufListe().filter(a=>a.eltern===id&&istUnter(a)));
-const hauptVon=a=>istUnter(a)?S.aufgaben[a.eltern]:null;
-/* In der Listenansicht erbt eine Unteraufgabe ohne eigene Liste die Liste ihrer
-   Hauptaufgabe. Sonst läge „Farbe kaufen" unter „Ohne Liste", während das Thema
-   „Kinderzimmer streichen" in „Geburt" steht - und der Vorrat wäre zerrissen. */
-const listeVon=a=>a.kat||(istUnter(a)?(hauptVon(a).kat||null):null);
-
-/* Aufgeklappt oder nicht ist reiner Bildschirmzustand: er geht niemanden sonst
-   etwas an und wird deshalb weder gespeichert noch abgeglichen. */
-let offeneUnter={};
-function unterKlappen(id){ offeneUnter[id]=!offeneUnter[id]; render(); }
-
-/* Ein Abschnitt bekommt Gruppen statt loser Zeilen.
-   Steht die Hauptaufgabe selbst hier an, ist sie die Zeile; ihre Unteraufgaben
-   hängen aufklappbar darunter. Steht nur ein Kind hier an, kommt die
-   Hauptaufgabe als schmale Kopfzeile mit - eine Unteraufgabe ohne ihren
-   Zusammenhang wäre nicht zu verstehen. Beides zusammen kann nicht eintreten,
-   damit steht jede abhakbare Zeile je Abschnitt genau einmal. */
-function gruppen(passt){
-  const alle=aufListe();
-  const raus=[];
-  sortiert(alle.filter(a=>!istUnter(a))).forEach(a=>{
-    if(passt(a)){ raus.push({haupt:a,eigen:true,treffer:[]}); return; }
-    const treffer=sortiert(alle.filter(k=>k.eltern===a.id&&istUnter(k)&&offen(k)&&passt(k)));
-    if(treffer.length) raus.push({haupt:a,eigen:false,treffer});
-  });
-  return raus;
-}
-/* Zum Zählen und für Sammelaktionen: was tatsächlich abgehakt werden kann.
-   Unteraufgaben zählen mit, sie sind eigene Punkte des Tages. */
-const flach=passt=>sortiert(aufListe().filter(passt));
-
 /* Schnelleingabe versteht "morgen", Wochentage und #liste */
 function eingabeDeuten(text){
   let t=" "+text.trim()+" ", katId=null, wann=null;
@@ -816,18 +724,13 @@ function eingabeDeuten(text){
   }
   return {text:t.replace(/\s+/g," ").trim(),katId,wann};
 }
-function aufgabeAnlegen(rohtext,vorgabeWann,vorgabeKat,elternId){
+function aufgabeAnlegen(rohtext,vorgabeWann,vorgabeKat){
   const d=eingabeDeuten(rohtext);
   if(!d.text) return null;
-  /* Genau eine Ebene: hängt die angegebene Hauptaufgabe selbst schon unter
-     etwas, wird die neue Aufgabe deren Geschwister statt ihres Kindes. */
-  let eltern=elternId||null;
-  if(eltern){ const e=S.aufgaben[eltern]; eltern=e?(e.eltern||eltern):null; }
   const id="a"+id6();
   const a={t:d.text,wann:d.wann||vorgabeWann||null,kat:d.katId||vorgabeKat||null,
-           eltern,fertig:null,erstellt:Date.now(),pos:naechstePos()};
-  /* Der Dublettenhinweis gilt je Ebene: „Anrufen" darf unter zwei Themen stehen. */
-  const doppelt=aufListe().find(x=>!x.fertig&&(x.eltern||null)===eltern&&normText(x.t)===normText(a.t));
+           fertig:null,erstellt:Date.now(),pos:naechstePos()};
+  const doppelt=aufListe().find(x=>!x.fertig&&normText(x.t)===normText(a.t));
   mut("aufgaben/"+id,a,!doppelt);
   if(doppelt){
     const wo=doppelt.wann?(/^\d{4}-/.test(doppelt.wann)?datumText(doppelt.wann):(doppelt.wann==="woche"?"Diese Woche":"Danach")):(doppelt.kat?kat(doppelt.kat).n:"ohne Liste");
@@ -863,96 +766,17 @@ function naechsterTermin(a){
 function haken(id){
   const a=S.aufgaben[id]; if(!a) return;
   if(a.fertig){ aufAendern(id,{fertig:null}); return; }
-  const offeneKinder=kinderVon(id).filter(offen);
   if(a.wdh){
     const naechst=naechsterTermin(a);
-    if(naechst){
-      const neuId="a"+id6();
-      mut("aufgaben/"+neuId,{...a,wann:naechst,fertig:null,erstellt:Date.now(),pos:naechstePos()},false);
-      /* Eine wiederkehrende Aufgabe nimmt ihre Punkte mit: die Liste steht beim
-         nächsten Mal wieder offen da. Eigene Termine der Punkte bleiben außen
-         vor, sie lägen sonst allesamt in der Vergangenheit. */
-      kinderVon(id).forEach(k=>{
-        const roh=S.aufgaben[k.id]; if(!roh) return;
-        mut("aufgaben/a"+id6(),{...roh,eltern:neuId,wann:null,fertig:null,erstellt:Date.now(),pos:naechstePos()},false);
-      });
-    }
+    if(naechst) mut("aufgaben/a"+id6(),{...a,wann:naechst,fertig:null,erstellt:Date.now(),pos:naechstePos()},false);
   }
-  /* Kurz die Feier zeigen, dann erst neu zeichnen. Der Haken einer
-     Unteraufgabe heißt anders, damit dieselbe Aufgabe an zwei Stellen der Seite
-     nicht zweimal dieselbe Kennung trägt. */
-  const el=document.getElementById("hak_"+id)||document.getElementById("uhak_"+id);
+  /* Kurz die Feier zeigen, dann erst neu zeichnen */
+  const el=document.getElementById("hak_"+id);
   if(el&&el.classList){ el.classList.add("feier"); }
   /* Wer abgehakt hat, wird nur festgehalten, wenn unter „Mehr" ein Name steht.
      Ohne Namen bleibt die App wie bisher anonym. */
-  const wer=(cfg.name||"").trim()||null;
-  aufAendern(id,{fertig:Date.now(),von:wer},false);
-  /* Wer das Thema abhakt, meint auch dessen Punkte. Rückgängig macht beides. */
-  if(offeneKinder.length){
-    offeneKinder.forEach(k=>aufAendern(k.id,{fertig:Date.now(),von:wer},false));
-    hinweis(offeneKinder.length===1?"Eine Unteraufgabe wurde mit abgehakt"
-      :offeneKinder.length+" Unteraufgaben wurden mit abgehakt","Rückgängig",()=>{
-        aufAendern(id,{fertig:null},false);
-        offeneKinder.forEach(k=>aufAendern(k.id,{fertig:null},false));
-        render();
-      });
-    return;                                    /* hinweis() zeichnet schon neu */
-  }
-  /* War das der letzte offene Punkt, sagt die App das leise. Von selbst
-     abgehakt wird das Thema nicht: oft fehlt noch ein letzter Schritt, und was
-     ungefragt passiert, versteht hinterher niemand. */
-  const oben=hauptVon(a);
-  if(oben&&!oben.fertig&&!kinderVon(a.eltern).some(offen)){
-    hinweis("Alle Unteraufgaben von „"+oben.t.slice(0,26)+"“ sind erledigt","Thema abhaken",()=>haken(a.eltern));
-    return;
-  }
+  aufAendern(id,{fertig:Date.now(),von:(cfg.name||"").trim()||null},false);
   setTimeout(render,320);
-}
-/* ---------- Umhängen ---------- */
-/* Aus einer Unteraufgabe wieder eine eigenständige machen. Sie behält alles,
-   was sie hat - nur der Zusammenhang fällt weg. */
-function herausloesen(id){
-  const a=S.aufgaben[id]; if(!a||!a.eltern) return;
-  const vorher=a.eltern;
-  aufAendern(id,{eltern:null},false);
-  closeSheet();
-  hinweis("„"+a.t.slice(0,30)+"“ steht jetzt für sich","Rückgängig",()=>aufAendern(id,{eltern:vorher}));
-}
-/* Der Weg andersherum: eine bestehende Aufgabe unter ein Thema hängen. */
-function unterordnenWaehlen(id){
-  const a=S.aufgaben[id]; if(!a) return;
-  if(kinderVon(id).length){ hinweis("Eine Aufgabe mit eigenen Unteraufgaben kann nicht selbst eine werden."); return; }
-  const kandidaten=sortiert(aufListe().filter(x=>x.id!==id&&!x.fertig&&!istUnter(x)));
-  openSheet(`<div class="sheet-kopf"><h2>Worunter?</h2>
-      <button class="btn btn-ghost btn-s" onclick="aufgabeOeffnen('${id}')" aria-label="Zurück">✕</button></div>
-    <p class="note" style="margin:6px 0 10px">„${esc(a.t.slice(0,50))}“ hängt danach unter der gewählten Aufgabe.</p>
-    ${kandidaten.length?kandidaten.map(x=>`<button class="wahlzeile" onclick="unterordnen('${id}','${x.id}')">
-        ${x.kat?`<i class="punkt" style="background:${kat(x.kat).f}"></i>`:""}${esc(x.t)}
-        <span class="anz">${kinderVon(x.id).length||""}</span></button>`).join("")
-      :`<p class="note">Es gibt keine andere offene Aufgabe.</p>`}
-    <button class="btn btn-wide btn-ghost" style="margin-top:12px" onclick="aufgabeOeffnen('${id}')">Abbrechen</button>`);
-}
-function unterordnen(id,elternId){
-  const a=S.aufgaben[id], e=S.aufgaben[elternId];
-  if(!a||!e||id===elternId||e.eltern||kinderVon(id).length) return;
-  const vorher=a.eltern||null;
-  aufAendern(id,{eltern:elternId},false);
-  offeneUnter[elternId]=true;
-  closeSheet();
-  hinweis("Hängt jetzt unter „"+e.t.slice(0,30)+"“","Rückgängig",()=>aufAendern(id,{eltern:vorher}));
-}
-/* Eine Unteraufgabe anlegen. Aufgeklappt wird sofort, sonst sieht man nicht,
-   wohin das Getippte gegangen ist. */
-function unterAnlegen(elternId,feldId){
-  const el=document.getElementById(feldId); if(!el) return null;
-  const t=el.value; if(!t.trim()) return null;
-  const e=S.aufgaben[elternId]; if(!e) return null;
-  if(e.eltern){ hinweis("Unteraufgaben gibt es genau eine Ebene tief."); return null; }
-  el.value="";
-  offeneUnter[elternId]=true;
-  const neu=aufgabeAnlegen(t,null,null,elternId);
-  const feld=document.getElementById(feldId); if(feld&&feld.focus)feld.focus();
-  return neu;
 }
 function verschieben(id,wann){ aufAendern(id,{wann}); }
 function umEinenTag(id){
@@ -970,44 +794,25 @@ function posTausch(idA,idB){
 }
 function aufgabeLoeschenFragen(id,ausDialog){
   const a=S.aufgaben[id]; if(!a) return;
-  const n=kinderVon(id).length;
-  bestaetigen("Aufgabe löschen?","„"+a.t.slice(0,60)+(a.t.length>60?"…":"")+"“"
-    +(n?" - samt "+n+(n===1?" Unteraufgabe":" Unteraufgaben"):""),"Löschen",()=>aufgabeLoeschen(id));
+  bestaetigen("Aufgabe löschen?","„"+a.t.slice(0,60)+(a.t.length>60?"…":"")+"“","Löschen",()=>aufgabeLoeschen(id));
 }
 function aufgabeLoeschen(id){
   const kopie=S.aufgaben[id]; if(!kopie) return;
-  /* Unteraufgaben ohne ihre Hauptaufgabe wären Waisen: sie gehen mit und kommen
-     mit zurück. */
-  const kinder=kinderVon(id).map(k=>({id:k.id,daten:S.aufgaben[k.id]}));
-  kinder.forEach(k=>mut("aufgaben/"+k.id,null,false));
   mut("aufgaben/"+id,null,false);
   /* Beim Zurückholen ein frischer Stempel: sonst wäre der wiederhergestellte
      Eintrag älter als sein eigener Grabstein und flöge gleich wieder hinaus. */
-  hinweis("„"+kopie.t.slice(0,34)+(kopie.t.length>34?"…":"")+"“ gelöscht"
-      +(kinder.length?" samt "+kinder.length+(kinder.length===1?" Unteraufgabe":" Unteraufgaben"):""),
-    "Rückgängig",()=>{
-      mut("aufgaben/"+id,{...kopie,ts:Date.now()},false);
-      kinder.forEach(k=>mut("aufgaben/"+k.id,{...k.daten,ts:Date.now()},false));
-      render();
-    });
+  hinweis("„"+kopie.t.slice(0,34)+(kopie.t.length>34?"…":"")+"“ gelöscht","Rückgängig",
+    ()=>mut("aufgaben/"+id,{...kopie,ts:Date.now()}));
 }
-/* Aus dem Blatt der Hauptaufgabe heraus: ohne Rückfrage, dafür mit Rücknahme -
-   ein einzelner Punkt ist kein Fall für einen Bestätigungsdialog. */
-function unterLoeschen(elternId,id){ aufgabeLoeschen(id); aufgabeOeffnen(elternId); }
 
 /* Was gehört in welchen Topf? */
 function topfHeute(){
   const h=heute();
-  const heuteAn=a=>offen(a)&&a.wann===h;
-  const spaet=a=>offen(a)&&a.wann&&a.wann<h&&/^\d{4}-/.test(a.wann);
+  const alle=aufListe();
   return {
-    faellig: gruppen(heuteAn),
-    ueberfaellig: gruppen(spaet),
-    fertig: aufListe().filter(istHeuteFertig).sort((a,b)=>b.fertig-a.fertig),
-    /* Gruppen sind zum Zeigen da, die flachen Listen zum Zählen und für
-       „Alle auf heute". Eine Kopfzeile ist keine Aufgabe und zählt nicht mit. */
-    faelligFlach: flach(heuteAn),
-    ueberFlach: flach(spaet)
+    faellig: sortiert(alle.filter(a=>offen(a)&&a.wann===h)),
+    ueberfaellig: sortiert(alle.filter(a=>offen(a)&&a.wann&&a.wann<h&&/^\d{4}-/.test(a.wann))),
+    fertig: alle.filter(istHeuteFertig).sort((a,b)=>b.fertig-a.fertig)
   };
 }
 
@@ -1138,12 +943,7 @@ function dndZonePruefen(){
   const zone=dropZoneAn(z.zeigerX,z.zeigerY);
   const eigen=S.aufgaben[z.zeile.getAttribute("data-dnd")];
   const wann=zone?zone.getAttribute("data-drop"):null;
-  /* Im eigenen Kasten wird sortiert, nicht abgelegt. Die Ablegezonen der
-     Ansicht liegen um die Kästen herum - ohne diese Unterscheidung hätte eine
-     Unteraufgabe beim bloßen Umsortieren den Termin des Abschnitts übernommen,
-     in dem ihre Hauptaufgabe gerade steht. */
-  const imEigenen=!!(zone&&z.box&&(zone===z.box||(typeof zone.contains==="function"&&zone.contains(z.box))));
-  const fremd=!!(zone&&eigen&&!imEigenen&&wann!==(eigen.wann||""));
+  const fremd=!!(zone&&eigen&&wann!==(eigen.wann||""));
   const neu=fremd?zone:null;
   if(z.zone&&z.zone!==neu) z.zone.classList.remove("drop-an");
   if(neu&&neu!==z.zone) neu.classList.add("drop-an");
@@ -1241,10 +1041,6 @@ function dndUebernehmen(ids,art){
   schreibenLokal();
   geaendert.forEach(id=>senden(feld+"/"+id,S[feld][id]));
   render();
-  /* Wurde im Blatt sortiert, zeigt render() nur die Seite dahinter neu.
-     Das Blatt selbst stünde sonst noch in der alten Reihenfolge da. */
-  if(offenAuf&&S.aufgaben[offenAuf]&&document.getElementById("sheet")
-     &&document.getElementById("sheet").innerHTML) aufgabeOeffnen(offenAuf);
 }
 /* Notizen stehen bei zeitlicher Sortierung in mehreren Kästen. Damit die neue
    Ordnung auch global stimmt, wird die sichtbare Gesamtreihenfolge genommen und
@@ -1270,7 +1066,7 @@ function bestaetigen(frage,erklaerung,knopf,fn){
       <button class="btn btn-primary" style="flex:1;background:var(--rot);border-color:var(--rot)" onclick="bestaetigungJa()">${esc(knopf)}</button>
     </div>`);
 }
-function bestaetigungJa(){ const f=bestaetigungFn; bestaetigungFn=null; offenAuf=null; document.getElementById("sheet").innerHTML=""; document.body.style.overflow=""; if(f)f(); }
+function bestaetigungJa(){ const f=bestaetigungFn; bestaetigungFn=null; document.getElementById("sheet").innerHTML=""; document.body.style.overflow=""; if(f)f(); }
 function bestaetigungAb(){ bestaetigungFn=null; closeSheet(); }
 
 /* ===== Ansichten: Heute, Woche, Listen ===== */
@@ -1280,9 +1076,6 @@ const ICON_WEG='<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l
 const ICON_KOPIE='<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/></svg>';
 const ICON_TEILEN='<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg>';
 const ICON_FERTIG='<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
-const ICON_UNTER='<svg viewBox="0 0 24 24"><path d="M7 4v9a3 3 0 0 0 3 3h8"/><path d="M15 13l3 3-3 3"/></svg>';
-const ICON_LOESEN='<svg viewBox="0 0 24 24"><path d="M5 4v16"/><path d="M9 12h10"/><path d="M15 8l4 4-4 4"/></svg>';
-const ICON_UNTERHAENGEN='<svg viewBox="0 0 24 24"><path d="M19 4v16"/><path d="M15 12H5"/><path d="M9 8l-4 4 4 4"/></svg>';
 const ICON_WOCHE_VOR='<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/><path d="M11 14.5l3 2.5-3 2.5"/></svg>';
 const ICON_WDH='<svg viewBox="0 0 24 24"><path d="M4 11a8 8 0 0 1 13.7-5.7L20 7"/><path d="M20 4v3h-3"/><path d="M20 13a8 8 0 0 1-13.7 5.7L4 17"/><path d="M4 20v-3h3"/></svg>';
 
@@ -1305,17 +1098,6 @@ function aufZeile(a,opt={}){
     if(tage>=LIEGT_AB) meta.push(`<span class="mini liegt">liegt seit ${tage} Tagen</span>`);
   }
   if(a.fertig&&a.von) meta.push(`<span class="mini">✓ ${esc(a.von)}</span>`);
-  /* Steht eine Unteraufgabe einmal für sich - in der Suche, im Erledigten, im
-     Wochentopf -, gehört ihr Zusammenhang an die Zeile. */
-  const oben=hauptVon(a);
-  if(oben&&!opt.ohneEltern) meta.push(`<span class="mini">↳ ${esc(oben.t.slice(0,40))}</span>`);
-  /* Der Fortschritt ist zugleich der Schalter: ein Tipp klappt die Punkte auf. */
-  const kinder=opt.ohneKinder?[]:kinderVon(a.id);
-  const offK=kinder.filter(offen).length;
-  const auf=!!offeneUnter[a.id];
-  if(kinder.length) meta.push(`<button class="ufort ${offK?"":"voll"}" aria-expanded="${auf}"
-      aria-label="Unteraufgaben ${auf?"zuklappen":"aufklappen"}"
-      onclick="event.stopPropagation();unterKlappen('${a.id}')"><span class="pf">▸</span>${kinder.length-offK}/${kinder.length}</button>`);
   /* Der Griff ist immer da - Ziehen soll ohne Umschalten funktionieren.
      Die ganze Zeile öffnet die Bearbeitung; Haken und Griff halten das Ereignis auf. */
   const griff=opt.sort?`<button class="griff" onpointerdown="dndGriff(event,'${opt.box}','aufgabe')" onclick="event.stopPropagation()" aria-label="Verschieben">${GRIFF}</button>`:"";
@@ -1327,45 +1109,14 @@ function aufZeile(a,opt={}){
          ${a.wann!==morgen()?`<button class="ztakt" onclick="event.stopPropagation();verschieben('${a.id}','${morgen()}')" aria-label="Auf morgen">Morgen</button>`:""}
        </div>`
     : "";
-  /* Die Kennung des Kastens hängt an der Aufgabe, nicht an einem Zähler: nur so
-     findet das Eingabefeld nach dem Neuzeichnen den Fokus wieder. Je Ansicht
-     steht eine Hauptaufgabe genau einmal, doppelt kann die Kennung nicht werden. */
-  const ubox="ubox_"+a.id;
-  const unterBlock=(kinder.length&&auf)
-    ? `<div class="unter" id="${ubox}">${kinder.map(u=>unterZeile(u,ubox)).join("")}</div>
-       <div class="uneu">
-         <input type="text" id="un_${a.id}" placeholder="Unteraufgabe …" onclick="event.stopPropagation()"
-           onkeydown="event.stopPropagation();if(event.key==='Enter')unterAnlegen('${a.id}','un_${a.id}')">
-         <button class="btn" onclick="event.stopPropagation();unterAnlegen('${a.id}','un_${a.id}')" aria-label="Unteraufgabe anlegen">+</button></div>`
-    : "";
-  return `<div class="auf ${a.fertig?"fertig":""} ${spaet&&!a.fertig?"ueber":""} ${unterBlock?"aufgeklappt":""}" data-dnd="${a.id}" onclick="aufgabeOeffnen('${a.id}')">
+  return `<div class="auf ${a.fertig?"fertig":""} ${spaet&&!a.fertig?"ueber":""}" data-dnd="${a.id}" onclick="aufgabeOeffnen('${a.id}')">
     <button class="hak" id="hak_${a.id}" onclick="event.stopPropagation();haken('${a.id}')" aria-label="${a.fertig?"Wieder öffnen":"Erledigt"}">
       <svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9"/></svg></button>
     <div class="auf-txt">${esc(a.t)}
       ${meta.length?`<div class="auf-meta">${meta.join("")}</div>`:""}
       ${a.notiz?`<div class="auf-notiz">${esc(a.notiz)}</div>`:""}
-      ${schnellZiel}${unterBlock}</div>
+      ${schnellZiel}</div>
     ${griff}
-  </div>`;
-}
-/* Die Unteraufgabe in der aufgeklappten Zeile: schmaler als eine Aufgabenzeile,
-   aber mit allem, was man im Vorbeigehen braucht - Haken, Termin, Liste, Griff.
-   Alles Weitere steht in ihrem eigenen Blatt, das ein Tipp öffnet. */
-function unterZeile(u,box){
-  const k=u.kat?kat(u.kat):null;
-  const h=heute();
-  const spaet=!u.fertig&&u.wann&&/^\d{4}-/.test(u.wann)&&u.wann<h;
-  const meta=[];
-  if(k) meta.push(`<span class="mini"><i class="punkt" style="background:${k.f}"></i> ${esc(k.n)}</span>`);
-  if(u.wann) meta.push(`<span class="mini ${spaet?"spaet":""}">${
-    u.wann==="woche"?"Diese Woche":u.wann==="danach"?"Danach":(spaet?"seit ":"")+datumText(u.wann)}</span>`);
-  if(u.wdh) meta.push(`<span class="mini">${WDH[u.wdh]}</span>`);
-  if(u.notiz) meta.push(`<span class="mini">Notiz</span>`);
-  return `<div class="uzeile ${u.fertig?"fertig":""}" data-dnd="${u.id}" onclick="event.stopPropagation();aufgabeOeffnen('${u.id}')">
-    <button class="uhak" id="uhak_${u.id}" onclick="event.stopPropagation();haken('${u.id}')" aria-label="${u.fertig?"Wieder öffnen":"Erledigt"}">
-      <svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9"/></svg></button>
-    <div class="utxt">${esc(u.t)}${meta.length?`<div class="auf-meta">${meta.join("")}</div>`:""}</div>
-    <button class="ugriff" onpointerdown="dndGriff(event,'${box}','aufgabe')" onclick="event.stopPropagation()" aria-label="Verschieben">${GRIFF}</button>
   </div>`;
 }
 /* Eine Liste mit optionalen Sortierpfeilen ausgeben */
@@ -1376,23 +1127,6 @@ function aufListeHtml(liste,opt={}){
   return `<div id="${box}">`+liste.map(a=>aufZeile(a,{...opt,sort:zieh,box})).join("")+`</div>`;
 }
 /* Der frühere Knopf „Sortieren“ ist entfallen: gezogen wird immer. */
-
-/* Aus Gruppen wird Html. Zuerst die Hauptaufgaben, die selbst hier anstehen, in
-   einem gemeinsamen Kasten - dort lässt sich umsortieren wie bisher. Danach je
-   Kopfzeile ein eigener Kasten: quer über zwei Themen zu ziehen ergäbe keine
-   Reihenfolge, die irgendwo hinführt. */
-function gruppenHtml(liste,opt={}){
-  const eigene=liste.filter(g=>g.eigen).map(g=>g.haupt);
-  const kopfzeilen=liste.filter(g=>!g.eigen);
-  return (eigene.length?aufListeHtml(eigene,opt):"")
-    + kopfzeilen.map(g=>{
-        const offK=kinderVon(g.haupt.id).filter(offen).length;
-        return `<div class="ukopf">${ICON_UNTER}
-            <button onclick="aufgabeOeffnen('${g.haupt.id}')">${esc(g.haupt.t)}</button>
-            <span class="zahl">${g.treffer.length} von ${offK} offenen</span></div>`
-          + aufListeHtml(g.treffer,{...opt,ohneEltern:true});
-      }).join("");
-}
 
 function schnellFeld(vorgabeWann,vorgabeKat){
   return `<div class="schnell">
@@ -1479,17 +1213,16 @@ function heuteNotizen(){
    Der Topf „Diese Woche, ohne festen Tag" lebte bisher nur in der Wochenansicht.
    Wer morgens auf „Heute" schaut, hat ihn dadurch nie gesehen. */
 function wochenTopf(){
-  const liste=flach(a=>!a.fertig&&a.wann==="woche");
+  const liste=sortiert(aufListe().filter(a=>!a.fertig&&a.wann==="woche"));
   if(!liste.length) return "";
   const zeigen=liste.slice(0,3), rest=liste.length-zeigen.length;
   return `<div class="sect"><h2>Diese Woche noch</h2><span class="zahl">${liste.length}</span>
       <button class="btn btn-s" onclick="go('woche')">Woche</button></div>
     ${zeigen.map(a=>{
       const k=a.kat?kat(a.kat):null;
-      const oben=hauptVon(a);
       return `<div class="topfzeile" onclick="aufgabeOeffnen('${a.id}')">
         ${k?`<i class="punkt" style="background:${k.f}"></i>`:""}
-        <span>${esc(a.t)}${oben?` <span class="mini">↳ ${esc(oben.t.slice(0,22))}</span>`:""}</span>
+        <span>${esc(a.t)}</span>
         <button class="ztakt rest" onclick="event.stopPropagation();verschieben('${a.id}','${heute()}')">Heute</button>
       </div>`;}).join("")}
     ${rest>0?`<p class="note" style="margin:2px 0 8px">und ${rest} weitere unter „Woche".</p>`:""}`;
@@ -1498,19 +1231,18 @@ function wochenTopf(){
 /* ---------- Heute: Vorschau auf morgen, zugleich Ablegezone ---------- */
 function morgenBlock(){
   const m=morgen();
-  const passt=a=>!a.fertig&&a.wann===m;
-  const g=gruppen(passt);
-  return `<div class="sect"><h2>Morgen</h2><span class="zahl">${flach(passt).length}</span>
+  const liste=sortiert(aufListe().filter(a=>!a.fertig&&a.wann===m));
+  return `<div class="sect"><h2>Morgen</h2><span class="zahl">${liste.length}</span>
       <button class="btn btn-s" onclick="schnellFuer('${m}')">Eintragen</button></div>
     <div class="morgenzone" data-drop="${m}">
-      ${g.length?gruppenHtml(g):`<div class="leer">Noch nichts. Zieh eine Aufgabe am Griff hierher.</div>`}
+      ${liste.length?aufListeHtml(liste):`<div class="leer">Noch nichts. Zieh eine Aufgabe am Griff hierher.</div>`}
     </div>`;
 }
 
 /* ---------- Heute ---------- */
 function vHeute(){
-  const {faellig,ueberfaellig,fertig,faelligFlach,ueberFlach}=topfHeute();
-  const ges=faelligFlach.length+ueberFlach.length+fertig.length;
+  const {faellig,ueberfaellig,fertig}=topfHeute();
+  const ges=faellig.length+ueberfaellig.length+fertig.length;
   const anteil=ges?Math.round(fertig.length/ges*100):0;
   const bogen=`<div class="bogen ${ges&&fertig.length===ges?"voll":""}">
     <div class="bogen-kopf"><b>${ges?(fertig.length===ges?"Alles erledigt":fertig.length+" von "+ges+" erledigt"):"Noch nichts geplant"}</b>
@@ -1525,15 +1257,15 @@ function vHeute(){
   /* Überfälliges lässt sich dort aufräumen, wo es auftaucht - statt drei
      Ansichten weiter unter „Mehr". */
   const ueberKopf=ueberfaellig.length
-    ? `<div class="sect"><h2>Überfällig</h2><span class="zahl">${ueberFlach.length}</span>
+    ? `<div class="sect"><h2>Überfällig</h2><span class="zahl">${ueberfaellig.length}</span>
          <button class="btn btn-s" onclick="ueberfaelligHolen()">Alle auf heute</button></div>
-       ${gruppenHtml(ueberfaellig,{datum:true,schnell:true})}`
+       ${aufListeHtml(ueberfaellig,{datum:true,schnell:true})}`
     : "";
 
   return hinweisLeiste() + bogen + `<div style="margin-top:14px"></div>` + schnellFeld(heute(),null)
     + ueberKopf
-    + (faellig.length?`<div class="sect"><h2>Für heute</h2><span class="zahl">${faelligFlach.length}</span></div>
-        <div data-drop="${heute()}">${gruppenHtml(faellig)}</div>`:`<div data-drop="${heute()}"></div>`)
+    + (faellig.length?`<div class="sect"><h2>Für heute</h2><span class="zahl">${faellig.length}</span></div>
+        <div data-drop="${heute()}">${aufListeHtml(faellig)}</div>`:`<div data-drop="${heute()}"></div>`)
     + nichts
     + wochenTopf()
     + morgenBlock()
@@ -1555,33 +1287,29 @@ function vWoche(){
       <button class="btn btn-s" onclick="wochenVersatz++;render()">›</button></div>`;
 
   const bloecke=tage.map(d=>{
-    const offenAmTag=a=>a.wann===d&&!a.fertig;
-    const gOffen=gruppen(offenAmTag);
-    const offeneT=flach(offenAmTag);
+    const offeneT=sortiert(alle.filter(a=>a.wann===d&&!a.fertig));
     const erledigtT=alle.filter(a=>a.wann===d&&a.fertig).sort((x,y)=>(y.fertig||0)-(x.fertig||0));
+    const drin=wocheFertig?offeneT.concat(erledigtT):offeneT;
     const fertigT=erledigtT.length;
-    const zeigErledigt=wocheFertig&&fertigT;
-    const inhalt=gruppenHtml(gOffen)+(zeigErledigt?aufListeHtml(erledigtT):"");
     return `<div class="tagblock ${d===heute()?"heute":""}">
       <div class="tagblock-h"><b>${TAGE[wochentag(d)]}${d===heute()?" · heute":""}</b>
         <span>${ausIso(d).getDate()}.${ausIso(d).getMonth()+1}.${offeneT.length?" · "+offeneT.length+" OFFEN":""}${fertigT?" · "+fertigT+" ERLEDIGT":""}</span></div>
-      ${gOffen.length||zeigErledigt?inhalt:`<div class="leer">frei - <button class="btn btn-ghost btn-s" style="padding:0" onclick="schnellFuer('${d}')">etwas eintragen</button></div>`}
+      ${drin.length?aufListeHtml(drin):`<div class="leer">frei - <button class="btn btn-ghost btn-s" style="padding:0" onclick="schnellFuer('${d}')">etwas eintragen</button></div>`}
     </div>`;}).join("");
 
-  const wochePasst=a=>!a.fertig&&a.wann==="woche";
-  const danachPasst=a=>!a.fertig&&a.wann==="danach";
-  const wocheOffen=gruppen(wochePasst), danach=gruppen(danachPasst);
+  const wocheOffen=sortiert(alle.filter(a=>!a.fertig&&a.wann==="woche"));
+  const danach=sortiert(alle.filter(a=>!a.fertig&&a.wann==="danach"));
 
   const erledigtGes=alle.filter(a=>a.fertig&&tage.includes(a.wann)).length;
   return hinweisLeiste() + kopf
     + `<div class="row-btns" style="margin-bottom:10px">
         <button class="btn btn-s" onclick="wocheFertig=!wocheFertig;render()">${wocheFertig?"Erledigte ausblenden":"Erledigte einblenden"}${erledigtGes?" ("+erledigtGes+")":""}</button></div>`
     + bloecke
-    + `<div class="sect"><h2>Diese Woche, ohne festen Tag</h2><span class="zahl">${flach(wochePasst).length}</span></div>`
-    + (wocheOffen.length?gruppenHtml(wocheOffen):`<p class="note" style="margin-bottom:10px">Nichts offen.</p>`)
+    + `<div class="sect"><h2>Diese Woche, ohne festen Tag</h2><span class="zahl">${wocheOffen.length}</span></div>`
+    + (wocheOffen.length?aufListeHtml(wocheOffen):`<p class="note" style="margin-bottom:10px">Nichts offen.</p>`)
     + schnellFeld("woche",null)
-    + `<div class="sect"><h2>Danach</h2><span class="zahl">${flach(danachPasst).length}</span></div>`
-    + (danach.length?gruppenHtml(danach):`<p class="note">Nichts vorgemerkt.</p>`);
+    + `<div class="sect"><h2>Danach</h2><span class="zahl">${danach.length}</span></div>`
+    + (danach.length?aufListeHtml(danach):`<p class="note">Nichts vorgemerkt.</p>`);
 }
 /* Ein Tipp von „Heute" in die kommende Woche, ohne den Umweg über die
    Wochenansicht und deren Pfeile. */
@@ -1603,9 +1331,7 @@ function vListen(){
   const alle=aufListe();
   const ohneDatum=a=>!a.fertig&&!a.wann;
   const katsSortiert=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
-  /* In dieser Ansicht zählt die geerbte Liste, siehe listeVon() */
-  const inListe=(a,id)=>ohneDatum(a)&&listeVon(a)===id;
-  const offenZahl=id=>alle.filter(a=>inListe(a,id)).length;
+  const offenZahl=id=>alle.filter(a=>ohneDatum(a)&&a.kat===id).length;
   /* Die Listen stehen als Reiter direkt oben. Vorher kostete jeder Wechsel drei
      Handgriffe: Blatt öffnen, wählen, schließen. */
   const chips=`<div class="chips" style="padding-bottom:10px">
@@ -1614,23 +1340,22 @@ function vListen(){
     <button class="chip" onclick="katVerwalten()" aria-label="Listen verwalten" title="Listen verwalten">⚙</button></div>`;
   const zeigen=katsSortiert.filter(([id])=>katFilter==="alle"||katFilter===id);
   const bloecke=zeigen.map(([id,k])=>{
-    const g=gruppen(a=>inListe(a,id));
+    const drin=sortiert(alle.filter(a=>ohneDatum(a)&&a.kat===id));
     const notizZahl=Object.values(S.notizen||{}).filter(n=>n.kat===id&&!n.archiv).length;
     return `<div class="sect"><h2><i class="punkt" style="background:${k.f}"></i> ${esc(k.n)}</h2>
-        <span class="zahl">${offenZahl(id)} offen${notizZahl?" · "+notizZahl+(notizZahl===1?" Notiz":" Notizen"):""}</span></div>
-      ${g.length?gruppenHtml(g,{schnell:true}):`<p class="note" style="margin-bottom:8px">Noch nichts gesammelt.</p>`}
+        <span class="zahl">${drin.length} offen${notizZahl?" · "+notizZahl+(notizZahl===1?" Notiz":" Notizen"):""}</span></div>
+      ${drin.length?aufListeHtml(drin,{schnell:true}):`<p class="note" style="margin-bottom:8px">Noch nichts gesammelt.</p>`}
       <div class="schnell" style="margin-bottom:14px">
         <input type="text" id="neu_${id}" placeholder="In „${esc(k.n)}“ sammeln …"
           onkeydown="if(event.key==='Enter')sammeln('${id}')">
         <button class="btn" onclick="sammeln('${id}')">+</button></div>`;
   }).join("");
 
-  const ohnePasst=a=>ohneDatum(a)&&!listeVon(a);
-  const ohneListe=gruppen(ohnePasst);
+  const ohneListe=sortiert(alle.filter(a=>ohneDatum(a)&&!a.kat));
   if(aufSuche.trim()) return hinweisLeiste()+sucheFeld()+`<div id="suchtreffer">${sucheTreffer()}</div>`;
   return hinweisLeiste() + sucheFeld() + chips + bloecke
     + (ohneListe.length&&katFilter==="alle"
-      ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${flach(ohnePasst).length}</span></div>${gruppenHtml(ohneListe,{schnell:true})}`:"");
+      ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${ohneListe.length}</span></div>${aufListeHtml(ohneListe,{schnell:true})}`:"");
 }
 function listenFilterWaehlen(){
   const alle=aufListe(), ohneDatum=a=>!a.fertig&&!a.wann;
@@ -1686,36 +1411,13 @@ function sammeln(katId){
 /* ---------- Aufgabe bearbeiten ---------- */
 function aufgabeOeffnen(id){
   const a=S.aufgaben[id]; if(!a) return;
-  offenAuf=id;                       /* damit das Blatt nach dem Ziehen mitkommt */
   const body=()=>{
     const b=S.aufgaben[id]; if(!b) return "";
     const wannIst=w=>b.wann===w;
     const festesDatum=/^\d{4}-/.test(b.wann||"");
-    const oben=hauptVon(b);
-    const kinder=oben?[]:kinderVon(id);
-    const fertigK=kinder.filter(x=>x.fertig).length;
-    return `<div class="sheet-kopf"><h2>${oben?"Unteraufgabe":"Aufgabe"}</h2>
+    return `<div class="sheet-kopf"><h2>Aufgabe</h2>
         <button class="btn btn-ghost btn-s" onclick="closeSheet()" aria-label="Schließen">✕</button></div>
       <textarea id="atxt" rows="2" oninput="aufAendern('${id}',{t:this.value.trim()||'Ohne Titel'},false)">${esc(b.t)}</textarea>
-      ${oben?`<button class="btn btn-s btn-wide" style="margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px"
-            onclick="aufgabeOeffnen('${b.eltern}')">${ICON_UNTER}gehört zu „${esc(oben.t.slice(0,38))}“</button>`
-        :`<label class="fl">Unteraufgaben</label>
-      ${kinder.length?`<p class="note" style="margin:0 0 5px">${fertigK} von ${kinder.length} erledigt</p>
-        <div class="ubalken"><i style="width:${Math.round(fertigK/kinder.length*100)}%"></i></div>
-        <div id="sbox_${id}">${kinder.map(u=>`
-          <div class="usheet ${u.fertig?"fertig":""}" data-dnd="${u.id}">
-            <button class="uhak" onclick="haken('${u.id}');aufgabeOeffnen('${id}')" aria-label="${u.fertig?"Wieder öffnen":"Erledigt"}">
-              <svg viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9"/></svg></button>
-            <button class="t" onclick="aufgabeOeffnen('${u.id}')">${esc(u.t)}${
-              u.wann?` <span class="mini">${u.wann==="woche"?"Diese Woche":u.wann==="danach"?"Danach":datumText(u.wann)}</span>`:""}</button>
-            <button class="ugriff" onpointerdown="dndGriff(event,'sbox_${id}','aufgabe')" aria-label="Verschieben">${GRIFF}</button>
-            <button class="weg" onclick="unterLoeschen('${id}','${u.id}')" aria-label="Unteraufgabe löschen">✕</button>
-          </div>`).join("")}</div>`
-        :`<p class="note" style="margin:0 0 6px">Noch keine. Große Themen werden hier in Schritte zerlegt.</p>`}
-      <div class="uneu" style="padding-left:0">
-        <input type="text" id="usheet_${id}" placeholder="Unteraufgabe …"
-          onkeydown="if(event.key==='Enter')unterImBlatt('${id}')">
-        <button class="btn" onclick="unterImBlatt('${id}')" aria-label="Unteraufgabe anlegen">+</button></div>`}
       <label class="fl">Wann</label>
       <div class="chips" style="padding-bottom:4px">
         <button class="chip" aria-pressed="${wannIst(heute())}" onclick="verschieben('${id}','${heute()}');aufgabeOeffnen('${id}')">Heute</button>
@@ -1754,20 +1456,10 @@ function aufgabeOeffnen(id){
       <button class="btn btn-primary btn-wide fertig-knopf" onclick="closeSheet()">Fertig</button>
       <div class="aktionen">
         <button class="ak-akz" onclick="verdoppeln('${id}')">${ICON_KOPIE}Duplizieren</button>
-        ${oben
-          ? `<button class="ak-gold" onclick="herausloesen('${id}')">${ICON_LOESEN}Herauslösen</button>`
-          : (kinder.length?"":`<button class="ak-gold" onclick="unterordnenWaehlen('${id}')">${ICON_UNTERHAENGEN}Unterordnen</button>`)}
         <button class="ak-rot" onclick="aufgabeLoeschenFragen('${id}',true)">${ICON_WEG}Löschen</button>
       </div>`;
   };
   openSheet(body(),true);
-}
-/* Aus dem Blatt heraus anlegen: das Blatt muss danach den neuen Punkt zeigen,
-   und der Finger soll im Feld bleiben, um gleich den nächsten zu tippen. */
-function unterImBlatt(id){
-  if(!unterAnlegen(id,"usheet_"+id)) return;
-  aufgabeOeffnen(id);
-  setTimeout(()=>{const e=document.getElementById("usheet_"+id); if(e&&e.focus)e.focus();},60);
 }
 /* Aufgabe und Notiz gehören manchmal zusammen - ein Sprung in beide Richtungen
    genügt dafür, ein ganzes Verknüpfungssystem braucht es nicht. */
@@ -1789,13 +1481,7 @@ function aufgabeZuNotiz(nid){
 }
 function verdoppeln(id){
   const a=S.aufgaben[id]; if(!a)return;
-  const neuId="a"+id6();
-  mut("aufgaben/"+neuId,{...a,fertig:null,erstellt:Date.now(),pos:naechstePos()},false);
-  /* Eine Kopie ohne ihre Punkte wäre keine Kopie des Themas. */
-  kinderVon(id).forEach(k=>{
-    const roh=S.aufgaben[k.id]; if(!roh) return;
-    mut("aufgaben/a"+id6(),{...roh,eltern:neuId,fertig:null,erstellt:Date.now(),pos:naechstePos()},false);
-  });
+  mut("aufgaben/a"+id6(),{...a,fertig:null,erstellt:Date.now(),pos:naechstePos()});
   closeSheet();
 }
 
@@ -2229,10 +1915,8 @@ const TABS=[
  ["mehr","Mehr",'<circle cx="12" cy="6" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="18" r="1.4"/>']
 ];
 function nav(){
-  /* Die Zahl am Reiter zählt, was abgehakt werden kann - Unteraufgaben mit.
-     Gruppen braucht sie nicht, deshalb rechnet sie hier selbst. */
-  const heut=heute();
-  const rest=aufListe().filter(a=>offen(a)&&(a.wann===heut||(a.wann&&a.wann<heut&&/^\d{4}-/.test(a.wann)))).length;
+  const {faellig,ueberfaellig}=topfHeute();
+  const rest=faellig.length+ueberfaellig.length;
   document.getElementById("nav").innerHTML=TABS.map(([id,l,ic])=>
     `<button onclick="go('${id}')" ${tab===id?'aria-current="page"':""}><svg viewBox="0 0 24 24">${ic}</svg>${
       id==="heute"&&rest?`<i class="badge">${rest}</i>`:""}<span>${l}</span></button>`).join("");
@@ -2262,7 +1946,6 @@ function openSheet(html,behalten){
   if(y){const neu=document.querySelector(".sheet-in");if(neu)neu.scrollTop=y;}
 }
 function closeSheet(){
-  offenAuf=null;
   if(offeneNotiz){notizMerkenSofort();offeneNotiz=null;}
   document.getElementById("sheet").innerHTML="";
   document.body.style.overflow=""; render();
@@ -2287,9 +1970,8 @@ function rueckblickListe(){
     <div class="rbtag">${esc(datumText(d))} · ${liste.length}</div>
     ${liste.map(a=>{
       const k=a.kat?kat(a.kat):null;
-      const oben=hauptVon(a);
       return `<div class="rbzeile">${k?`<i class="punkt" style="background:${k.f}"></i>`:""}
-        <s>${esc(a.t)}</s>${oben?`<span class="mini">↳ ${esc(oben.t.slice(0,22))}</span>`:""}${a.von?`<span class="mini">${esc(a.von)}</span>`:""}</div>`;}).join("")}`).join("");
+        <s>${esc(a.t)}</s>${a.von?`<span class="mini">${esc(a.von)}</span>`:""}</div>`;}).join("")}`).join("");
 }
 
 function rueckblickZeigen(){
@@ -2372,7 +2054,7 @@ function altesAufraeumen(){
   render();
 }
 function ueberfaelligHolen(){
-  const ueberfaellig=topfHeute().ueberFlach;
+  const {ueberfaellig}=topfHeute();
   if(!ueberfaellig.length){alert("Nichts ist überfällig.");return;}
   /* Einzeln schreiben: ein Rundumschlag auf alle Aufgaben würde zeitgleiche
      Änderungen des anderen Geräts überschreiben. */

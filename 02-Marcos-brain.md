@@ -1,8 +1,8 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.2**, Stand 27. August 2026. Datei rund 128 KB, 2171 Zeilen.
-Die Testreihen unter `tests/` prüfen 189 Punkte, Aufruf mit `./tests/run.sh`.
+**Version 2.3**, Stand 27. August 2026. Datei rund 148 KB, 2486 Zeilen.
+Die Testreihen unter `tests/` prüfen 214 Punkte, Aufruf mit `./tests/run.sh`.
 
 Voraussetzung: Lies zuerst `00-Grundlagen-und-Infrastruktur.md`.
 
@@ -31,7 +31,7 @@ Speicherschlüssel `tagwerk.v1`, Zugangsdaten unter `tagwerk.v1.cfg`
 
 ```
 S = {
-  aufgaben:    { id: aufgabenObjekt },
+  aufgaben:    { id: aufgabenObjekt },        // Haupt- und Unteraufgaben gemeinsam
   notizen:     { id: notizObjekt },
   kategorien:  { id: {n, f, art, pos} },     // "Listen" in der Oberfläche
   einst:       { notizSort: "erstellt"|"geoeffnet"|"geaendert"|"eigen" },
@@ -46,6 +46,7 @@ S = {
   t: "Kinderwagen abholen",   // Text
   wann: null,                 // siehe unten
   kat: "k_geb"|null,          // Liste
+  eltern: "a…"|null,          // Kennung der Hauptaufgabe, siehe Abschnitt 8
   fertig: zeitstempel|null,   // Zeitpunkt des Abhakens
   von: "Marco"|null,          // wer abgehakt hat, nur wenn ein Gerätename gesetzt ist
   erstellt: zeitstempel,
@@ -102,6 +103,9 @@ und war auf dem Hauptbildschirm unsichtbar. Jetzt stehen bis zu drei Einträge k
 Oben der **Tagesbogen**: „3 von 7 erledigt" mit Fortschrittsbalken, der sich beim Abhaken
 füllt. Beim Antippen springt der Kreis auf, ein Ring pulsiert nach außen, der Haken zeichnet
 sich - bewusst als kleine Belohnung gebaut.
+
+Themen mit Unteraufgaben tragen in der Zeile einen Fortschritts-Chip; steht nur ein Punkt
+eines Themas an, erscheint das Thema als schmale Kopfzeile darüber (Abschnitt 8).
 
 Rechts im Tagesbogen ein **Mini-Symbol**, das in die nächste Woche springt
 (`naechsteWoche()` setzt `wochenVersatz=1` und wechselt auf „Woche").
@@ -281,7 +285,78 @@ Wer den Import wiederhaben will, findet ihn in `index.backup-20260827-1014.html`
 
 ---
 
-## 8. Teilen aus anderen Apps
+## 8. Unteraufgaben
+
+Große Themen zerfallen in Schritte. Dafür trägt eine Aufgabe die Kennung ihrer
+Hauptaufgabe im Feld `eltern`. Mehr ist es nicht: eine Unteraufgabe ist eine ganz
+gewöhnliche Aufgabe und kann alles, was eine Hauptaufgabe kann - eigener Termin, eigene
+Liste, eigene Wiederholung, eigene Notiz, eigener Haken, eigenes Blatt.
+
+**Genau eine Ebene.** Enkel wären in einer Zeile nicht mehr zu lesen und beim Ziehen nicht
+mehr vorherzusagen. `aufgabeAnlegen()` macht aus dem Kind eines Kindes stillschweigend
+dessen Geschwister; `unterordnen()` weist eine Aufgabe ab, die selbst schon Punkte hat.
+
+**Verwaiste heilen sich selbst.** Zeigt `eltern` ins Leere - die Hauptaufgabe wurde auf dem
+anderen Gerät gelöscht -, gilt der Eintrag wieder als Hauptaufgabe (`istUnter()`). Es
+braucht dafür keinen Aufräumlauf und keine zusätzliche Grabsteinpflege.
+
+### Die Anzeigeregel
+
+Das eigentliche Problem: eine Unteraufgabe mit eigenem Termin muss an ihrem Tag auftauchen,
+darf aber nirgends doppelt stehen. `gruppen(passt)` löst das für jeden Abschnitt:
+
+| Fall | Anzeige |
+|---|---|
+| Die Hauptaufgabe steht selbst hier an | volle Zeile mit Fortschritts-Chip `2/5`, aufklappbar |
+| Nur eine Unteraufgabe steht hier an | schmale **Kopfzeile** mit dem Thema (kein Haken) und darunter genau diese Unteraufgaben als volle Zeilen |
+| Sonst | gar nicht - eine Unteraufgabe steht nie ohne ihren Zusammenhang |
+
+Beide Fälle schließen sich aus, deshalb steht jede abhakbare Zeile je Abschnitt **genau
+einmal**. Was aufgeklappt unter einer Zeile erscheint, ist eine Detailansicht des Themas
+und keine zweite Zeile.
+
+In den **Listen** erbt eine Unteraufgabe ohne eigene Liste die ihrer Hauptaufgabe
+(`listeVon()`). Ohne das läge „Farbe kaufen" unter „Ohne Liste", während das Thema
+„Kinderzimmer streichen" in „Geburt" steht - und der Vorrat wäre zerrissen.
+
+`gruppen()` zeigt, `flach()` zählt. Der Tagesbogen, die Zahl am Reiter und die
+Abschnittszahlen nehmen `flach()`: eine Kopfzeile ist keine Aufgabe und zählt nicht mit,
+eine Unteraufgabe dagegen schon.
+
+### Verhalten
+
+- **Abhaken der Hauptaufgabe** hakt alle offenen Punkte mit ab. Rückgängig macht beides.
+- **Der letzte Punkt** hakt das Thema *nicht* von selbst ab, sondern meldet sich mit
+  „Thema abhaken" als Angebot. Oft fehlt noch ein letzter Schritt, und was ungefragt
+  passiert, versteht hinterher niemand.
+- **Löschen** nimmt die Punkte mit - sonst blieben Waisen zurück. Rückgängig holt alles.
+- **Duplizieren** und **Wiederholungen** nehmen die Punkte mit. Bei der Wiederholung
+  starten sie ohne eigenen Termin, sonst lägen sie alle in der Vergangenheit.
+- **Herauslösen** macht aus einem Punkt wieder eine eigenständige Aufgabe,
+  **Unterordnen** den Weg zurück.
+
+### Bedienung
+
+In der Zeile ist der Fortschritts-Chip zugleich der Schalter: ein Tipp klappt die Punkte
+auf, darunter steht ein schmales Feld für den nächsten. Der aufgeklappte Zustand steht in
+`offeneUnter` - reiner Bildschirmzustand, er wird weder gespeichert noch abgeglichen.
+
+Im Blatt der Hauptaufgabe stehen die Punkte direkt unter dem Titel, mit Fortschrittsbalken,
+Haken, Griff und ✕. Ein Tipp auf den Text öffnet das Blatt des Punktes; von dort führt
+„gehört zu …" zurück.
+
+**Gezogen** wird in beiden Richtungen: innerhalb des eigenen Kastens sortiert das Ziehen um,
+über den Kasten hinaus in eine Ablegezone setzt es den Termin. Diese Unterscheidung trifft
+`dndZonePruefen()` daran, ob die Zone den Ursprungskasten enthält. Ohne sie hätte eine
+Unteraufgabe beim bloßen Umsortieren den Termin des Abschnitts übernommen, in dem ihre
+Hauptaufgabe gerade steht.
+
+Wird im Blatt sortiert, zieht `dndUebernehmen()` das Blatt über `offenAuf` nach - `render()`
+zeichnet nur die Seite dahinter neu.
+
+---
+
+## 9. Teilen aus anderen Apps
 
 Über `share_target` im Manifest erscheint die App im Android-Teilen-Menü. Geteilte Inhalte
 können wahlweise als schnelle Aufgabe oder als Notiz mit vollem Text übernommen werden.
@@ -292,7 +367,7 @@ nicht nur als Verknüpfung über „Zum Startbildschirm hinzufügen". Dafür bra
 
 ---
 
-## 9. Aufräumen und Sicherung
+## 10. Aufräumen und Sicherung
 
 - **Erledigtes älter als 30 Tage löschen** - ein Knopf unter „Mehr".
 - **Überfälliges auf heute ziehen** - schiebt alles Liegengebliebene in den heutigen Tag.
@@ -303,7 +378,7 @@ nicht nur als Verknüpfung über „Zum Startbildschirm hinzufügen". Dafür bra
 
 ---
 
-## 10. Gestaltung
+## 11. Gestaltung
 
 Eigene Farbwelt, bewusst anders als der Küchenplan: **Schiefer und Petrol**. Kühle,
 zurückgenommene Fläche, darauf genau ein Akzent. Jede Farbe trägt eine Bedeutung, es gibt
@@ -352,11 +427,10 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
 
 ---
 
-## 11. Bekannte Grenzen und offene Ideen
+## 12. Bekannte Grenzen und offene Ideen
 
 - **Kein Erinnerungssystem.** Keine Benachrichtigungen, keine Weckzeiten. Wäre technisch
   über die Notification API möglich, ist aber bewusst nicht gebaut.
-- **Keine Unteraufgaben.**
 - **Keine Verknüpfung** zwischen Aufgabe und Notiz.
 - **`execCommand` ist veraltet.** Funktioniert in Chrome, könnte aber irgendwann
   wegfallen. Ersatz wäre eine eigene Bearbeitungslogik oder eine Bibliothek.
@@ -364,7 +438,22 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 12. Was in Version 2.2 geändert wurde
+## 13. Was in Version 2.3 dazugekommen ist
+
+**Unteraufgaben**, siehe Abschnitt 8. Dazu drei Dinge, die dabei aufgefallen sind:
+
+1. **Das Ziehen im eigenen Kasten setzte einen Termin.** Die Ablegezonen der Ansicht
+   umschließen die Kästen; beim bloßen Umsortieren einer Unteraufgabe griff deshalb die
+   Zone und schrieb ihr den Termin des Abschnitts. `dndZonePruefen()` unterscheidet jetzt,
+   ob die Zone den Ursprungskasten enthält. Für Hauptaufgaben war das vorher folgenlos,
+   weil dort Zone und eigener Termin ohnehin übereinstimmten.
+2. **Das Eingabefeld verlor den Fokus.** Die Kennung des Unteraufgabenkastens hing an
+   einem Zähler, der bei jedem Neuzeichnen weiterlief. Sie hängt jetzt an der Aufgabe -
+   je Ansicht steht eine Hauptaufgabe genau einmal, doppelt kann sie nicht werden.
+3. **`topfHeute()` liefert jetzt Gruppen und flache Listen.** Wer die Zahl braucht, nimmt
+   `faelligFlach`/`ueberFlach`; wer zeichnet, nimmt `faellig`/`ueberfaellig`.
+
+## 14. Was in Version 2.2 geändert wurde
 
 1. **Doppelte Feldnamen beseitigt.** Das Blatt „Aufgabe für …" trug ein Eingabefeld mit der
    Kennung `neu` - dieselbe, die „Heute" und „Woche" schon auf der Seite dahinter benutzen.
@@ -396,7 +485,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
 11. **Der Google-Notizen-Import ist entfallen**, siehe Abschnitt 7.
 12. **Einzahl und Mehrzahl** werden auseinandergehalten: „1 Notiz" statt „1 Notizen".
 
-## 13. Was in Version 2.0 dazugekommen ist
+## 15. Was in Version 2.0 dazugekommen ist
 
 Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neuerungen.js`):
 
@@ -422,7 +511,7 @@ Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neu
     Namen bleibt alles anonym wie bisher. Bewusst abschaltbar, weil eine Buchführung
     übereinander auch belasten kann.
 
-## 14. Was in Version 1.9 behoben wurde
+## 16. Was in Version 1.9 behoben wurde
 
 - **Änderungen konnten sich selbst rückgängig machen.** Abhaken, Zurücknehmen, Anheften,
   Archivieren, Verschieben, Liste wechseln, Wiederholung setzen - all das schrieb nur das

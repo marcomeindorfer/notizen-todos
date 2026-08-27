@@ -231,9 +231,13 @@ t("Überfälliges wird als solches erkannt", () => {
   frisch();
   const id = A.aufgabeAnlegen("Liegengeblieben");
   A.S.aufgaben[id].wann = tagVor(5);
-  const { ueberfaellig, faellig } = A.topfHeute();
-  gleich(ueberfaellig.map(a => a.id), [id]);
+  const { ueberfaellig, faellig, ueberFlach, faelligFlach } = A.topfHeute();
+  /* topfHeute liefert Gruppen zum Zeigen und flache Listen zum Zählen */
+  gleich(ueberFlach.map(a => a.id), [id]);
+  gleich(ueberfaellig.map(g => g.haupt.id), [id]);
+  wahr(ueberfaellig[0].eigen, "steht mit eigener Zeile da");
   gleich(faellig.length, 0);
+  gleich(faelligFlach.length, 0);
 });
 t("Überfälliges lässt sich auf heute ziehen", () => {
   frisch();
