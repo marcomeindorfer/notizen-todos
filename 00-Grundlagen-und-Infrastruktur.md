@@ -15,7 +15,7 @@ Lade zu Beginn hoch:
 
 Damit ist der Kontext vollständig. Die Quelldateien, aus denen ich die `index.html`
 ursprünglich zusammengebaut habe (`b2_data.js`, `c2_logic.js` und so weiter), existieren
-nicht mehr – **es wird direkt in der einen `index.html` weitergearbeitet.** Der Aufbau der
+nicht mehr - **es wird direkt in der einen `index.html` weitergearbeitet.** Der Aufbau der
 Datei ist in den App-Dokumentationen beschrieben, damit man sich darin zurechtfindet.
 
 ---
@@ -23,7 +23,7 @@ Datei ist in den App-Dokumentationen beschrieben, damit man sich darin zurechtfi
 ## 1. Personen und Zweck
 
 Nutzer sind **Marco** und seine Partnerin. Ein Kind ist unterwegs beziehungsweise gerade
-geboren – daraus ergeben sich mehrere Anforderungen, die durchgängig gelten:
+geboren - daraus ergeben sich mehrere Anforderungen, die durchgängig gelten:
 
 - Bedienung häufig **einhändig**, oft unterwegs, oft in Eile.
 - Ernährung **darmfreundlich**, kein Schweinefleisch, einmal Fisch und einmal Fleisch pro
@@ -54,10 +54,10 @@ Die Einkaufsliste muss im Supermarkt ohne Empfang funktionieren. Alles, was beim
 nachgeladen wird, ist ein Risiko. Zwei Ausnahmen laden bewusst erst bei Bedarf nach und
 sind nur online nutzbar:
 
-- **pdf.js** `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js` – für das
+- **pdf.js** `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js` - für das
   Einlesen der Aldi-Prospekte.
 - **tesseract.js** `https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js`
-  – für Texterkennung aus Bildern.
+  - für Texterkennung aus Bildern.
 
 ---
 
@@ -72,7 +72,7 @@ Beide Apps liegen in **eigenen öffentlichen GitHub-Repositories** und werden ü
 | Marco's brain | `tagwerk` (Ordnername kann abweichen) | `https://marco-meindorfer.github.io/<repo>/` |
 
 **Wichtig:** GitHub Pages funktioniert bei kostenlosen Konten **nur mit öffentlichen
-Repositories**. Öffentlich ist dabei ausschließlich der Programmcode – die Daten liegen im
+Repositories**. Öffentlich ist dabei ausschließlich der Programmcode - die Daten liegen im
 Browserspeicher des Geräts und in Firebase, nicht in der Datei.
 
 Beide Apps tragen im Kopfbereich:
@@ -136,14 +136,14 @@ Daten vollständig getrennt sind.
 ```
 
 Auf oberster Ebene ist alles gesperrt, niemand kann die vorhandenen Haushalte auflisten.
-Zugriff gibt es nur unterhalb eines Pfads mit mindestens 20 Zeichen – das ist der
+Zugriff gibt es nur unterhalb eines Pfads mit mindestens 20 Zeichen - das ist der
 Haushaltscode. Ein zufälliger 24-Zeichen-Code aus einem 33er-Alphabet ist praktisch nicht
 zu erraten.
 
 **Ehrliche Einordnung:** Das ist Schutz durch Unkenntnis des Pfads, keine Authentifizierung.
 Wer den Code kennt, kommt an die Daten. Für Einkaufslisten und Rezepte angemessen; wenn in
 Marco's brain dauerhaft Sensibles landet, wäre **Firebase Authentication mit anonymer
-Anmeldung** der nächste Schritt – dann prüfen die Regeln eine echte Identität statt einer
+Anmeldung** der nächste Schritt - dann prüfen die Regeln eine echte Identität statt einer
 Pfadlänge. Das ist bisher bewusst nicht umgesetzt.
 
 ### Einrichtung auf einem weiteren Gerät
@@ -162,7 +162,7 @@ gelesen haben.
 
 1. `verbinden()` öffnet eine `EventSource` auf den Haushaltspfad.
 2. Firebase schickt als Erstes ein `put`-Ereignis mit Pfad `/` und dem **kompletten** Stand.
-3. Jedes Wurzel-Update läuft durch `zusammenfuehren(fern)` – **nie** durch blindes Ersetzen.
+3. Jedes Wurzel-Update läuft durch `zusammenfuehren(fern)` - **nie** durch blindes Ersetzen.
 4. Danach kommen einzelne `put`- und `patch`-Ereignisse für Teilpfade, die direkt
    übernommen werden.
 
@@ -173,7 +173,7 @@ gelesen haben.
 - Einträge, die es nur auf einer Seite gibt, bleiben erhalten.
 - Bei gleicher Kennung gewinnt der **jüngere Zeitstempel** (`geaendert`, `ts`, `erstellt`).
 - Anschließend wird der gemischte Stand hochgeschoben, aber nur wenn er sich vom
-  empfangenen unterscheidet – sonst entstünde eine Endlosschleife.
+  empfangenen unterscheidet - sonst entstünde eine Endlosschleife.
 
 Die Liste der gemischten Felder wird **automatisch aus `leer()` abgeleitet**
 (Funktion `SAMMELFELDER()`). Das ist kein Detail, sondern die Lehre aus einem Fehler:
@@ -190,7 +190,7 @@ Datenverlust verursacht haben:
   die ganze Schlange heraus; brach die Verbindung beim zweiten Eintrag ab, waren alle
   folgenden ersatzlos weg.
 - **Je Pfad wartet nur der jüngste Stand.** Vorher stauten sich hunderte überholte Fassungen
-  desselben Pfades, bis der Deckel bei 500 die ältesten verwarf – womöglich noch ungesendete
+  desselben Pfades, bis der Deckel bei 500 die ältesten verwarf - womöglich noch ungesendete
   andere Pfade.
 - **Dauerhafte Fehler werden erkannt und gemeldet.** Bei 401/403 (Regeln) oder 404 (falsche
   URL) hört die App auf zu senden und schreibt den Grund im Klartext unter „Mehr".
@@ -206,7 +206,7 @@ gewinnen. Deshalb führt **jede** Änderung einen reinen Abgleichsstempel `ts` m
 ### Selbstheilung
 
 - Bricht die Verbindung ab, wird mit wachsendem Abstand neu versucht, gedeckelt bei
-  30 Sekunden – außer bei einem dauerhaften Fehler, da hilft Wiederholen nicht.
+  30 Sekunden - außer bei einem dauerhaften Fehler, da hilft Wiederholen nicht.
 - Alle 30 Sekunden und beim Zurückkehren aus dem Hintergrund prüft `syncPruefen()`.
 - Ereignisse aus der Leitung werden abgesichert gelesen: ein einzelnes kaputtes `put`
   darf die Verbindung nicht lahmlegen.
@@ -215,7 +215,7 @@ gewinnen. Deshalb führt **jede** Änderung einen reinen Abgleichsstempel `ts` m
 ### Grabsteine: gelöscht bleibt gelöscht
 
 Früher konnten Löschungen zurückkehren. Löschte man auf Gerät A etwas, während B offline
-war, brachte B es beim Verbinden zurück – B wusste nur „ich habe hier etwas, das drüben
+war, brachte B es beim Verbinden zurück - B wusste nur „ich habe hier etwas, das drüben
 fehlt", und eine Abwesenheit kann gegen einen vorhandenen Eintrag nichts ausrichten. Genau
 so ist eine gelöschte Notiz mehrfach wieder aufgetaucht.
 
@@ -229,7 +229,7 @@ tot: { "notizen:nab12cd": 1755500000000 }     Kennung mit Doppelpunkt, Zeitpunkt
 - Beim Zusammenführen fällt jeder Eintrag heraus, dessen Grabstein **echt jünger** ist als
   sein jüngster Zeitstempel. Bei Gleichstand bleibt der Eintrag: fälschlich behalten ist der
   harmlosere der beiden Irrtümer.
-- Ohne Grabstein wird nichts gelöscht – Einträge aus alten Fassungen tragen gar keinen
+- Ohne Grabstein wird nichts gelöscht - Einträge aus alten Fassungen tragen gar keinen
   Zeitstempel, sonst wären sie alle betroffen.
 - Wird derselbe Eintrag wirklich wieder angelegt („Rückgängig"), bekommt er einen frischen
   Stempel, ist damit jünger als der Grabstein, und der Grabstein wird gelöst und mitgeteilt.
@@ -257,14 +257,14 @@ Lesen normalisiert (`rezeptNorm()` im Küchenplan). Nie davon ausgehen, dass ein
 ### Zeitbasierte Kennungen kollidieren
 
 `Date.now().toString(36)` liefert zweimal denselben Wert, wenn zwei Einträge in derselben
-Millisekunde entstehen – beim schnellen Eintippen also regelmäßig. Der zweite überschreibt
+Millisekunde entstehen - beim schnellen Eintippen also regelmäßig. Der zweite überschreibt
 den ersten. **Lösung:** `neueId(prefix)` mit zusätzlichem Zähler. Dasselbe gilt für
 Sortierpositionen (`naechstePos()`).
 
 ### Schrägstriche in Datenschlüsseln
 
 Der Schrägstrich trennt Datenpfade. Ein Schlüssel `0/2-a` erzeugte in `mut("plan/0/2-a")`
-eine verschachtelte Struktur statt eines flachen Eintrags – Gerichte verschwanden nach dem
+eine verschachtelte Struktur statt eines flachen Eintrags - Gerichte verschwanden nach dem
 Eintragen. **Lösung:** Schlüsselformat `w0-2-a`. Firebase verbietet außerdem
 `.`, `$`, `#`, `[`, `]` in Schlüsseln.
 
@@ -292,7 +292,7 @@ auffindbar war. **Lösung:** `normText()` ohne Kürzung für Suche, `slug()` nur
 
 ### Fremde Hintergrundprozesse blockiert der Browser
 
-pdf.js lädt seinen Worker von cdnjs – Chrome auf Android lehnt das wegen fremder Herkunft ab.
+pdf.js lädt seinen Worker von cdnjs - Chrome auf Android lehnt das wegen fremder Herkunft ab.
 **Lösung:** Eine kleine lokale Blob-Datei erzeugen, die per `importScripts` den fremden
 Code nachlädt.
 
@@ -309,8 +309,8 @@ Beim Ziehen und Ablegen lief die Suche nach der Zeile bis zum `document`, das ke
 
 ### Ein Neuzeichnen mitten im Ziehen tauscht das Element unter dem Finger
 
-`render()` ersetzt `#view` vollständig. Läuft es während eines Zugs – weil eine Meldung
-ausläuft, das andere Gerät etwas schickt oder eine Minute vergeht –, hängt der Zug an einem
+`render()` ersetzt `#view` vollständig. Läuft es während eines Zugs - weil eine Meldung
+ausläuft, das andere Gerät etwas schickt oder eine Minute vergeht -, hängt der Zug an einem
 Element, das nicht mehr im Dokument steht: Er lässt sich nicht mehr abschließen und
 hinterlässt Klassen an Zeilen, die es nicht mehr gibt. **Lösung:** `dndSperre` setzt
 `render()` für die Dauer des Zugs aus und merkt sich das Versäumte in `dndNachholen`.
@@ -318,7 +318,7 @@ hinterlässt Klassen an Zeilen, die es nicht mehr gibt. **Lösung:** `dndSperre`
 ### Zwei Stellen, die denselben Namen ausrechnen, driften auseinander
 
 Der Griff einer Notiz nennt den Kasten, in dem gezogen wird. Die Kartenfunktion rechnete
-diesen Namen selbst noch einmal aus – und kam bei „Eigene Reihenfolge" auf `nbox_heute`,
+diesen Namen selbst noch einmal aus - und kam bei „Eigene Reihenfolge" auf `nbox_heute`,
 während die Liste dort ungruppiert in `nbox` steht. Der Griff zeigte ins Leere, Ziehen tat
 nichts mehr, und zwar genau ab dem ersten erfolgreichen Zug, weil der die Sortierung
 umstellt. **Lösung:** Der Kasten wird übergeben, nicht zweimal hergeleitet.
@@ -330,27 +330,27 @@ umstellt. **Lösung:** Der Kasten wird übergeben, nicht zweimal hergeleitet.
 Getestet wird mit einem **nachgebauten Browser**: `localStorage`, `document.getElementById`,
 `EventSource` und `fetch` werden durch Attrappen ersetzt, dann wird der Skriptteil der
 `index.html` ausgewertet. Ausgeführt wird das mit **JavaScriptCore**, das auf jedem Mac unter
-`/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc` liegt – es muss
+`/System/Library/Frameworks/JavaScriptCore.framework/Versions/A/Helpers/jsc` liegt - es muss
 nichts installiert werden. Aufruf: `./tests/run.sh`.
 
 **Der nachgebaute Browser ersetzt den echten nicht.** JavaScriptCore hat eine ungültige
 Zeichenklasse in einem regulären Ausdruck anstandslos geschluckt, während Chrome die ganze
-Datei mit einem `SyntaxError` verwarf – die App startete dort überhaupt nicht mehr, obwohl
+Datei mit einem `SyntaxError` verwarf - die App startete dort überhaupt nicht mehr, obwohl
 alle Prüfungen grün waren. Seitdem prüft eine Testreihe zusätzlich, dass keine wörtlichen
 Steuerzeichen im Quelltext stehen, und am Ende wird die App einmal im Browser geöffnet.
 
 Bewährt haben sich vier Arten von Prüfungen:
 
-1. **Datenprüfung** – alle Rezepte auf vollständige Felder, gültige Abteilungen, kein
+1. **Datenprüfung** - alle Rezepte auf vollständige Felder, gültige Abteilungen, kein
    Schweinefleisch, plausible Zeiten.
-2. **Regelprüfung mit vielen Durchläufen** – etwa 60 bis 300 Wochenvorschläge erzeugen und
+2. **Regelprüfung mit vielen Durchläufen** - etwa 60 bis 300 Wochenvorschläge erzeugen und
    statistisch auswerten (Fisch/Fleisch-Verhältnis, Beilagenvielfalt, Protein, Dubletten).
-3. **Klick-Durchlauf** – jede Ansicht in jeder Variante rendern, per regulärem Ausdruck
+3. **Klick-Durchlauf** - jede Ansicht in jeder Variante rendern, per regulärem Ausdruck
    **alle** `onclick`/`oninput`/`onchange`-Attribute herausziehen und einzeln aufrufen.
    Zuletzt: 924 Bedienelemente im Küchenplan, 204 in Marco's brain, jeweils ohne Ausnahme.
    Wichtig: Der Aufruf muss mit direktem `eval` im selben Geltungsbereich erfolgen, sonst
    sieht er die App-Funktionen nicht.
-4. **Mehrgeräte-Simulation** – zwei bis fünf App-Instanzen in getrennten VM-Kontexten gegen
+4. **Mehrgeräte-Simulation** - zwei bis fünf App-Instanzen in getrennten VM-Kontexten gegen
    eine nachgebaute Datenbank, die Ereignisse an alle Hörer verteilt.
 
 Zusätzlich ein statischer Blick auf Handy-Tauglichkeit: Sichtbereich, Systemleisten,
@@ -369,12 +369,12 @@ Geschwindigkeit auf dem Gerät.
 - **Keine Bestätigungsdialoge, wo eine Rücknahme reicht.** Gelöschtes zeigt sieben Sekunden
   lang eine Leiste mit „Rückgängig". Nur bei endgültigem Löschen gibt es zusätzlich eine
   kurze Rückfrage.
-- **Ehrliche Leermeldungen.** Wenn nichts gefunden wurde, steht das da, samt Grund – statt
+- **Ehrliche Leermeldungen.** Wenn nichts gefunden wurde, steht das da, samt Grund - statt
   ersatzweise etwas Falsches anzuzeigen.
 - **Mitgelieferte Schriften.** Inter und Instrument Serif liegen als woff2 im Ordner
   `fonts` und stehen im Service Worker, werden also mitinstalliert. Kein Aufruf nach außen,
   offline vollständig da, auf jedem Gerät dasselbe Bild. Beide unter der SIL Open Font
   License, siehe `fonts/LIZENZ.txt`. Wer die Dateien vergisst hochzuladen, bekommt die
-  Systemschrift – die App bleibt benutzbar, sieht aber anders aus.
+  Systemschrift - die App bleibt benutzbar, sieht aber anders aus.
 - **Dunkler Modus** über `prefers-color-scheme` in beiden Apps.
 - **Farben** über CSS-Variablen, nie fest im Markup.

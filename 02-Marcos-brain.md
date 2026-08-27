@@ -1,8 +1,8 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.0**, Stand 11. August 2026. Datei rund 106 KB, 1870 Zeilen.
-Die Testreihen unter `tests/` prüfen 151 Punkte, Aufruf mit `./tests/run.sh`.
+**Version 2.2**, Stand 27. August 2026. Datei rund 128 KB, 2171 Zeilen.
+Die Testreihen unter `tests/` prüfen 189 Punkte, Aufruf mit `./tests/run.sh`.
 
 Voraussetzung: Lies zuerst `00-Grundlagen-und-Infrastruktur.md`.
 
@@ -16,8 +16,8 @@ sonst verwaisen alle Daten.
 
 Google Notizen kennt nur Listen. Marcos tatsächliches System ist aber zweistufig:
 
-- Dinge mit **Termin** – heute, morgen, diese Woche, danach.
-- Dinge im **Vorrat** – eine Liste wie „Geburt", aus der gezielt in den Tag gezogen wird.
+- Dinge mit **Termin** - heute, morgen, diese Woche, danach.
+- Dinge im **Vorrat** - eine Liste wie „Geburt", aus der gezielt in den Tag gezogen wird.
 
 Genau diese Unterscheidung ist das Kernkonzept der App. Dazu kommt die Freude am sichtbar
 Erledigten am Ende des Tages, die Keep ebenfalls nicht bietet.
@@ -58,7 +58,7 @@ S = {
 }
 ```
 
-**Das Feld `wann` kennt fünf Zustände** – das ist der Kern des Konzepts:
+**Das Feld `wann` kennt fünf Zustände** - das ist der Kern des Konzepts:
 
 | Wert | Bedeutung |
 |---|---|
@@ -87,7 +87,7 @@ S = {
 
 ### Startlisten
 
-`Allgemein`, `Geburt`, `Arbeit`, `Ideen` – frei erweiterbar, mit Farbe aus einer Palette
+`Allgemein`, `Geburt`, `Arbeit`, `Ideen` - frei erweiterbar, mit Farbe aus einer Palette
 von acht Werten. Listen gelten gleichermaßen für Aufgaben und Notizen.
 
 ---
@@ -95,17 +95,21 @@ von acht Werten. Listen gelten gleichermaßen für Aufgaben und Notizen.
 ## 3. Die fünf Ansichten
 
 ### Heute
-Neu: **Diese Woche noch** – der Topf `wann:"woche"` lebte bisher nur in der Wochenansicht
+Neu: **Diese Woche noch** - der Topf `wann:"woche"` lebte bisher nur in der Wochenansicht
 und war auf dem Hauptbildschirm unsichtbar. Jetzt stehen bis zu drei Einträge kompakt auf
 „Heute", jeder mit einem Knopf, der ihn in den Tag holt.
 
 Oben der **Tagesbogen**: „3 von 7 erledigt" mit Fortschrittsbalken, der sich beim Abhaken
 füllt. Beim Antippen springt der Kreis auf, ein Ring pulsiert nach außen, der Haken zeichnet
-sich – bewusst als kleine Belohnung gebaut.
+sich - bewusst als kleine Belohnung gebaut.
+
+Rechts im Tagesbogen ein **Mini-Symbol**, das in die nächste Woche springt
+(`naechsteWoche()` setzt `wochenVersatz=1` und wechselt auf „Woche").
 
 Darunter drei Abschnitte: **Überfällig** (rot markiert, „seit Dienstag"), **Für heute**,
-und ganz unten **Heute geschafft** mit durchgestrichenen Einträgen. Letzterer verschwindet
-um Mitternacht von allein, weil er am Zeitstempel `fertig` hängt.
+und ganz unten **Heute geschafft** mit durchgestrichenen Einträgen. Letzterer leert sich
+um Mitternacht von allein, weil er am Zeitstempel `fertig` hängt. Der erklärende Satz
+darunter ist in 2.2 entfallen, das Verhalten bleibt.
 
 ### Woche
 Sieben Tageskarten mit Vor- und Zurück-Blättern über Wochen. Erledigte sind
@@ -113,18 +117,20 @@ Sieben Tageskarten mit Vor- und Zurück-Blättern über Wochen. Erledigte sind
 „Diese Woche, ohne festen Tag" und „Danach".
 
 ### Listen
-Kompakter Filterknopf statt langer Chipreihe. Je Liste die gesammelten Aufgaben ohne Datum
-plus ein Eingabefeld zum Sammeln. Oben ein Suchfeld über **alle** Aufgaben inklusive
+Die Listen stehen seit 2.2 als **Reiter** oben, jeder mit der Zahl der offenen Aufgaben;
+ein Zahnrad am Ende führt in die Listenverwaltung. Je Liste die gesammelten Aufgaben ohne
+Datum plus ein Eingabefeld zum Sammeln. Oben ein Suchfeld über **alle** Aufgaben inklusive
 erledigter.
 
 ### Notizen
-Suchfeld, Filterknopf, Kartenliste. Karten haben einen farbigen Rand in der Listenfarbe,
+Suchfeld, **Reiter für die Listen**, darunter ein schmaler Knopf für Status und
+Reihenfolge, dann die Kartenliste. Karten haben einen farbigen Rand in der Listenfarbe,
 rechts Nadel, Archiv und Papierkorb. Bei Sortierung nach Zeit werden sie automatisch
 gruppiert: Angeheftet, Heute, Diese Woche, Diesen Monat, Monatsnamen, Jahre.
 
 ### Mehr
 Rückblick der letzten sieben Tage als Balken, Listenverwaltung, Aufräumfunktionen,
-Google-Import, Sync, Sicherung, Zurücksetzen, Versionsnummer.
+Sync, Sicherung, Zurücksetzen, Versionsnummer.
 
 ---
 
@@ -132,18 +138,22 @@ Google-Import, Sync, Sicherung, Zurücksetzen, Versionsnummer.
 
 ### Schnelleingabe an zwei Stellen
 
-Oben auf „Heute" das gewohnte Feld. Zusätzlich ein runder Knopf über der Navigationsleiste –
+Oben auf „Heute" das gewohnte Feld. Zusätzlich ein runder Knopf über der Navigationsleiste -
 in Daumenreichweite, weil die App oft einhändig bedient wird und der obere Bildschirmrand
 dafür die schlechteste Stelle ist. Er öffnet ein kleines Fenster mit Feld und Zielauswahl
 (Heute · Morgen · Diese Woche · Nur sammeln) und bleibt nach dem Anlegen offen, damit
 mehrere Dinge am Stück hineingehen. Auf der Notizansicht legt derselbe Knopf eine Notiz an.
 
+Beim Blättern nach unten tritt der Knopf zur Seite, damit er den Text nicht verdeckt; nach
+oben oder nach kurzer Ruhe ist er wieder da. Unter dem Inhalt steht ohnehin genug Luft,
+sodass er am Seitenende nichts überlagert.
+
 ### Schnelleingabe versteht Zusätze
 `eingabeDeuten()` erkennt beim Eintippen:
 - `heute`, `morgen`, `übermorgen`, `woche`, `danach`, `irgendwann`
-- Wochentage (`Freitag`, `Mo`, `Di`, …) – immer der nächste passende
-- Datumsangaben `14.9.` – bei Vergangenheit automatisch das Folgejahr
-- `#Geburt` – Zuordnung zur Liste, Präfix genügt
+- Wochentage (`Freitag`, `Mo`, `Di`, …) - immer der nächste passende
+- Datumsangaben `14.9.` - bei Vergangenheit automatisch das Folgejahr
+- `#Geburt` - Zuordnung zur Liste, Präfix genügt
 
 Beispiel: „Kinderwagen abholen morgen #Geburt" landet mit Datum in der richtigen Liste.
 
@@ -156,12 +166,12 @@ und `touch-action:none` am Griff. Vorhanden in Heute, Woche, Listen und Notizen.
 So verhält es sich:
 
 - **Erst ab acht Pixeln Weg ist es ein Zug.** Ein Antippen des Griffs verändert nichts mehr.
-  Vorher war jede Berührung sofort ein Zug – die häufigste Quelle versehentlicher Umsortierungen.
+  Vorher war jede Berührung sofort ein Zug - die häufigste Quelle versehentlicher Umsortierungen.
 - **Das Fenster hört mit**, nicht der Griff. Rutscht der Finger schneller, als das Bild
   nachkommt, geht der Zug nicht mehr verloren.
 - **Die Nachbarn weichen sichtbar aus**, statt dass nur ein Strich das Ziel andeutet.
 - **Der Zielplatz wird an der Mitte der gezogenen Zeile gemessen**, nicht an der Fingerspitze.
-  Gerechnet wird gegen die Mitten, die die Nachbarn *während* des Zugs haben – unterhalb der
+  Gerechnet wird gegen die Mitten, die die Nachbarn *während* des Zugs haben - unterhalb der
   Lücke ist alles um eine Zeile aufgerückt. Ohne diese Verrechnung landete jede nach unten
   gezogene Zeile eine Stelle zu früh.
 - **Am Bildrand rollt die Liste mit**, sonst kommt nichts weiter als einen Bildschirm.
@@ -173,14 +183,14 @@ So verhält es sich:
 
 Bei Notizen schaltet das Ablegen automatisch auf „Eigene Reihenfolge", weil manuelles Ordnen
 neben einer Datumssortierung sinnlos wäre. Geschrieben wird die **sichtbare
-Gesamtreihenfolge**, nicht nur der bewegte Kasten – sonst zerfiele die Ordnung beim
+Gesamtreihenfolge**, nicht nur der bewegte Kasten - sonst zerfiele die Ordnung beim
 Umschalten. **Achtung:** Der Kasten, auf den der Griff zeigt, muss derselbe sein, in dem die
 Karte steht; siehe Grundlagen, Abschnitt 6.
 
 ### Kurze Wege in den Tag
 
-Der häufigste Handgriff – etwas aus dem Vorrat oder aus dem Überfälligen in den heutigen
-Tag holen – ist ein Tipp, kein Weg durch ein Fenster. Aufgaben ohne Termin und überfällige
+Der häufigste Handgriff - etwas aus dem Vorrat oder aus dem Überfälligen in den heutigen
+Tag holen - ist ein Tipp, kein Weg durch ein Fenster. Aufgaben ohne Termin und überfällige
 Aufgaben tragen direkt in der Zeile die Knöpfe **Heute** und **Morgen**; der Knopf für den
 bereits gesetzten Termin entfällt. Im Kopf der Überfällig-Sektion steht zusätzlich
 **Alle auf heute**.
@@ -192,11 +202,11 @@ Rücknahme-Leiste. Gilt für Aufgaben und Notizen gleichermaßen.
 ### Wiederholungen
 Täglich, **alle 2 Tage**, wöchentlich, monatlich. Beim Abhaken entsteht automatisch der
 nächste Termin. Lag die Aufgabe lange, springt der Folgetermin so weit vor, dass er in der
-Zukunft liegt – statt fünf verpasste Wochen nachzuliefern.
+Zukunft liegt - statt fünf verpasste Wochen nachzuliefern.
 
 Bei „wöchentlich" lässt sich ein **fester Wochentag** wählen; ohne Wahl bleibt es beim
 Abstand von sieben Tagen. Bei „monatlich" wird der Monatstag auf den letzten gültigen Tag
-des Zielmonats begrenzt – der 31. Januar führt zum 28. Februar, nicht zum 3. März.
+des Zielmonats begrenzt - der 31. Januar führt zum 28. Februar, nicht zum 3. März.
 
 ---
 
@@ -209,16 +219,16 @@ Werkzeugleiste nach Zweck geordnet: **Abschnitt, Text, Aufzählung, Nummerierte 
 dann Auszeichnung (fett, kursiv, durchgestrichen), dann Trennlinie und Bild.
 
 Schrift: Inter, 16,5px, Zeilenhöhe 1,65. Abschnittsüberschriften in Instrument Serif, 22px,
-mit feiner Trennlinie darunter – dadurch sieht man die Struktur beim Überfliegen, ohne dass
+mit feiner Trennlinie darunter - dadurch sieht man die Struktur beim Überfliegen, ohne dass
 der Text laut wird.
 
 **Vorlagen** beim Anlegen, abgeleitet aus den tatsächlichen Anwendungsfällen:
 - *Leer*
-- *Kartentext* – Anrede und Grußformel vorbereitet, wird nach dem Verschicken gelöscht
-- *Buch oder Podcast* – Quelle, Kernaussagen, Zitate, Was ich mitnehme
-- *Input oder Vortrag* – Anlass und Publikum, Kernbotschaft in einem Satz, Roter Faden,
+- *Kartentext* - Anrede und Grußformel vorbereitet, wird nach dem Verschicken gelöscht
+- *Buch oder Podcast* - Quelle, Kernaussagen, Zitate, Was ich mitnehme
+- *Input oder Vortrag* - Anlass und Publikum, Kernbotschaft in einem Satz, Roter Faden,
   Beispiele, Schluss und Aufruf
-- *Sammlung zu einem Thema* – Worum es geht, Offene Fragen, Gefundenes
+- *Sammlung zu einem Thema* - Worum es geht, Offene Fragen, Gefundenes
 
 **Bilder** werden vor dem Einfügen auf 1200 Pixel und JPEG-Güte 0,72 verkleinert. Ohne das
 wäre der Browserspeicher nach etwa zwanzig Fotos voll. Gespeichert wird beim Tippen mit
@@ -228,7 +238,7 @@ wäre der Browserspeicher nach etwa zwanzig Fotos voll. Gespeichert wird beim Ti
 
 - ganze Blöcke, die in einer Notiz nichts zu suchen haben (`script`, `style`, `iframe`,
   `object`, `embed`, `form`, `meta`, `base` …),
-- alle `on…`-Attribute – auch wenn sie mit `/` oder einem Umbruch statt eines Leerzeichens
+- alle `on…`-Attribute - auch wenn sie mit `/` oder einem Umbruch statt eines Leerzeichens
   abgetrennt sind (`<img/onerror=…>` kam vorher durch),
 - Adressen in `href`/`src`, die Code ausführen könnten. Erlaubt bleiben `http`, `https`,
   `mailto`, `tel`, relative Adressen und eingefügte Bilder als `data:image/…;base64`.
@@ -236,7 +246,7 @@ wäre der Browserspeicher nach etwa zwanzig Fotos voll. Gespeichert wird beim Ti
   wieder ein Schema.
 
 Bis Version 1.8 fehlte alles außer `<script>` und den Leerzeichen-getrennten `on…`-Attributen.
-Der Inhalt kommt aus dem Editor, aus geteilten Seiten und aus dem Google-Import – überall
+Der Inhalt kommt aus dem Editor und aus geteilten Seiten - überall
 kann fremdes HTML mitkommen.
 
 ---
@@ -254,41 +264,20 @@ Gewichtung je Suchwort:
 der Ausschnitt beginnt in der Nähe des ersten Treffers.
 
 Wichtig: Die Normalisierung nutzt `normText()` **ohne Kürzung**. Ein früherer Fehler nutzte
-`slug()`, das nach 60 Zeichen abschneidet – in langen Notizen war dadurch ab Zeile drei
+`slug()`, das nach 60 Zeichen abschneidet - in langen Notizen war dadurch ab Zeile drei
 nichts mehr auffindbar.
 
 ---
 
-## 7. Import aus Google Notizen
+## 7. Entfallen: Import aus Google Notizen
 
-Unter „Mehr → Google-Notizen-Export einlesen". Takeout-Archiv entpacken, Ordner `Keep`
-auswählen, alle Dateien gemeinsam markieren.
+Bis Version 2.1 gab es unter „Mehr" einen Import für Google-Takeout-Archive. Er hat seinen
+Zweck erfüllt - der Umzug ist erledigt - und ist in **2.2 auf Wunsch entfernt** worden,
+samt Testreihe `tests/05-import.js`. Erhalten geblieben ist nur das, was der Editor
+weiterhin braucht: die Entity-Tabelle `ENTITAET` und `entziffern()`, beide von `textAus()`
+genutzt.
 
-### Ablauf
-- **JSON schlägt HTML.** Zu jeder Notiz gibt es beides; das JSON enthält Archivstatus,
-  Etiketten und Zeitstempel sauber. Gibt es nur HTML, wird das gelesen.
-- **Archivierte werden übersprungen**, Papierkorb immer. Ein Schalter erlaubt trotzdem die
-  Übernahme (landet dann im Archiv von Marco's brain).
-- **Etiketten werden zu Listen**, mit Farbe aus der Palette.
-- **Checklisten wahlweise zu Aufgaben** – offene Punkte werden Aufgaben ohne Datum in der
-  Liste des Etiketts, mit Herkunftsvermerk „Aus Google Notizen: …". Abgehakte fallen weg.
-  Alternativ wird eine Notiz mit durchgestrichenen Punkten erzeugt.
-- **Angepinnte** Notizen werden oben angeheftet.
-- **Doppelte** werden über Titel plus Erstellzeitpunkt erkannt.
-- Vor dem Import zeigt ein Bericht, was passieren wird.
-
-### Was dabei zu beachten war
-Google verpackt jeden Absatz in `<span style="font-size:7.2pt">`. Ungefiltert übernommen
-wären alle Notizen unlesbar klein. `keepSaeubern()` wirft die Formatierung weg und behält
-nur echte Auszeichnung: fett, kursiv, durchgestrichen, unterstrichen, Absätze, Umbrüche,
-Listen, Links.
-
-Checklisten liegen im JSON unter `listContent`, im HTML als `<li class="listitem">` mit
-den Zeichen ☐ und ☑. **Beides muss behandelt werden** – anfangs war nur der JSON-Weg
-umgesetzt, wodurch eine Checkliste ohne JSON-Partner als unbrauchbarer Fließtext ankam.
-
-**Bilder aus Takeout** liegen als separate Dateien vor und lassen sich nicht übernehmen.
-Der Bericht weist auf die Anzahl betroffener Notizen hin.
+Wer den Import wiederhaben will, findet ihn in `index.backup-20260827-1014.html`.
 
 ---
 
@@ -299,18 +288,18 @@ können wahlweise als schnelle Aufgabe oder als Notiz mit vollem Text übernomme
 
 **Voraussetzung:** Die App muss über Chromes Menüpunkt „App installieren" installiert sein,
 nicht nur als Verknüpfung über „Zum Startbildschirm hinzufügen". Dafür braucht es
-`manifest.json`, Icons und einen Service Worker – alle drei sind vorhanden.
+`manifest.json`, Icons und einen Service Worker - alle drei sind vorhanden.
 
 ---
 
 ## 9. Aufräumen und Sicherung
 
-- **Erledigtes älter als 30 Tage löschen** – ein Knopf unter „Mehr".
-- **Überfälliges auf heute ziehen** – schiebt alles Liegengebliebene in den heutigen Tag.
-- **Alles als Datei sichern** – der komplette Zustand als JSON zum Kopieren.
-- **Sicherung einspielen** – ersetzt den Stand vollständig, mit Rückfrage.
+- **Erledigtes älter als 30 Tage löschen** - ein Knopf unter „Mehr".
+- **Überfälliges auf heute ziehen** - schiebt alles Liegengebliebene in den heutigen Tag.
+- **Alles als Datei sichern** - der komplette Zustand als JSON zum Kopieren.
+- **Sicherung einspielen** - ersetzt den Stand vollständig, mit Rückfrage.
 - Unter „Mehr" steht außerdem, wie viel Speicher belegt ist und wie viele Bilder enthalten
-  sind – der übliche Grund für vollen Speicher.
+  sind - der übliche Grund für vollen Speicher.
 
 ---
 
@@ -341,14 +330,14 @@ Inhalt. Ecken: 16px für Flächen, 12px für Zeilen.
 
 **Listenfarben** kommen aus einer eigenen, gleich hellen Palette (`FARBEN`), damit acht
 Punkte nebeneinander ruhig bleiben. Wer noch die alten Vorgabefarben in seinen Listen hat,
-bekommt sie beim Laden über `FARBEN_ALT` auf die Entsprechung umgestellt – selbst gewählte
+bekommt sie beim Laden über `FARBEN_ALT` auf die Entsprechung umgestellt - selbst gewählte
 Farben bleiben unberührt. Die Zuordnung ist in sich geschlossen, ein zweiter Durchlauf
 ändert nichts mehr.
 
 **Schrift:** Inter für alles Bediente, Instrument Serif für Titel, Blattüberschriften,
 Leermeldungen und Notizabschnitte. Der Wechsel von Grotesk zu Serife ersetzt das frühere
 Versal-Mono als Mittel der Gliederung; Mono steht nur noch in `pre` und `code`. Beide
-Schriften liegen im Ordner `fonts` und werden mitgeliefert – siehe Grundlagen, Abschnitt 8.
+Schriften liegen im Ordner `fonts` und werden mitgeliefert - siehe Grundlagen, Abschnitt 8.
 
 Icon: petrolfarbenes Quadrat, drei Listenzeilen, oberste mit mintfarbenem Haken. Erzeugt
 mit einem kurzen Pillow-Skript, damit die drei PNG-Größen aus einer Quelle kommen.
@@ -372,39 +361,71 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
 - **`execCommand` ist veraltet.** Funktioniert in Chrome, könnte aber irgendwann
   wegfallen. Ersatz wäre eine eigene Bearbeitungslogik oder eine Bibliothek.
 - **Gezogen wird nur innerhalb eines Kastens.** Eine Notiz aus „Diese Woche" lässt sich
-  nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch – dafür gibt es
+  nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 12. Was in Version 2.0 dazugekommen ist
+## 12. Was in Version 2.2 geändert wurde
+
+1. **Doppelte Feldnamen beseitigt.** Das Blatt „Aufgabe für …" trug ein Eingabefeld mit der
+   Kennung `neu` - dieselbe, die „Heute" und „Woche" schon auf der Seite dahinter benutzen.
+   `getElementById` fand das verdeckte Feld zuerst: der Fokus lag hinten, das Getippte landete
+   hinten, und das Blatt legte gar nichts an. Genau das war der Fehlerbericht „ich sehe das
+   Overlay, geschrieben wird aber dahinter". Das Blattfeld heißt jetzt `neublatt`, und
+   `neuAnlegen(wann,kat,feldId)` bekommt gesagt, welches Feld gemeint ist.
+2. **Das Ziel umstellen wirft nichts mehr weg.** In „Schnell eintragen" baute jeder Klick auf
+   „Heute/Morgen/Diese Woche" das ganze Blatt neu und löschte damit das halb Getippte.
+   `schnellZiel()` schaltet nur noch `aria-pressed` um.
+3. **Blätter schließen nur noch auf Zuruf.** Der Griff neben ein Blatt schloss es vorher
+   sofort; beim Tippen einer Beschreibung reichte ein Fehlgriff. Jetzt schließen nur „Fertig"
+   und das ✕. „Aufgabe für …" und „Schnell eintragen" haben dafür einen „Fertig"-Knopf
+   bekommen und bleiben nach dem Eintragen offen, damit mehrere Dinge am Stück hineingehen.
+4. **Listen und Notizen: Kategorien als Reiter** statt Filterknopf - ein Tipp statt Blatt
+   öffnen, wählen, schließen.
+5. **Der Plus-Knopf gibt den Text frei.** Unten stehen jetzt 96 px Luft unter dem Inhalt, und
+   beim Blättern nach unten tritt der Knopf zur Seite (`.daumen.weg`); beim Blättern nach oben
+   oder nach einer Sekunde Ruhe ist er wieder da.
+6. **Mini-Symbol im Tagesbogen** springt von „Heute" in die nächste Woche.
+7. **Das Kalendersymbol im Datumsfeld** war dunkelgrau auf dunklem Grund und damit unsichtbar.
+   Im dunklen Bild wird es jetzt weiß gedreht.
+8. **Der Balken unter „Mehr" überlagerte die Überschrift.** Der Kasten war auf 70 px
+   festgenagelt, Balken samt zwei Beschriftungen brauchen aber gut 90 px. Jetzt hat der Balken
+   ein eigenes Feld von 54 px, die Beschriftungen stehen darunter, der Kasten wächst mit.
+9. **Lange Striche sind normale Bindestriche.** Im ganzen Dokument, Oberfläche wie Kommentare.
+10. **Zwei Hinweistexte entfernt**: „Verschwindet um Mitternacht von allein." unter „Heute
+    geschafft" und „Aufgaben hier haben bewusst kein Datum …" unter den Listen.
+11. **Der Google-Notizen-Import ist entfallen**, siehe Abschnitt 7.
+12. **Einzahl und Mehrzahl** werden auseinandergehalten: „1 Notiz" statt „1 Notizen".
+
+## 13. Was in Version 2.0 dazugekommen ist
 
 Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neuerungen.js`):
 
-1. **Heute/Morgen direkt auf der Zeile** – aus drei Tippern wird einer.
+1. **Heute/Morgen direkt auf der Zeile** - aus drei Tippern wird einer.
 2. **„Alle auf heute"** im Kopf der Überfällig-Sektion, statt drei Ansichten entfernt.
-3. **Leere Notizen werden beim Schließen verworfen** – wer anlegt und ohne Eingabe schließt,
+3. **Leere Notizen werden beim Schließen verworfen** - wer anlegt und ohne Eingabe schließt,
    hinterlässt nichts. Verbundene Notizen sind ausgenommen.
-4. **Schnelleingabe in Daumenreichweite** – siehe Abschnitt 4.
+4. **Schnelleingabe in Daumenreichweite** - siehe Abschnitt 4.
 5. **Die Suche zeichnet nicht mehr alles neu.** `aufSucheAendern()` tauscht nur noch
    `#suchtreffer` aus. Das ist die in den Grundlagen beschriebene Falle „Vollständiges
-   Neuzeichnen zerstört den Tastaturfokus" – sie war hier wieder eingezogen.
+   Neuzeichnen zerstört den Tastaturfokus" - sie war hier wieder eingezogen.
 6. **Alle 2 Tage** und **fester Wochentag** bei der Wiederholung.
 7. **„Diese Woche noch"** auf dem Hauptbildschirm.
 8. **„Liegt seit N Tagen"** an gesammelten Aufgaben ab 14 Tagen (`LIEGT_AB`). Die ruhige
-   Version einer Erinnerung – ohne Benachrichtigungen, die bewusst nicht gebaut sind.
-9. **Rückblick mit Inhalt** – „Zeigen, was es war" listet die tatsächlich erledigten
+   Version einer Erinnerung - ohne Benachrichtigungen, die bewusst nicht gebaut sind.
+9. **Rückblick mit Inhalt** - „Zeigen, was es war" listet die tatsächlich erledigten
    Aufgaben der letzten sieben Tage nach Tag gruppiert, nicht nur Balken.
 10. **Eine Suche über Aufgaben und Notizen**, inklusive Archiv und Erledigtem.
-11. **Aufgabe und Notiz verbinden** – `notizId` an der Aufgabe, `aufgabe` an der Notiz,
+11. **Aufgabe und Notiz verbinden** - `notizId` an der Aufgabe, `aufgabe` an der Notiz,
     ein Sprung in beide Richtungen. Kein Verknüpfungssystem, nur die zwei Knöpfe.
-12. **Wer hat abgehakt** – optional. Steht unter „Mehr" ein Gerätename in `cfg.name`, wird
+12. **Wer hat abgehakt** - optional. Steht unter „Mehr" ein Gerätename in `cfg.name`, wird
     er beim Abhaken in `von` vermerkt und erscheint in der Zeile und im Rückblick. Ohne
     Namen bleibt alles anonym wie bisher. Bewusst abschaltbar, weil eine Buchführung
     übereinander auch belasten kann.
 
-## 13. Was in Version 1.9 behoben wurde
+## 14. Was in Version 1.9 behoben wurde
 
 - **Änderungen konnten sich selbst rückgängig machen.** Abhaken, Zurücknehmen, Anheften,
-  Archivieren, Verschieben, Liste wechseln, Wiederholung setzen – all das schrieb nur das
+  Archivieren, Verschieben, Liste wechseln, Wiederholung setzen - all das schrieb nur das
   einzelne Feld, ohne einen Zeitstempel zu hinterlassen. Beim Zusammenführen gewann dann die
   *alte* Fassung, weil sie durch ihr `fertig` den jüngeren Stempel trug. Jetzt geht jede
   Änderung durch `aufAendern()` beziehungsweise `notizAendern()` und führt einen reinen
@@ -412,11 +433,11 @@ Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neu
   „zuletzt geändert" weiter stimmt. `stempel()` nimmt jetzt den **jüngsten** aller Zeitstempel
   statt des erstbesten.
 - **Kennungen und Positionen kollidierten unter Last.** `id6()` hatte nur vier Zufallszeichen
-  und `naechstePos()` zählte modulo 100 – bei einem Import mit hunderten Notizen in derselben
+  und `naechstePos()` zählte modulo 100 - bei einem Import mit hunderten Notizen in derselben
   Millisekunde konnten Einträge einander überschreiben, und die eigene Reihenfolge kippte.
   Beide zählen jetzt streng aufsteigend.
-- **Der HTML-Bereiniger hatte Lücken** – siehe Abschnitt 5.
-- **Die Warteschlange verlor Daten** und dauerhafte Verbindungsfehler blieben stumm –
+- **Der HTML-Bereiniger hatte Lücken** - siehe Abschnitt 5.
+- **Die Warteschlange verlor Daten** und dauerhafte Verbindungsfehler blieben stumm -
   siehe Grundlagen, Abschnitt 5.
 - **Archiviert/gelöscht/angepinnt** wurden im HTML-Rückfall des Google-Imports nur erkannt,
   wenn die Klasse allein stand (`class="archived"`, aber nicht `class="note archived"`).

@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%230E6E68'/><path d='M15 20l4 4 7-9' stroke='%234FC7BC' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M30 20h18M30 32h18M30 44h12' stroke='%23F4F6F7' stroke-width='5' stroke-linecap='round'/></svg>">
 <style>
-/* Schriften liegen im Ordner „fonts" und werden mit ausgeliefert - so sieht die
+/* Schriften liegen im Ordner „fonts" und werden mit ausgeliefert – so sieht die
    App auf jedem Gerät gleich aus und funktioniert ohne Netz. Beide stehen unter
    der SIL Open Font License 1.1, siehe fonts/LIZENZ.txt */
 @font-face{font-family:"Inter";font-style:normal;font-weight:400 700;font-display:swap;
@@ -31,7 +31,7 @@
   unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;}
 
 /* Schiefer und Petrol: kühle, ruhige Fläche, genau ein Akzent.
-   Farbe trägt hier Bedeutung - Petrol ist bedienbar, Moos ist erledigt,
+   Farbe trägt hier Bedeutung – Petrol ist bedienbar, Moos ist erledigt,
    Bernstein wartet, Ziegel ist endgültig. Alles andere bleibt neutral. */
 :root{
   --paper:#F4F6F7; --card:#FFFFFF; --card-2:#EDF1F2; --karte-hoch:#FFFFFF;
@@ -63,7 +63,7 @@
 html,body{margin:0;padding:0}
 body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:16px;line-height:1.5;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-optical-sizing:auto;
-  overscroll-behavior-y:none;padding-bottom:calc(var(--nav-h) + 96px + env(safe-area-inset-bottom))}
+  overscroll-behavior-y:none;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom))}
 #app{max-width:600px;margin:0 auto;padding:0 16px}
 h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.014em}
 button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
@@ -100,7 +100,7 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing
 .auf.fertig{background:transparent;border-color:transparent;box-shadow:none;padding-top:7px;padding-bottom:7px}
 .auf.ueber{border-left:3px solid var(--rot)}
 .hak{width:26px;height:26px;flex:none;border-radius:50%;border:1.8px solid var(--line-2);background:transparent;display:grid;place-items:center;padding:0;position:relative;transition:background .18s,border-color .18s}
-/* Der Kreis bleibt klein, die Trefferfläche wächst auf gut 44px - sonst trifft man ihn unterwegs nicht */
+/* Der Kreis bleibt klein, die Trefferfläche wächst auf gut 44px – sonst trifft man ihn unterwegs nicht */
 .hak::before{content:"";position:absolute;inset:-9px;border-radius:50%}
 .hak svg{width:15px;height:15px;stroke:var(--card);stroke-width:2.6;fill:none;stroke-linecap:round;stroke-linejoin:round;
   stroke-dasharray:22;stroke-dashoffset:22}
@@ -153,8 +153,6 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing
   white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:background .14s,color .14s,border-color .14s}
 .chip[aria-pressed="true"]{background:var(--akz);color:var(--auf-akz);border-color:var(--akz)}
 .chip[aria-pressed="true"] .punkt{box-shadow:0 0 0 1.5px var(--auf-akz)}
-.chip .anz{font-size:11.5px;font-weight:500;color:var(--ink-3)}
-.chip[aria-pressed="true"] .anz{color:var(--auf-akz);opacity:.85}
 
 .btn{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-s);padding:11px 14px;font-weight:550;
   letter-spacing:-.005em;transition:transform .1s,background .14s,border-color .14s}
@@ -275,20 +273,8 @@ label.fl{display:block;font-size:12.5px;color:var(--ink-2);margin:14px 0 5px;fon
 .liste-zeile b{font-size:15px;font-weight:600}
 pre{font-family:var(--mono);font-size:12px;background:var(--card-2);border:1px solid var(--line);border-radius:var(--r-s);padding:11px;overflow-x:auto;line-height:1.5}
 code{font-family:var(--mono);font-size:12.5px;background:var(--card-2);padding:2px 5px;border-radius:5px;word-break:break-all}
-/* Das Kalendersymbol im Datumsfeld ist von Haus aus dunkelgrau und verschwand
-   damit auf dunklem Grund. Im dunklen Bild wird es weiß gedreht. */
-input[type=date]::-webkit-calendar-picker-indicator{opacity:.9;cursor:pointer}
-@media (prefers-color-scheme:dark){
-  input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(2.2);opacity:1}}
 input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--akz);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-
-/* Kleiner Sprungknopf, der neben einer Überschrift Platz findet */
-.ikon{border:1px solid var(--line-2);background:var(--card-2);color:var(--ink-2);border-radius:9px;
-  padding:5px 7px;line-height:0;display:inline-grid;place-items:center;align-self:center;flex:none;
-  transition:transform .1s,color .14s,border-color .14s}
-.ikon svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.ikon:active{transform:scale(.94);color:var(--akz);border-color:var(--akz)}
 
 /* Zeilenknöpfe: der kurze Weg in den Tag, ohne die Zeile zu überladen */
 .zeilentakt{display:flex;gap:6px;margin-top:7px}
@@ -302,11 +288,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
   width:54px;height:54px;border-radius:18px;border:0;background:var(--akz);color:var(--auf-akz);
   font-size:26px;font-weight:400;line-height:1;display:grid;place-items:center;z-index:41;
   box-shadow:0 6px 20px color-mix(in srgb,var(--akz) 40%,transparent),0 2px 6px rgba(16,26,30,.18)}
-.daumen{transition:transform .22s cubic-bezier(.2,.8,.3,1),opacity .22s ease}
 .daumen:active{transform:scale(.94)}
-/* Beim Blättern nach unten tritt der Knopf zur Seite und gibt den Text frei,
-   beim Blättern nach oben ist er sofort wieder da. */
-.daumen.weg{transform:translateY(120px);opacity:0;pointer-events:none}
 /* Solange ein Fenster offen ist, hat der Knopf nichts zu suchen */
 #sheet:not(:empty) + .daumen{display:none}
 @media (min-width:700px){.daumen{right:calc(50% - 320px)}}
@@ -339,11 +321,12 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 <div id="sheet"></div>
 <button class="daumen" id="daumen" onclick="daumenKnopf()" aria-label="Neu eintragen">+</button>
 <input type="file" id="bildwahl" accept="image/*" style="display:none">
+<input type="file" id="keepwahl" accept=".json,.html,application/json,text/html" multiple style="display:none">
 <script>
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="2.2";
+const VERSION="2.1";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -352,18 +335,18 @@ const MONATE=["Januar","Februar","März","April","Mai","Juni","Juli","August","S
    damit acht Punkte nebeneinander nicht schreien. */
 const FARBEN=["#0E6E68","#2C6E9B","#5A57A8","#8A4C74","#A0640B","#2C7A4C","#B3382C","#5B6770"];
 /* Wer die App vor der Auffrischung genutzt hat, hat noch die alten Vorgabefarben
-   in den Listen stehen. Genau diese - und nur diese - werden einmalig ersetzt. */
+   in den Listen stehen. Genau diese – und nur diese – werden einmalig ersetzt. */
 const FARBEN_ALT={"#4A2D6E":"#0E6E68","#136B54":"#2C7A4C","#9A6512":"#A0640B","#9B3327":"#B3382C",
   "#2A6478":"#2C6E9B","#7A3B62":"#8A4C74","#4C6B18":"#5A57A8","#5C5850":"#5B6770"};
 
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 /* Der Zähler macht die Kennung auch dann eindeutig, wenn hunderte Einträge in
-   derselben Millisekunde entstehen. Zwei gleiche Kennungen hätten sonst einen
-   Eintrag überschrieben. */
+   derselben Millisekunde entstehen – beim Import aus Google Notizen ist genau
+   das der Fall, und zwei gleiche Kennungen hätten eine Notiz überschrieben. */
 let idZaehler=0;
 const id6=()=>Date.now().toString(36)+(idZaehler++).toString(36)+Math.random().toString(36).slice(2,5);
 /* Streng aufsteigend, ohne Ausnahme. Ein Zähler modulo 100 sprang beim Überlauf
-   zurück - die eigene Reihenfolge war danach durcheinander. */
+   zurück – die eigene Reihenfolge war danach durcheinander. */
 let posLetzte=0;
 function naechstePos(){
   const p=Math.max(Date.now()*100,posLetzte+1);
@@ -450,8 +433,8 @@ function lesenLokal(){
 }
 /* Beim Umstieg auf das neue Farbbild: Listen, die noch eine alte Vorgabefarbe
    tragen, bekommen deren Entsprechung. Selbst gewählte Farben bleiben, wie sie
-   sind. Die Zuordnung ist in sich geschlossen - ein zweiter Durchlauf ändert
-   nichts mehr -, deshalb darf sie auch nach jedem Abgleich wieder laufen. */
+   sind. Die Zuordnung ist in sich geschlossen – ein zweiter Durchlauf ändert
+   nichts mehr –, deshalb darf sie auch nach jedem Abgleich wieder laufen. */
 function farbenAuffrischen(){
   Object.entries(S.kategorien||{}).forEach(([id,k])=>{
     const neu=k&&FARBEN_ALT[String(k.f||"").toUpperCase()];
@@ -463,7 +446,7 @@ function schreibenLokal(){
     localStorage.setItem(KEY,JSON.stringify(S));
     localStorage.setItem(KEY+".cfg",JSON.stringify(cfg));
     localStorage.setItem(KEY+".q",JSON.stringify(queue));
-  }catch(e){ if(String(e).match(/quota|Quota/)) alert("Der Speicher des Browsers ist voll. Meist liegt das an Bildern in Notizen - ältere Notizen archivieren und löschen schafft Platz."); }
+  }catch(e){ if(String(e).match(/quota|Quota/)) alert("Der Speicher des Browsers ist voll. Meist liegt das an Bildern in Notizen – ältere Notizen archivieren und löschen schafft Platz."); }
 }
 const basis=()=>cfg.db&&cfg.hid?cfg.db.replace(/\/$/,"")+"/haushalte/"+cfg.hid:null;
 function setPfad(o,pfad,daten){
@@ -476,13 +459,13 @@ function setPfad(o,pfad,daten){
 /* Wurzel und Unterpfad brauchen unterschiedliche Adressen */
 const adresse=pfad=>{const b=basis();return pfad?b+"/"+pfad+".json":b+".json";};
 
-/* Bei diesen beiden Zuständen hilft kein erneuter Versuch - weiterzusenden würde
+/* Bei diesen beiden Zuständen hilft kein erneuter Versuch – weiterzusenden würde
    den Fehler nur verschleiern, statt ihn zu zeigen. */
 const dauerfehler=()=>syncState==="verweigert"||syncState==="fehlt";
 function zustandSetzen(neu){ if(syncState===neu)return; syncState=neu; nav(); }
 /* Jede Änderung geht durch die Warteschlange. Dadurch bleibt die Reihenfolge
    erhalten, ein Abbruch mittendrin verliert nichts, und je Pfad wartet nur der
-   jüngste Stand - sonst stauen sich beim Tippen hunderte überholte Fassungen. */
+   jüngste Stand – sonst stauen sich beim Tippen hunderte überholte Fassungen. */
 function einreihen(pfad,wert){
   if(!pfad){ queue=[{pfad:"",wert}]; return; }   /* Gesamtstand ersetzt alles Wartende */
   const i=queue.findIndex(q=>q.pfad===pfad);
@@ -525,22 +508,22 @@ function senden(pfad,wert){
 }
 /* ---------- Grabsteine: gelöscht bleibt gelöscht ----------
    Eine Löschung ist auf beiden Geräten nur eine Abwesenheit. Beim
-   Zusammenführen gewinnt aber jeder Eintrag, den es irgendwo noch gibt - eine
+   Zusammenführen gewinnt aber jeder Eintrag, den es irgendwo noch gibt – eine
    Abwesenheit kann gegen ihn nichts ausrichten. Genau daran ist eine gelöschte
    Notiz vom anderen Gerät zurückgekommen. Deshalb hinterlässt jedes Löschen
    jetzt eine Notiz über sich selbst: Kennung und Zeitpunkt. Wer den Eintrag
    später wieder sieht, weiß, dass er älter ist als seine Löschung, und lässt
-   ihn liegen. Wird derselbe Eintrag danach wirklich wieder angelegt - etwa über
-   „Rückgängig" -, trägt er einen neueren Stempel und der Grabstein fällt. */
+   ihn liegen. Wird derselbe Eintrag danach wirklich wieder angelegt – etwa über
+   „Rückgängig" –, trägt er einen neueren Stempel und der Grabstein fällt. */
 const TOT_HALTEN=90*TAG_MS;
 const EINTRAGSPFAD=/^(aufgaben|notizen|kategorien)\/([^/]+)$/;
 const totSchluessel=pfad=>pfad.replace("/",":");
 const totZeit=pfad=>+(S.tot||{})[totSchluessel(pfad)]||0;
-/* Gilt der Eintrag als gelöscht? Nur wenn es überhaupt einen Grabstein gibt -
+/* Gilt der Eintrag als gelöscht? Nur wenn es überhaupt einen Grabstein gibt –
    Einträge aus alten Fassungen tragen gar keinen Zeitstempel, und ohne diese
    Bedingung wäre jeder von ihnen gelöscht. Die Löschung muss außerdem echt
-   jünger sein als die letzte Änderung: bei Gleichstand - zwei Vorgänge in
-   derselben Millisekunde - bleibt der Eintrag. Etwas fälschlich zu behalten ist
+   jünger sein als die letzte Änderung: bei Gleichstand – zwei Vorgänge in
+   derselben Millisekunde – bleibt der Eintrag. Etwas fälschlich zu behalten ist
    der harmlosere der beiden Irrtümer. */
 const istTot=(pfad,eintrag)=>{const t=totZeit(pfad); return t>0&&t>stempel(eintrag);};
 function grabstein(pfad,wert,verschicken=true){
@@ -555,7 +538,7 @@ function grabstein(pfad,wert,verschicken=true){
     if(verschicken) senden("tot/"+k,null);
   }
 }
-/* Nach drei Monaten hat jedes Gerät die Löschung gesehen - dann darf der
+/* Nach drei Monaten hat jedes Gerät die Löschung gesehen – dann darf der
    Grabstein selbst verschwinden, sonst wächst er ewig mit. */
 function totAufraeumen(){
   const grenze=Date.now()-TOT_HALTEN;
@@ -571,7 +554,7 @@ function mut(pfad,wert,neuZeichnen=true){
    Zusammenführen entscheidet er, welche Fassung gewinnt. Ohne ihn machte ein
    Gerät mit altem Stand das Abhaken, Anheften oder Verschieben wieder rückgängig,
    weil die alte Fassung durch ihr „fertig" den jüngeren Stempel trug.
-   `ts` ist reiner Abgleichsstempel - `geaendert` bleibt dem Inhalt vorbehalten,
+   `ts` ist reiner Abgleichsstempel – `geaendert` bleibt dem Inhalt vorbehalten,
    damit die Sortierung „zuletzt geändert" weiter stimmt. */
 function eintragAendern(feld,id,felder,neuZeichnen=true){
   const alt=(S[feld]||{})[id]; if(!alt) return;
@@ -583,7 +566,7 @@ const notizAendern=(id,felder,neuZeichnen=true)=>eintragAendern("notizen",id,fel
 /* ---------- Zusammenführen statt Überschreiben ----------
    Beim Verbinden treffen zwei Stände aufeinander. Pro Eintrag gewinnt der
    jüngere Zeitstempel, Einträge die es nur auf einer Seite gibt bleiben erhalten. */
-/* Der jüngste aller Zeitstempel zählt - nicht der erstbeste. Sonst gewinnt eine
+/* Der jüngste aller Zeitstempel zählt – nicht der erstbeste. Sonst gewinnt eine
    Fassung mit altem „fertig" gegen eine neuere ohne. `pos` trägt den Zeitpunkt
    mal hundert in sich und wird dafür zurückgerechnet. */
 const stempel=v=>{
@@ -606,14 +589,14 @@ function zusammenfuehren(fern){
       const v=lokal[k], r=entfernt[k];
       const sieger=(v&&(!r||stempel(v)>stempel(r)))?v:r;
       if(!sieger) return;
-      if(istTot(f+"/"+k,sieger)) return;       /* seit der Löschung nicht angefasst - bleibt fort */
+      if(istTot(f+"/"+k,sieger)) return;       /* seit der Löschung nicht angefasst – bleibt fort */
       raus[k]=sieger;
     });
     neu[f]=raus;
   });
   neu.einst={...((fern&&fern.einst)||{}),...(S.einst||{})};
   S=neu; farbenAuffrischen(); schreibenLokal();
-  /* Alles, was die Gegenseite noch nicht kennt, hochschieben - dazu gehören
+  /* Alles, was die Gegenseite noch nicht kennt, hochschieben – dazu gehören
      ausdrücklich auch die Grabsteine und die dadurch entfernten Einträge. */
   const auszug=z=>JSON.stringify({aufgaben:(z&&z.aufgaben)||{},notizen:(z&&z.notizen)||{},
     kategorien:(z&&z.kategorien)||{},tot:(z&&z.tot)||{}});
@@ -623,7 +606,7 @@ function zusammenfuehren(fern){
 
 /* Was von außen hereinkommt, geht durch dieselbe Prüfung wie ein Abgleich:
    Ein Eintrag, der hier längst gelöscht ist und seither nicht angefasst wurde,
-   wird nicht wieder aufgenommen - stattdessen bekommt die Gegenseite die
+   wird nicht wieder aufgenommen – stattdessen bekommt die Gegenseite die
    Löschung noch einmal geschickt, denn offenbar kennt sie sie nicht. */
 function fernSetzen(pfad,daten){
   const rein=String(pfad||"").replace(/^\//,"");
@@ -821,11 +804,11 @@ function topfHeute(){
    behoben:
    1. Jede Berührung des Griffs war sofort ein Zug. Ein Antippen beim Scrollen
       hat dadurch die Reihenfolge verändert. Jetzt gilt erst als Zug, was sich
-      auch bewegt - acht Pixel weit.
+      auch bewegt – acht Pixel weit.
    2. Die Bewegung hing am Griff. Rutschte der Finger schneller als das Bild
       nachkam, ging der Zug verloren. Jetzt hört das Fenster mit.
-   3. Ein Neuzeichnen mitten im Zug - etwa weil eine Meldung ausläuft oder das
-      andere Gerät etwas schickt - hat die gezogene Zeile unter dem Finger
+   3. Ein Neuzeichnen mitten im Zug – etwa weil eine Meldung ausläuft oder das
+      andere Gerät etwas schickt – hat die gezogene Zeile unter dem Finger
       ausgetauscht. Während eines Zugs wird nicht mehr gezeichnet, das
       Versäumte danach nachgeholt.
    4. Der Zielplatz wurde an der Fingerspitze gemessen. Wo man die Zeile
@@ -860,7 +843,7 @@ function dndGriff(ev,containerId,art){
   addEventListener("keydown",dndTaste,true);
 }
 const versatzY=()=>(typeof scrollY==="number"?scrollY:0);
-/* Nach oben suchen, aber begrenzt - oberhalb des Körpers gibt es kein getAttribute mehr */
+/* Nach oben suchen, aber begrenzt – oberhalb des Körpers gibt es kein getAttribute mehr */
 function elternMit(el,attr,tiefe=12){
   let n=el, i=0;
   while(n&&typeof n.getAttribute==="function"&&!n.getAttribute(attr)&&i++<tiefe) n=n.parentNode;
@@ -881,7 +864,7 @@ function dndStarten(){
     return {top:r.top+oben, hoehe:r.height, mitte:r.top+oben+r.height/2};
   });
   const eigen=z.rects[z.index];
-  /* Der Schritt ist die Höhe der Zeile samt Abstand zur nächsten - so weit
+  /* Der Schritt ist die Höhe der Zeile samt Abstand zur nächsten – so weit
      rücken die Nachbarn, wenn sie Platz machen. */
   const luecke=z.rects.length>1?Math.max(0,z.rects[1].top-(z.rects[0].top+z.rects[0].hoehe)):0;
   z.schritt=eigen.hoehe+luecke;
@@ -912,7 +895,7 @@ function dndZeichnen(){
   /* Zielplatz aus der Mitte der gezogenen Zeile: wo der Finger sie gepackt hat,
      darf das Ergebnis nicht verschieben.
      Verglichen wird mit den Mitten, die die Nachbarn während des Zugs
-     tatsächlich haben - alles unterhalb der gezogenen Zeile ist um eine Zeile
+     tatsächlich haben – alles unterhalb der gezogenen Zeile ist um eine Zeile
      aufgerückt, weil deren Platz ja frei ist. Ohne diese Verrechnung landete
      eine nach unten gezogene Zeile stets eine Stelle zu früh. */
   const mitte=z.rects[z.index].mitte+dy;
@@ -926,7 +909,7 @@ function dndZeichnen(){
   z.ziel=ziel;
   dndLueckeZeigen();
 }
-/* Die Nachbarn zwischen alter und neuer Position rücken um eine Zeile weiter -
+/* Die Nachbarn zwischen alter und neuer Position rücken um eine Zeile weiter –
    die Lücke wandert sichtbar mit, statt nur als Strich zu erscheinen. */
 function dndLueckeZeigen(){
   const z=dndZustand; if(!z) return;
@@ -967,7 +950,7 @@ function dndAbbrechen(){
   dndAufraeumen();
   if(war) render();
 }
-/* Alles zurück auf Anfang - wird aus jedem Ende heraus aufgerufen, damit keine
+/* Alles zurück auf Anfang – wird aus jedem Ende heraus aufgerufen, damit keine
    Klasse, kein Zuhörer und kein Bildlauf hängen bleibt. */
 function dndAufraeumen(){
   const z=dndZustand; if(!z) return;
@@ -1044,7 +1027,7 @@ function dndUebernehmen(ids,art){
 }
 /* Notizen stehen bei zeitlicher Sortierung in mehreren Kästen. Damit die neue
    Ordnung auch global stimmt, wird die sichtbare Gesamtreihenfolge genommen und
-   nur der bewegte Abschnitt darin ersetzt - Platz für Platz. */
+   nur der bewegte Abschnitt darin ersetzt – Platz für Platz. */
 function notizFolgeGlobal(ids){
   if(!document.querySelectorAll) return ids;
   const alle=[...document.querySelectorAll(".notizreihe[data-dnd]")].map(k=>k.getAttribute("data-dnd"));
@@ -1076,7 +1059,6 @@ const ICON_WEG='<svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l
 const ICON_KOPIE='<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M6 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1"/></svg>';
 const ICON_TEILEN='<svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg>';
 const ICON_FERTIG='<svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg>';
-const ICON_WOCHE_VOR='<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/><path d="M11 14.5l3 2.5-3 2.5"/></svg>';
 const ICON_WDH='<svg viewBox="0 0 24 24"><path d="M4 11a8 8 0 0 1 13.7-5.7L20 7"/><path d="M20 4v3h-3"/><path d="M20 13a8 8 0 0 1-13.7 5.7L4 17"/><path d="M4 20v-3h3"/></svg>';
 
 function aufZeile(a,opt={}){
@@ -1091,18 +1073,18 @@ function aufZeile(a,opt={}){
     else meta.push(`<span class="mini ${spaet?"spaet":""}">${spaet?"seit ":""}${datumText(a.wann)}</span>`);
   }
   if(a.wdh) meta.push(`<span class="mini">${WDH[a.wdh]}</span>`);
-  /* Was lange ohne Termin im Vorrat liegt, sagt das leise selbst -
+  /* Was lange ohne Termin im Vorrat liegt, sagt das leise selbst –
      die ruhige Variante einer Erinnerung, ganz ohne Benachrichtigung. */
   if(!a.fertig&&!a.wann&&a.erstellt){
     const tage=Math.floor((Date.now()-a.erstellt)/TAG_MS);
     if(tage>=LIEGT_AB) meta.push(`<span class="mini liegt">liegt seit ${tage} Tagen</span>`);
   }
   if(a.fertig&&a.von) meta.push(`<span class="mini">✓ ${esc(a.von)}</span>`);
-  /* Der Griff ist immer da - Ziehen soll ohne Umschalten funktionieren.
+  /* Der Griff ist immer da – Ziehen soll ohne Umschalten funktionieren.
      Die ganze Zeile öffnet die Bearbeitung; Haken und Griff halten das Ereignis auf. */
   const griff=opt.sort?`<button class="griff" onpointerdown="dndGriff(event,'${opt.box}','aufgabe')" onclick="event.stopPropagation()" aria-label="Verschieben">${GRIFF}</button>`:"";
-  /* Der häufigste Handgriff des Tages - aus dem Vorrat oder aus dem Überfälligen
-     in den Tag - soll ein Tipp sein, nicht drei. */
+  /* Der häufigste Handgriff des Tages – aus dem Vorrat oder aus dem Überfälligen
+     in den Tag – soll ein Tipp sein, nicht drei. */
   const schnellZiel=opt.schnell&&!a.fertig
     ? `<div class="zeilentakt">
          ${a.wann!==h?`<button class="ztakt" onclick="event.stopPropagation();verschieben('${a.id}','${h}')" aria-label="Auf heute">Heute</button>`:""}
@@ -1133,24 +1115,20 @@ function schnellFeld(vorgabeWann,vorgabeKat){
     <input type="text" id="neu" placeholder="Aufgabe eintippen …"
       onkeydown="if(event.key==='Enter'){neuAnlegen('${vorgabeWann||""}','${vorgabeKat||""}')}">
     <button class="btn btn-primary" onclick="neuAnlegen('${vorgabeWann||""}','${vorgabeKat||""}')">+</button></div>
-    <p class="note" style="margin:0 0 12px">„morgen“, „Freitag“, „14.9.“ oder „#Geburt“ mitschreiben - das wird direkt zugeordnet.</p>`;
+    <p class="note" style="margin:0 0 12px">„morgen“, „Freitag“, „14.9.“ oder „#Geburt“ mitschreiben – das wird direkt zugeordnet.</p>`;
 }
-/* Das Eingabefeld wird ausdrücklich benannt. Vorher hieß es überall „neu": lag
-   hinter einem geöffneten Blatt eine Seite, die ebenfalls ein „neu" enthielt,
-   fand die App das verdeckte Feld dahinter zuerst. Der Fokus landete hinten,
-   das Getippte landete hinten, und das Blatt legte gar nichts an. */
-function neuAnlegen(wann,katId,feldId){
-  const el=document.getElementById(feldId||"neu"); if(!el) return;
+function neuAnlegen(wann,katId){
+  const el=document.getElementById("neu"); if(!el) return;
   const t=el.value; if(!t.trim()) return;
   el.value="";
   aufgabeAnlegen(t,wann||null,katId||null);
   /* Fokus zurückholen, damit man mehrere Aufgaben am Stück eintippen kann */
-  const neu=document.getElementById(feldId||"neu"); if(neu&&neu.focus)neu.focus();
+  const neu=document.getElementById("neu"); if(neu&&neu.focus)neu.focus();
 }
 
 /* ---------- Schnelleingabe in Daumenreichweite ----------
    Dasselbe Feld wie oben auf „Heute", nur erreichbar ohne die Hand zu wechseln.
-   Auf der Notizansicht legt derselbe Knopf eine Notiz an - das ist dort das,
+   Auf der Notizansicht legt derselbe Knopf eine Notiz an – das ist dort das,
    was man erwartet. Nach dem Anlegen bleibt das Fenster offen, damit mehrere
    Dinge am Stück hineingehen. */
 let schnellWohin="heute";
@@ -1168,19 +1146,10 @@ function schnellOeffnen(){
       <button class="btn btn-primary" onclick="schnellAnlegen()">+</button></div>
     <div class="chips" style="padding-bottom:4px">
       ${SCHNELL_ZIELE.map(([w,l])=>`<button class="chip" aria-pressed="${schnellWohin===w}"
-        onclick="schnellZiel(this,'${w}')">${l}</button>`).join("")}</div>
-    <p class="note" style="margin-top:10px">„morgen", „Freitag", „14.9." oder „#Geburt" mitschreiben, das schlägt die Auswahl hier.</p>
-    <button class="btn btn-primary btn-wide fertig-knopf" onclick="closeSheet()">Fertig</button>`;
+        onclick="schnellWohin='${w}';schnellOeffnen()">${l}</button>`).join("")}</div>
+    <p class="note" style="margin-top:10px">„morgen", „Freitag", „14.9." oder „#Geburt" mitschreiben – das schlägt die Auswahl hier.</p>`;
   openSheet(koerper(),true);
   setTimeout(()=>{const e=document.getElementById("schnellfeld"); if(e&&e.focus)e.focus();},60);
-}
-/* Nur die Auswahl umschalten, nicht das ganze Blatt neu bauen: sonst war das
-   halb Getippte weg, sobald man das Ziel gewechselt hat. */
-function schnellZiel(el,wohin){
-  schnellWohin=wohin;
-  const reihe=el&&el.parentNode;
-  if(reihe&&reihe.querySelectorAll) reihe.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",String(c===el)));
-  const f=document.getElementById("schnellfeld"); if(f&&f.focus)f.focus();
 }
 function schnellAnlegen(){
   const el=document.getElementById("schnellfeld"); if(!el) return;
@@ -1246,15 +1215,14 @@ function vHeute(){
   const anteil=ges?Math.round(fertig.length/ges*100):0;
   const bogen=`<div class="bogen ${ges&&fertig.length===ges?"voll":""}">
     <div class="bogen-kopf"><b>${ges?(fertig.length===ges?"Alles erledigt":fertig.length+" von "+ges+" erledigt"):"Noch nichts geplant"}</b>
-      <span>${new Date().getDate()}. ${MONATE[new Date().getMonth()].toUpperCase()} · ${kw()}</span>
-      <button class="ikon" onclick="naechsteWoche()" aria-label="Nächste Woche ansehen" title="Nächste Woche">${ICON_WOCHE_VOR}</button></div>
+      <span>${new Date().getDate()}. ${MONATE[new Date().getMonth()].toUpperCase()} · ${kw()}</span></div>
     <div class="balken"><i style="width:${anteil}%"></i></div></div>`;
 
   const nichts=!faellig.length&&!ueberfaellig.length&&!fertig.length
     ? `<div class="leerzustand"><b>Der Tag ist frei</b>Trag oben etwas ein oder hol dir unter Listen eine Aufgabe aus einem deiner Vorräte.
        <div style="margin-top:14px"><button class="btn" onclick="go('listen')">Zu den Listen</button></div></div>` : "";
 
-  /* Überfälliges lässt sich dort aufräumen, wo es auftaucht - statt drei
+  /* Überfälliges lässt sich dort aufräumen, wo es auftaucht – statt drei
      Ansichten weiter unter „Mehr". */
   const ueberKopf=ueberfaellig.length
     ? `<div class="sect"><h2>Überfällig</h2><span class="zahl">${ueberfaellig.length}</span>
@@ -1271,7 +1239,8 @@ function vHeute(){
     + morgenBlock()
     + heuteNotizen()
     + (fertig.length?`<div class="sect"><h2>Heute geschafft</h2><span class="zahl">${fertig.length}</span></div>
-       ${fertig.map(a=>aufZeile(a,{})).join("")}`:"");
+       ${fertig.map(a=>aufZeile(a,{})).join("")}
+       <p class="note" style="margin-top:6px">Verschwindet um Mitternacht von allein.</p>`:"");
 }
 
 /* ---------- Woche ---------- */
@@ -1294,7 +1263,7 @@ function vWoche(){
     return `<div class="tagblock ${d===heute()?"heute":""}">
       <div class="tagblock-h"><b>${TAGE[wochentag(d)]}${d===heute()?" · heute":""}</b>
         <span>${ausIso(d).getDate()}.${ausIso(d).getMonth()+1}.${offeneT.length?" · "+offeneT.length+" OFFEN":""}${fertigT?" · "+fertigT+" ERLEDIGT":""}</span></div>
-      ${drin.length?aufListeHtml(drin):`<div class="leer">frei - <button class="btn btn-ghost btn-s" style="padding:0" onclick="schnellFuer('${d}')">etwas eintragen</button></div>`}
+      ${drin.length?aufListeHtml(drin):`<div class="leer">frei — <button class="btn btn-ghost btn-s" style="padding:0" onclick="schnellFuer('${d}')">etwas eintragen</button></div>`}
     </div>`;}).join("");
 
   const wocheOffen=sortiert(alle.filter(a=>!a.fertig&&a.wann==="woche"));
@@ -1311,19 +1280,14 @@ function vWoche(){
     + `<div class="sect"><h2>Danach</h2><span class="zahl">${danach.length}</span></div>`
     + (danach.length?aufListeHtml(danach):`<p class="note">Nichts vorgemerkt.</p>`);
 }
-/* Ein Tipp von „Heute" in die kommende Woche, ohne den Umweg über die
-   Wochenansicht und deren Pfeile. */
-function naechsteWoche(){ wochenVersatz=1; go("woche"); }
 function schnellFuer(d){
   offenAuf=null;
-  openSheet(`<div class="sheet-kopf"><h2>Aufgabe für ${datumText(d)}</h2>
-      <button class="btn btn-ghost btn-s" onclick="closeSheet()" aria-label="Schließen">✕</button></div>
+  openSheet(`<div class="sheet-kopf"><h2>Aufgabe für ${datumText(d)}</h2><button class="btn btn-ghost btn-s" onclick="closeSheet()">✕</button></div>
     <div class="schnell" style="margin-top:12px">
-      <input type="text" id="neublatt" placeholder="Aufgabe …" onkeydown="if(event.key==='Enter')neuAnlegen('${d}','','neublatt')">
-      <button class="btn btn-primary" onclick="neuAnlegen('${d}','','neublatt')">+</button></div>
-    <p class="note" style="margin:2px 0 0">Mehrere hintereinander gehen auch, das Blatt bleibt offen.</p>
-    <button class="btn btn-primary btn-wide fertig-knopf" onclick="closeSheet()">Fertig</button>`);
-  setTimeout(()=>{const e=document.getElementById("neublatt");if(e&&e.focus)e.focus();},60);
+      <input type="text" id="neu" placeholder="Aufgabe …" onkeydown="if(event.key==='Enter'){neuAnlegen('${d}','');closeSheet()}">
+      <button class="btn btn-primary" onclick="neuAnlegen('${d}','');closeSheet()">+</button></div>
+    <button class="btn btn-wide btn-ghost" style="margin-top:8px" onclick="closeSheet()">Abbrechen</button>`);
+  setTimeout(()=>{const e=document.getElementById("neu");if(e&&e.focus)e.focus();},60);
 }
 
 /* ---------- Listen (Vorräte ohne Datum) ---------- */
@@ -1331,19 +1295,20 @@ function vListen(){
   const alle=aufListe();
   const ohneDatum=a=>!a.fertig&&!a.wann;
   const katsSortiert=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
+  const k=katFilter==="alle"?null:S.kategorien[katFilter];
   const offenZahl=id=>alle.filter(a=>ohneDatum(a)&&a.kat===id).length;
-  /* Die Listen stehen als Reiter direkt oben. Vorher kostete jeder Wechsel drei
-     Handgriffe: Blatt öffnen, wählen, schließen. */
-  const chips=`<div class="chips" style="padding-bottom:10px">
-    <button class="chip" aria-pressed="${katFilter==="alle"}" onclick="katFilter='alle';render()">Alle<span class="anz">${alle.filter(a=>ohneDatum(a)).length}</span></button>
-    ${katsSortiert.map(([id,kk])=>`<button class="chip" aria-pressed="${katFilter===id}" onclick="katFilter='${id}';render()"><i class="punkt" style="background:${kk.f}"></i>${esc(kk.n)}<span class="anz">${offenZahl(id)}</span></button>`).join("")}
-    <button class="chip" onclick="katVerwalten()" aria-label="Listen verwalten" title="Listen verwalten">⚙</button></div>`;
+  const chips=`<div class="filterzeile">
+    <button class="filterknopf" onclick="listenFilterWaehlen()">
+      ${k?`<i class="punkt" style="background:${k.f}"></i>`:""}
+      <b>${k?esc(k.n):"Alle Listen"}</b>
+      <span class="anz">${k?offenZahl(katFilter):alle.filter(a=>ohneDatum(a)).length} offen</span>
+      <span class="pfeil">▾</span></button></div>`;
   const zeigen=katsSortiert.filter(([id])=>katFilter==="alle"||katFilter===id);
   const bloecke=zeigen.map(([id,k])=>{
     const drin=sortiert(alle.filter(a=>ohneDatum(a)&&a.kat===id));
     const notizZahl=Object.values(S.notizen||{}).filter(n=>n.kat===id&&!n.archiv).length;
     return `<div class="sect"><h2><i class="punkt" style="background:${k.f}"></i> ${esc(k.n)}</h2>
-        <span class="zahl">${drin.length} offen${notizZahl?" · "+notizZahl+(notizZahl===1?" Notiz":" Notizen"):""}</span></div>
+        <span class="zahl">${drin.length} offen${notizZahl?" · "+notizZahl+" Notizen":""}</span></div>
       ${drin.length?aufListeHtml(drin,{schnell:true}):`<p class="note" style="margin-bottom:8px">Noch nichts gesammelt.</p>`}
       <div class="schnell" style="margin-bottom:14px">
         <input type="text" id="neu_${id}" placeholder="In „${esc(k.n)}“ sammeln …"
@@ -1355,7 +1320,8 @@ function vListen(){
   if(aufSuche.trim()) return hinweisLeiste()+sucheFeld()+`<div id="suchtreffer">${sucheTreffer()}</div>`;
   return hinweisLeiste() + sucheFeld() + chips + bloecke
     + (ohneListe.length&&katFilter==="alle"
-      ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${ohneListe.length}</span></div>${aufListeHtml(ohneListe,{schnell:true})}`:"");
+      ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${ohneListe.length}</span></div>${aufListeHtml(ohneListe,{schnell:true})}`:"")
+    + `<p class="note" style="margin-top:16px">Aufgaben hier haben bewusst kein Datum. Über das ···-Menü ziehst du sie in den Tag oder in die Woche.</p>`;
 }
 function listenFilterWaehlen(){
   const alle=aufListe(), ohneDatum=a=>!a.fertig&&!a.wann;
@@ -1380,7 +1346,7 @@ function sucheTreffer(){
     .sort((a,b)=>(a.fertig?1:0)-(b.fertig?1:0)||(b.erstellt||0)-(a.erstellt||0));
   const notizen=notizenSuchen(aufSuche,"alle");
   if(!aufgaben.length&&!notizen.length)
-    return `<div class="leerzustand"><b>Nichts gefunden</b>Gesucht wird in Aufgaben samt Notizfeld - auch im Erledigten - und in allen Notizen samt Archiv.</div>`;
+    return `<div class="leerzustand"><b>Nichts gefunden</b>Gesucht wird in Aufgaben samt Notizfeld – auch im Erledigten – und in allen Notizen samt Archiv.</div>`;
   return (aufgaben.length?`<div class="sect"><h2>Aufgaben</h2><span class="zahl">${aufgaben.length}</span></div>`
       +aufgaben.slice(0,40).map(a=>aufZeile(a,{datum:true})).join(""):"")
     +(notizen.length?`<div class="sect"><h2>Notizen</h2><span class="zahl">${notizen.length}</span></div>`
@@ -1461,7 +1427,7 @@ function aufgabeOeffnen(id){
   };
   openSheet(body(),true);
 }
-/* Aufgabe und Notiz gehören manchmal zusammen - ein Sprung in beide Richtungen
+/* Aufgabe und Notiz gehören manchmal zusammen – ein Sprung in beide Richtungen
    genügt dafür, ein ganzes Verknüpfungssystem braucht es nicht. */
 function notizZuAufgabe(id){
   const a=S.aufgaben[id]; if(!a) return;
@@ -1477,7 +1443,7 @@ function aufgabeZuNotiz(nid){
   if(!aid) return;
   aufAendern(aid,{notizId:nid},false);
   notizAendern(nid,{aufgabe:aid},false);
-  hinweis("Aufgabe angelegt - liegt in deinen Listen.","Öffnen",()=>{notizSchliessen();aufgabeOeffnen(aid);});
+  hinweis("Aufgabe angelegt – liegt in deinen Listen.","Öffnen",()=>{notizSchliessen();aufgabeOeffnen(aid);});
 }
 function verdoppeln(id){
   const a=S.aufgaben[id]; if(!a)return;
@@ -1521,7 +1487,7 @@ function katLoeschen(id){
   const auf=aufListe().filter(a=>a.kat===id).length;
   const not=Object.values(S.notizen||{}).filter(n=>n.kat===id).length;
   if(!confirm("Liste löschen?"+(auf+not?` ${auf} Aufgaben und ${not} Notizen bleiben erhalten, verlieren aber die Zuordnung.`:"")))return;
-  /* Nur die betroffenen Einträge anfassen - ein Rundumschlag auf alle Aufgaben
+  /* Nur die betroffenen Einträge anfassen – ein Rundumschlag auf alle Aufgaben
      und Notizen würde alles überschreiben, was das andere Gerät gerade tut. */
   aufListe().filter(a=>a.kat===id).forEach(a=>aufAendern(a.id,{kat:null},false));
   Object.entries(S.notizen||{}).forEach(([nid,n])=>{if(n.kat===id)notizAendern(nid,{kat:null},false);});
@@ -1542,11 +1508,11 @@ let offeneNotiz=null, speicherTimer=null;
 const textAus=h=>entziffern(String(h||"").replace(/<br\s*\/?>/gi," ").replace(/<\/(p|div|li|h\d)>/gi," ").replace(/<[^>]+>/g," "))
   .replace(/\u00a0/g," ").replace(/\s+/g," ").trim();
 /* Notizen dürfen Auszeichnung enthalten, aber nichts Ausführbares. Der Inhalt kommt
-   aus dem Editor, aus geteilten Seiten und aus dem Google-Import - überall kann
+   aus dem Editor, aus geteilten Seiten und aus dem Google-Import – überall kann
    fremdes HTML mitkommen, und es landet anschließend wieder in einem Element. */
 const SCHEMA_ERLAUBT=/^(?:https?|mailto|tel):/i;
 const BILD_ERLAUBT=/^data:image\/(?:png|jpe?g|gif|webp);base64,/i;
-/* „java&#115;cript:" wäre erst im Browser wieder ein Schema - deshalb werden
+/* „java&#115;cript:" wäre erst im Browser wieder ein Schema – deshalb werden
    Entities und unsichtbare Zeichen vor der Prüfung aufgelöst. */
 function adresseSicher(wert){
   const roh=String(wert)
@@ -1560,7 +1526,7 @@ const BOESE_TAGS="script|style|iframe|frame|frameset|object|embed|applet|link|me
 const sauberHtml=h=>String(h||"")
   .replace(new RegExp("<\\s*("+BOESE_TAGS+")\\b[\\s\\S]*?<\\s*/\\s*\\1\\s*>","gi"),"")
   .replace(new RegExp("<\\s*/?\\s*(?:"+BOESE_TAGS+")\\b[^>]*>","gi"),"")
-  /* Ereignis-Attribute - auch wenn sie mit / oder Umbruch statt Leerzeichen abgetrennt sind */
+  /* Ereignis-Attribute – auch wenn sie mit / oder Umbruch statt Leerzeichen abgetrennt sind */
   .replace(/[\s/]on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi,"")
   /* Adressen, die Code ausführen könnten. Eingefügte Bilder als data: bleiben erlaubt. */
   .replace(/\s(href|src|xlink:href|action|formaction)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi,
@@ -1644,27 +1610,18 @@ function vNotizen(){
   return `<div class="schnell">
       <input type="search" id="nsuche" placeholder="In allen Notizen suchen …" value="${esc(notizSuche)}" oninput="notizSucheAendern(this.value)">
       <button class="btn btn-primary" onclick="notizNeu()" aria-label="Neue Notiz">+</button></div>
-    <div id="nchips" style="margin-bottom:10px">${notizFilterZeile()}</div>
+    <div class="filterzeile" id="nchips">${notizFilterZeile()}</div>
     <div id="ntreffer">${notizTreffer()}</div>`;
 }
 function notizFilterZeile(){
+  const k=katFilter==="alle"?null:S.kategorien[katFilter];
   const status={aktiv:"Aktiv",archiv:"Archiv",alle:"Überall"}[notizFilter];
   const sortKurz={erstellt:"neueste",geoeffnet:"zuletzt geöffnet",geaendert:"zuletzt geändert",eigen:"eigene Ordnung"}[notizSortierung()];
   const anz=notizAuswahl().length;
-  const kats=Object.entries(S.kategorien).sort((a,b)=>(a[1].pos||0)-(b[1].pos||0));
-  const zahl=id=>{
-    let l=Object.values(S.notizen||{});
-    if(notizFilter==="archiv") l=l.filter(x=>x.archiv); else if(notizFilter!=="alle") l=l.filter(x=>!x.archiv);
-    return id?l.filter(x=>x.kat===id).length:l.length;
-  };
-  /* Die Listen sind Reiter, ein Tipp genügt. Status und Reihenfolge stellt man
-     selten um, die bleiben im Blatt und würden die Reiterzeile nur zustellen. */
-  return `<div class="chips" style="padding-bottom:8px">
-      <button class="chip" aria-pressed="${katFilter==="alle"}" onclick="katFilter='alle';render()">Alle<span class="anz">${zahl(null)}</span></button>
-      ${kats.map(([id,k])=>`<button class="chip" aria-pressed="${katFilter===id}" onclick="katFilter='${id}';render()"><i class="punkt" style="background:${k.f}"></i>${esc(k.n)}<span class="anz">${zahl(id)}</span></button>`).join("")}
-    </div>
-    <button class="filterknopf" onclick="notizFilterWaehlen()">
-      <b>${status}</b><span class="anz">${anz} ${anz===1?"Notiz":"Notizen"} · ${sortKurz}</span><span class="pfeil">▾</span></button>`;
+  return `<button class="filterknopf" onclick="notizFilterWaehlen()">
+      ${k?`<i class="punkt" style="background:${k.f}"></i>`:""}
+      <b>${k?esc(k.n):"Alle Listen"}</b><span class="anz">${status} · ${anz} · ${sortKurz}</span><span class="pfeil">▾</span></button>
+    `;
 }
 function notizAuswahl(){
   const treffer=notizenSuchen(notizSuche,notizFilter);
@@ -1688,7 +1645,7 @@ function notizTreffer(){
 /* Der Kasten wird übergeben, nicht ein zweites Mal ausgerechnet. Vorher stand in
    der Karte immer „nbox_<Zeitgruppe>", auch wenn die Liste bei eigener
    Reihenfolge gar nicht gruppiert war und schlicht „nbox" hieß. Der Griff zeigte
-   dann auf einen Kasten, den es nicht gab - und Ziehen tat nichts mehr, und zwar
+   dann auf einen Kasten, den es nicht gab – und Ziehen tat nichts mehr, und zwar
    ab dem Augenblick, in dem man das erste Mal etwas gezogen hatte. */
 function notizKarte(n,box){
   const k=n.kat?kat(n.kat):null;
@@ -1793,7 +1750,7 @@ function notizOeffnen(id){
       <button onclick="fmt('bold')" title="Fett"><b>F</b></button>
       <button onclick="fmt('italic')" title="Kursiv"><i>K</i></button>
       <button onclick="fmt('strikeThrough')" title="Durchgestrichen"><s>D</s></button>
-      <button onclick="fmt('insertHorizontalRule')" title="Trennlinie">Linie</button>
+      <button onclick="fmt('insertHorizontalRule')" title="Trennlinie">—</button>
       <button onclick="bildEinfuegen()" title="Bild einfügen">Bild</button>
     </div>
     <div class="editor" id="edit" contenteditable="true" data-leer="Schreib los …" oninput="notizMerken()">${sauberHtml(n.html)}</div>
@@ -1828,7 +1785,7 @@ function notizMerken(){
 function notizSchliessen(){
   clearTimeout(speicherTimer); notizMerkenSofort();
   /* Wer eine Notiz anlegt und ohne Eingabe wieder schließt, soll keine leere
-     zurücklassen. Es geht nichts verloren - da war ja nichts. */
+     zurücklassen. Es geht nichts verloren – da war ja nichts. */
   const id=offeneNotiz, n=id&&S.notizen[id];
   offeneNotiz=null; closeSheet();
   if(n&&!String(n.titel||"").trim()&&!textAus(n.html).trim()&&!n.aufgabe) mut("notizen/"+id,null);
@@ -1896,15 +1853,245 @@ function bildVerkleinern(datei,maxKante,guete){
   });
 }
 
-/* ===== Textwerkzeug für Notizen ===== */
+/* ===== Import aus Google Notizen (Takeout) ===== */
 
 const ENTITAET={nbsp:" ",amp:"&",quot:'"',apos:"'",lt:"<",gt:">",auml:"ä",ouml:"ö",uuml:"ü",
-  Auml:"Ä",Ouml:"Ö",Uuml:"Ü",szlig:"ß",eacute:"é",ndash:"-",mdash:"-",hellip:"…",
+  Auml:"Ä",Ouml:"Ö",Uuml:"Ü",szlig:"ß",eacute:"é",ndash:"–",mdash:"—",hellip:"…",
   bdquo:"„",ldquo:"“",rdquo:"”",lsquo:"‘",rsquo:"’",laquo:"«",raquo:"»",deg:"°",euro:"€",middot:"·"};
+/* Sicher heißt: spitze Klammern und & bleiben stehen, damit aus Text kein Tag wird */
+const entziffernSicher=t=>String(t||"")
+  .replace(/&#x([0-9a-f]+);/gi,(_,h)=>{const c=String.fromCodePoint(parseInt(h,16));return /[<>&]/.test(c)?_:c;})
+  .replace(/&#(\d+);/g,(_,d)=>{const c=String.fromCodePoint(+d);return /[<>&]/.test(c)?_:c;})
+  .replace(/&([a-z]+);/gi,(m,n)=>(n==="lt"||n==="gt"||n==="amp"||ENTITAET[n]===undefined)?m:ENTITAET[n]);
 const entziffern=t=>String(t||"")
   .replace(/&#x([0-9a-f]+);/gi,(_,h)=>String.fromCodePoint(parseInt(h,16)))
   .replace(/&#(\d+);/g,(_,d)=>String.fromCodePoint(+d))
   .replace(/&([a-z]+);/gi,(m,n)=>ENTITAET[n]!==undefined?ENTITAET[n]:m);
+
+/* Google steckt alles in <span> mit festen Schriftgrößen. Behalten wird nur,
+   was wirklich Auszeichnung ist: fett, kursiv, durchgestrichen, unterstrichen. */
+function keepSaeubern(roh){
+  let h=String(roh||"").replace(/<br\s*\/?>/gi,"<br>").replace(/<\/?(html|body|head|meta|div)[^>]*>/gi,"");
+  for(let runde=0;runde<12;runde++){
+    const vorher=h;
+    h=h.replace(/<span([^>]*)>([\s\S]*?)<\/span>/gi,(m,attr,inhalt)=>{
+      const st=(attr.match(/style\s*=\s*"([^"]*)"/i)||["",""])[1].toLowerCase();
+      let auf="",zu="";
+      if(/font-weight\s*:\s*(bold|[6-9]00)/.test(st)){auf+="<b>";zu="</b>"+zu;}
+      if(/font-style\s*:\s*italic/.test(st)){auf+="<i>";zu="</i>"+zu;}
+      if(/text-decoration[^;]*line-through/.test(st)){auf+="<s>";zu="</s>"+zu;}
+      if(/text-decoration[^;]*underline/.test(st)){auf+="<u>";zu="</u>"+zu;}
+      return auf+inhalt+zu;
+    });
+    if(h===vorher) break;
+  }
+  const erlaubt=["p","br","ul","ol","li","b","i","s","u","h3","strong","em","strike","a"];
+  h=h.replace(/<\/?([a-z0-9]+)([^>]*)>/gi,(m,tag,attr)=>{
+    const t=tag.toLowerCase();
+    if(!erlaubt.includes(t)) return "";
+    if(m[1]==="/") return "</"+t+">";
+    if(t==="a"){const href=(attr.match(/href\s*=\s*"([^"]*)"/i)||[])[1];
+      return href&&/^https?:/i.test(href)?'<a href="'+href.replace(/"/g,"")+'">':"";}
+    return "<"+t+">";
+  });
+  h=entziffernSicher(h).replace(/\u00a0/g," ");
+  h=h.replace(/<p>\s*<\/p>/gi,"").replace(/(<br>\s*){3,}/gi,"<br><br>");
+  return h.trim();
+}
+const textZuHtml=t=>String(t||"").split("\n")
+  .map(z=>z.trim()?"<p>"+esc(z)+"</p>":"<p><br></p>").join("").replace(/(<p><br><\/p>){3,}/g,"<p><br></p>");
+
+/* Eine Takeout-Datei auswerten, egal ob JSON oder HTML */
+function keepLesen(name,inhalt){
+  if(/\.json$/i.test(name)){
+    let d; try{ d=JSON.parse(inhalt); }catch(e){ return {fehler:"kein gültiges JSON"}; }
+    if(!d||typeof d!=="object") return {fehler:"unerwarteter Inhalt"};
+    return {
+      quelle:"json", datei:name,
+      titel:String(d.title||"").trim(),
+      html:d.textContentHtml?keepSaeubern(d.textContentHtml):textZuHtml(d.textContent),
+      text:String(d.textContent||""),
+      liste:Array.isArray(d.listContent)?d.listContent.map(x=>({t:String(x.text||"").trim(),ab:!!x.isChecked})).filter(x=>x.t):[],
+      etiketten:(d.labels||[]).map(l=>String(l.name||"").trim()).filter(Boolean),
+      archiviert:!!d.isArchived, geloescht:!!d.isTrashed, gepinnt:!!d.isPinned,
+      erstellt:Math.round((d.createdTimestampUsec||0)/1000)||Date.now(),
+      geaendert:Math.round((d.userEditedTimestampUsec||d.createdTimestampUsec||0)/1000)||Date.now(),
+      anhaenge:(d.attachments||[]).length
+    };
+  }
+  /* HTML-Rückfall, falls kein JSON zu einer Notiz vorliegt */
+  const titel=entziffern((inhalt.match(/<div class="title">([\s\S]*?)<\/div>/)||[])[1]||"").replace(/<[^>]+>/g,"").trim();
+  const körper=(inhalt.match(/<div class="content">([\s\S]*?)<\/div>\s*(?:<div class="chips">|<\/div>)/)||[])[1]||"";
+  const listePunkte=keepListeAusHtml(körper);
+  const etiketten=[...inhalt.matchAll(/<span class="label-name">([\s\S]*?)<\/span>/g)].map(m=>entziffern(m[1]).trim());
+  const datum=(inhalt.match(/<div class="heading">[\s\S]*?(\d{2}\.\d{2}\.\d{4}),\s*(\d{2}:\d{2}:\d{2})/)||[]);
+  let zeit=Date.now();
+  if(datum[1]){const [t,m,j]=datum[1].split(".");zeit=new Date(+j,+m-1,+t,...(datum[2]||"12:00:00").split(":").map(Number)).getTime();}
+  return {
+    quelle:"html", datei:name, titel,
+    html:listePunkte.length?"":keepSaeubern(körper),
+    text:entziffern(körper.replace(/<br>/gi,"\n").replace(/<[^>]+>/g," ")),
+    liste:listePunkte, etiketten,
+    /* Die Klasse steht selten allein: „class="note archived"“ ist genauso gültig */
+    archiviert:/class="[^"]*\barchived\b/.test(inhalt), geloescht:/class="[^"]*\btrashed\b/.test(inhalt),
+    gepinnt:/class="[^"]*\bpinned\b/.test(inhalt),
+    erstellt:zeit, geaendert:zeit, anhaenge:(inhalt.match(/class="attachments"/g)||[]).length
+  };
+}
+
+/* Keep exportiert Checklisten als <li class="listitem"> mit ☐ oder ☑ */
+function keepListeAusHtml(körper){
+  if(!/class="listitem/.test(körper||"")) return [];
+  return [...String(körper).matchAll(/<li class="listitem([^"]*)"[\s\S]*?<span class="text">([\s\S]*?)<\/span>/g)]
+    .map(m=>({
+      t:entziffern(m[2].replace(/<[^>]+>/g," ")).replace(/[\u2610\u2611\u2612]/g,"").replace(/\s+/g," ").trim(),
+      ab:/checked/.test(m[1])
+    })).filter(x=>x.t);
+}
+
+/* Doppelte Dateien: JSON schlägt HTML, gleicher Name zählt einmal */
+function keepBuendeln(dateien){
+  const nachName={};
+  dateien.forEach(d=>{
+    const basis=d.name.replace(/\.(json|html)$/i,"");
+    if(!nachName[basis]||/\.json$/i.test(d.name)) nachName[basis]=d;
+  });
+  return Object.values(nachName);
+}
+
+/* ---------- Oberfläche ---------- */
+let keepStand=null;
+const keepOpt={archivMit:false,listenAlsAufgaben:true,etikettenAlsListen:true};
+
+function keepImport(){
+  keepStand=null;
+  openSheet(keepMaske());
+  const f=document.getElementById("keepwahl");
+  if(f){ f.value=""; f.onchange=()=>keepDateienLesen(f.files); }
+}
+function keepMaske(){
+  return `<div class="sheet-kopf"><h2>Aus Google Notizen importieren</h2>
+      <button class="btn btn-ghost btn-s" onclick="closeSheet()">✕</button></div>
+    <p class="note" style="margin:6px 0 12px">Lade dein Takeout-Archiv herunter, entpacke es und wähle hier den Inhalt des Ordners <code>Keep</code> aus. Du kannst alle Dateien auf einmal markieren – JSON und HTML gemischt ist kein Problem, die App nimmt jeweils die bessere Fassung.</p>
+    <button class="btn btn-primary btn-wide" onclick="keepWaehlen()">Dateien auswählen</button>
+    <div id="keepbericht" style="margin-top:14px">${keepStand?keepBericht():""}</div>`;
+}
+function keepWaehlen(){ const f=document.getElementById("keepwahl"); if(f&&f.click)f.click(); }
+
+async function keepDateienLesen(dateien){
+  const liste=[...(dateien||[])].filter(f=>/\.(json|html)$/i.test(f.name));
+  if(!liste.length){ alert("Darunter war keine JSON- oder HTML-Datei."); return; }
+  const ziel=document.getElementById("keepbericht");
+  if(ziel) ziel.innerHTML='<p class="note">Wird gelesen …</p>';
+  const roh=[];
+  for(const f of liste){
+    try{ roh.push({name:f.name, inhalt: await f.text()}); }catch(e){}
+  }
+  const gebuendelt=keepBuendeln(roh);
+  const notizen=[], kaputt=[];
+  gebuendelt.forEach(d=>{
+    const n=keepLesen(d.name,d.inhalt);
+    if(n.fehler) kaputt.push(d.name+" ("+n.fehler+")"); else notizen.push(n);
+  });
+  keepStand={gelesen:roh.length,gebuendelt:gebuendelt.length,notizen,kaputt};
+  openSheet(keepMaske(),true);
+}
+function keepAuswahl(){
+  if(!keepStand) return [];
+  return keepStand.notizen.filter(n=>!n.geloescht&&(keepOpt.archivMit||!n.archiviert));
+}
+function keepBericht(){
+  const alle=keepStand.notizen;
+  const genommen=keepAuswahl();
+  const archiviert=alle.filter(n=>n.archiviert&&!n.geloescht).length;
+  const geloescht=alle.filter(n=>n.geloescht).length;
+  const checklisten=genommen.filter(n=>n.liste.length);
+  const offenePunkte=checklisten.reduce((s,n)=>s+n.liste.filter(x=>!x.ab).length,0);
+  const etiketten=[...new Set(genommen.flatMap(n=>n.etiketten))];
+  const neueListen=etiketten.filter(e=>!Object.values(S.kategorien).some(k=>slug(k.n)===slug(e)));
+  const anhaenge=genommen.filter(n=>n.anhaenge).length;
+  const alsNotiz=genommen.length-(keepOpt.listenAlsAufgaben?checklisten.length:0);
+
+  return `<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
+      <b style="font-size:15px">${keepStand.gebuendelt} Notizen gelesen</b>
+      <p class="note" style="margin-top:8px">
+        ${archiviert} archiviert${keepOpt.archivMit?" (werden mitgenommen)":" (werden übersprungen)"}${geloescht?" · "+geloescht+" im Papierkorb, immer übersprungen":""}<br>
+        <b style="color:var(--ink)">${alsNotiz} werden zu Notizen</b>${keepOpt.listenAlsAufgaben&&checklisten.length?`<br><b style="color:var(--ink)">${checklisten.length} Checklisten mit ${offenePunkte} offenen Punkten werden zu Aufgaben</b>`:""}
+        ${neueListen.length?`<br>${neueListen.length} neue Liste${neueListen.length>1?"n":""}: ${neueListen.map(esc).join(", ")}`:""}
+        ${genommen.filter(n=>n.gepinnt).length?`<br>${genommen.filter(n=>n.gepinnt).length} waren angepinnt und werden oben angeheftet.`:""}
+        ${anhaenge?`<br>${anhaenge} Notizen hatten Anhänge – Bilder liegen im Takeout als eigene Dateien und lassen sich nicht mit übernehmen.`:""}
+        ${keepStand.kaputt.length?`<br>Nicht lesbar: ${keepStand.kaputt.slice(0,3).map(esc).join(", ")}`:""}
+      </p></div>
+
+    <label class="fl">Was übernommen wird</label>
+    <div class="chips" style="padding-bottom:4px">
+      <button class="chip" aria-pressed="${!keepOpt.archivMit}" onclick="keepSchalter('archivMit',false)">Ohne Archiv</button>
+      <button class="chip" aria-pressed="${keepOpt.archivMit}" onclick="keepSchalter('archivMit',true)">Archiv mitnehmen</button>
+    </div>
+    <div class="chips" style="padding-bottom:4px">
+      <button class="chip" aria-pressed="${keepOpt.listenAlsAufgaben}" onclick="keepSchalter('listenAlsAufgaben',!keepOpt.listenAlsAufgaben)">Checklisten als Aufgaben</button>
+      <button class="chip" aria-pressed="${keepOpt.etikettenAlsListen}" onclick="keepSchalter('etikettenAlsListen',!keepOpt.etikettenAlsListen)">Etiketten als Listen</button>
+    </div>
+    ${genommen.length?`<div class="sect"><h2>Vorschau</h2><span class="zahl">erste 5</span></div>
+      ${genommen.slice(0,5).map(n=>`<div class="notiz" style="cursor:default">
+        <b>${esc(n.titel||textAus(n.html).slice(0,50)||"Ohne Titel")}</b>
+        <p>${esc(textAus(n.html).slice(0,120)||(n.liste.length?n.liste.length+" Listenpunkte":"Leer"))}</p>
+        <span class="nm">${n.etiketten.map(e=>`<span class="tag">${esc(e)}</span>`).join("")}
+          ${n.liste.length?`<span class="tag tag-akz">${n.liste.length} Punkte</span>`:""}
+          ${n.archiviert?`<span class="tag tag-gold">war archiviert</span>`:""}
+          <span class="mini">${new Date(n.geaendert).toLocaleDateString("de-DE")}</span></span></div>`).join("")}`:
+      `<p class="note" style="margin-top:12px">Nach diesen Regeln bleibt nichts zum Importieren übrig.${!keepOpt.archivMit&&archiviert?" Alle gelesenen Notizen waren archiviert – schalte oben „Archiv mitnehmen“ ein, wenn du sie doch brauchst.":""}</p>`}
+
+    <button class="btn btn-primary btn-wide" style="margin-top:14px" ${genommen.length?"":"disabled"} onclick="keepUebernehmen()">
+      ${genommen.length?"Jetzt importieren":"Nichts zu importieren"}</button>`;
+}
+function keepSchalter(feld,wert){ keepOpt[feld]=wert; openSheet(keepMaske(),true); }
+
+function keepUebernehmen(){
+  const genommen=keepAuswahl();
+  if(!genommen.length) return;
+  /* Etiketten zu Listen machen */
+  const listeFuer={};
+  if(keepOpt.etikettenAlsListen){
+    [...new Set(genommen.flatMap(n=>n.etiketten))].forEach(e=>{
+      const da=Object.entries(S.kategorien).find(([,k])=>slug(k.n)===slug(e));
+      if(da){ listeFuer[e]=da[0]; return; }
+      const id="k"+id6(), pos=Object.keys(S.kategorien).length;
+      setPfad(S,"kategorien/"+id,{n:e,f:FARBEN[pos%FARBEN.length],art:"beides",pos});
+      listeFuer[e]=id;
+    });
+  }
+  /* Doppelte am Titel und Erstellzeitpunkt erkennen */
+  const vorhanden=new Set(Object.values(S.notizen||{}).map(n=>slug(n.titel||"")+"|"+(n.erstellt||0)));
+  let notizen=0, aufgaben=0, uebersprungen=0;
+  genommen.forEach(n=>{
+    const katId=listeFuer[n.etiketten[0]]||null;
+    if(keepOpt.listenAlsAufgaben&&n.liste.length){
+      const offene=n.liste.filter(x=>!x.ab);
+      offene.forEach(x=>{
+        setPfad(S,"aufgaben/a"+id6(),{t:x.t,wann:null,kat:katId,fertig:null,
+          erstellt:n.erstellt,pos:naechstePos(),notiz:n.titel?("Aus Google Notizen: "+n.titel):null});
+        aufgaben++;
+      });
+      if(offene.length) return;
+    }
+    const schluessel=slug(n.titel||"")+"|"+n.erstellt;
+    if(vorhanden.has(schluessel)){ uebersprungen++; return; }
+    vorhanden.add(schluessel);
+    let html=n.html;
+    if(n.liste.length) html=(html||"")+"<ul>"+n.liste.map(x=>"<li>"+(x.ab?"<s>":"")+esc(x.t)+(x.ab?"</s>":"")+"</li>").join("")+"</ul>";
+    setPfad(S,"notizen/n"+id6(),{
+      titel:n.titel||textAus(html).slice(0,60)||"Ohne Titel", oben:!!n.gepinnt,
+      html:html||"<p><br></p>", kat:katId, art:"frei",
+      archiv:n.archiviert&&keepOpt.archivMit, erstellt:n.erstellt, geaendert:n.geaendert
+    });
+    notizen++;
+  });
+  schreibenLokal();
+  if(basis()) senden("",S);
+  keepStand=null; closeSheet(); go("notizen");
+  hinweis(notizen+" Notizen"+(aufgaben?" und "+aufgaben+" Aufgaben":"")+" importiert"+(uebersprungen?", "+uebersprungen+" doppelte übersprungen":""));
+}
 
 /* ===== Gerüst, Einstellungen, Start ===== */
 const TABS=[
@@ -1939,9 +2126,7 @@ function render(){
 }
 function openSheet(html,behalten){
   const alt=document.querySelector(".sheet-in"), y=behalten&&alt?alt.scrollTop:0;
-  /* Der Griff daneben schließt nichts mehr. Beim Tippen einer Beschreibung
-     reichte vorher ein Fehlgriff neben das Blatt, und alles war zu. */
-  document.getElementById("sheet").innerHTML=`<div class="sheet"><div class="sheet-in">${html}</div></div>`;
+  document.getElementById("sheet").innerHTML=`<div class="sheet" onclick="if(event.target===this)closeSheet()"><div class="sheet-in">${html}</div></div>`;
   document.body.style.overflow="hidden";
   if(y){const neu=document.querySelector(".sheet-in");if(neu)neu.scrollTop=y;}
 }
@@ -1989,14 +2174,13 @@ function vMehr(){
 
   return `<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
       <b style="font-size:15px">Die letzten sieben Tage</b>
-      <div style="display:flex;align-items:flex-end;gap:6px;margin-top:12px">
+      <div style="display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:12px">
         ${rb.slice().reverse().map(x=>`<div style="flex:1;text-align:center">
-          <div style="height:54px;display:flex;align-items:flex-end">
-            <div style="width:100%;height:${Math.round(x.n/max*50)+4}px;background:${x.n?"var(--erf)":"var(--line)"};border-radius:4px 4px 0 0"></div></div>
+          <div style="height:${Math.round(x.n/max*50)+4}px;background:${x.n?"var(--erf)":"var(--line)"};border-radius:4px 4px 0 0"></div>
           <div class="mini" style="margin-top:5px">${TAGE_K[wochentag(x.d)]}</div>
-          <div class="mini" style="font-family:var(--mono)">${x.n||"&nbsp;"}</div></div>`).join("")}
+          <div class="mini" style="font-family:var(--mono)">${x.n||""}</div></div>`).join("")}
       </div>
-      <p class="note" style="margin-top:10px">${rb.reduce((s,x)=>s+x.n,0)} ${rb.reduce((s,x)=>s+x.n,0)===1?"Aufgabe":"Aufgaben"} erledigt · ${offenGes} noch offen</p>
+      <p class="note" style="margin-top:10px">${rb.reduce((s,x)=>s+x.n,0)} Aufgaben erledigt · ${offenGes} noch offen</p>
       <button class="btn btn-s btn-wide" style="margin-top:10px" onclick="rueckblickZeigen()">Zeigen, was es war</button></div>
 
     <div class="sect"><h2>Listen</h2></div>
@@ -2007,7 +2191,7 @@ function vMehr(){
       <button class="btn btn-s" onclick="altesAufraeumen()">Erledigtes älter als 30 Tage löschen</button>
       <button class="btn btn-s" onclick="ueberfaelligHolen()">Überfälliges auf heute ziehen</button>
     </div>
-    <p class="note" style="margin-top:9px">${notGes} ${notGes===1?"Notiz":"Notizen"}, davon ${archGes} im Archiv · ${bilder} ${bilder===1?"Bild":"Bilder"} · ${platz} KB belegt</p>
+    <p class="note" style="margin-top:9px">${notGes} Notizen, davon ${archGes} im Archiv · ${bilder} Bilder · ${platz} KB belegt</p>
 
     <div class="sect"><h2>Sync zwischen Geräten</h2></div>
     <div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
@@ -2018,7 +2202,7 @@ function vMehr(){
       <label class="fl" for="gname">Dein Name auf diesem Gerät (optional)</label>
       <input type="text" id="gname" value="${esc(cfg.name||"")}" placeholder="leer lassen = anonym"
         onchange="cfg.name=this.value.trim();schreibenLokal();render()">
-      <p class="note" style="margin-top:4px">Steht hier ein Name, wird beim Abhaken vermerkt, wer es war - sichtbar nur im Rückblick. Leer bleibt alles wie bisher.</p>
+      <p class="note" style="margin-top:4px">Steht hier ein Name, wird beim Abhaken vermerkt, wer es war – sichtbar nur im Rückblick. Leer bleibt alles wie bisher.</p>
       <label class="fl" for="db">Datenbank-URL aus Firebase</label>
       <input type="url" id="db" value="${esc(cfg.db)}" placeholder="https://name-default-rtdb.europe-west1.firebasedatabase.app">
       <label class="fl" for="hid">Code für diese App</label>
@@ -2031,6 +2215,10 @@ function vMehr(){
       <p class="note" style="margin-top:11px">Beim ersten Verbinden werden beide Stände zusammengeführt: Was es nur auf einem Gerät gibt, bleibt erhalten; bei gleichen Einträgen gewinnt der jüngere. „Diesen Stand hochladen“ brauchst du deshalb nur, wenn du bewusst überschreiben willst.</p>
       <p class="note" style="margin-top:8px">Du kannst dasselbe Firebase-Projekt wie beim Küchenplan nutzen. Nimm aber einen <b>eigenen Code</b>, sonst vermischen sich die Daten beider Apps. Die vorhandenen Regeln passen unverändert.</p>
     </div>
+
+    <div class="sect"><h2>Umzug aus Google Notizen</h2></div>
+    <button class="btn btn-wide" onclick="keepImport()">Google-Notizen-Export einlesen</button>
+    <p class="note" style="margin-top:9px">Takeout-Archiv entpacken, Ordner „Keep“ auswählen. Archivierte Notizen bleiben außen vor, Etiketten werden zu Listen und Checklisten wahlweise zu Aufgaben.</p>
 
     <div class="sect"><h2>Sichern</h2></div>
     <div class="row-btns">
@@ -2045,7 +2233,7 @@ function vMehr(){
 function altesAufraeumen(){
   const grenze=Date.now()-30*TAG_MS;
   const weg=aufListe().filter(a=>a.fertig&&a.fertig<grenze);
-  if(!weg.length){alert("Nichts zum Aufräumen - alles Erledigte ist jünger als 30 Tage.");return;}
+  if(!weg.length){alert("Nichts zum Aufräumen – alles Erledigte ist jünger als 30 Tage.");return;}
   if(!confirm(weg.length+" erledigte Aufgaben endgültig löschen?"))return;
   /* Einzeln löschen statt die ganze Sammlung zu überschreiben: nur so entsteht
      je Aufgabe ein Grabstein, und nur so bleibt stehen, was das andere Gerät
@@ -2069,7 +2257,7 @@ function codeErzeugen(){
 function cfgSpeichern(){
   cfg.db=document.getElementById("db").value.trim().replace(/\/$/,"");
   cfg.hid=document.getElementById("hid").value.trim();
-  if(cfg.hid&&cfg.hid.length<20){alert("Der Code muss mindestens 20 Zeichen haben - so verlangen es die Firebase-Regeln.");return;}
+  if(cfg.hid&&cfg.hid.length<20){alert("Der Code muss mindestens 20 Zeichen haben – so verlangen es die Firebase-Regeln.");return;}
   schreibenLokal(); verbinden(); render();
 }
 async function hochladen(){
@@ -2129,21 +2317,6 @@ function geteiltAlsNotiz(){
   closeSheet(); go("notizen"); notizOeffnen(id);
 }
 
-/* ---------- Der Plus-Knopf tritt zur Seite ----------
-   Er schwebt über dem Inhalt und stand damit ständig auf irgendeiner Zeile.
-   Beim Blättern nach unten liest man, beim Blättern nach oben will man
-   eintragen: also verschwindet er beim Lesen und kommt zurück, sobald man
-   umkehrt. Ganz oben ist er immer da, und unter dem Inhalt steht so viel Luft,
-   dass er am Seitenende nichts mehr verdeckt. */
-let letzteHoehe=0;
-function daumenMitlaufen(){
-  const k=document.getElementById("daumen"); if(!k||!k.classList) return;
-  const y=Math.max(0,typeof scrollY==="number"?scrollY:0);
-  if(y>letzteHoehe+4&&y>90) k.classList.add("weg");        /* nach unten: lesen */
-  else if(y<letzteHoehe-4||y<=90) k.classList.remove("weg"); /* nach oben: eintragen */
-  letzteHoehe=y;
-}
-
 /* ---------- Start ---------- */
 if(typeof document!=="undefined"&&document.getElementById){
   lesenLokal();
@@ -2151,7 +2324,6 @@ if(typeof document!=="undefined"&&document.getElementById){
   shareAufnehmen();
   if(basis())verbinden();
   if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
-  addEventListener("scroll",daumenMitlaufen,{passive:true});
   /* Tageswechsel im Hintergrund abfangen, damit "Heute" stimmt */
   let letzterTag=heute();
   setInterval(()=>{
