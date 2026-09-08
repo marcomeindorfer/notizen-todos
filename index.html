@@ -552,7 +552,21 @@ function farbenAuffrischen(){
     if(neu) S.kategorien[id]={...k,f:neu};
   });
 }
+/* mut() ruft schreibenLokal() auf und gleich danach senden(), das intern noch
+   einmal schreibenLokal() aufruft (die Warteschlange hat sich geändert) - bei
+   einer Löschung kommt über grabstein() ein drittes Mal dazu. Jedes Mal wird
+   dabei der komplette Zustand (inklusive eingebetteter Notizbilder) neu
+   serialisiert. Da diese Aufrufe synchron unmittelbar hintereinander
+   passieren, genügt ein Mikrotask-Sammelbecken: erst wenn die aktuelle
+   Ausführung fertig ist, wird wirklich einmal geschrieben. */
+let schreibenAusstehend=false;
 function schreibenLokal(){
+  if(schreibenAusstehend) return;
+  schreibenAusstehend=true;
+  queueMicrotask(schreibenSofort);
+}
+function schreibenSofort(){
+  schreibenAusstehend=false;
   try{
     localStorage.setItem(KEY,JSON.stringify(S));
     localStorage.setItem(KEY+".cfg",JSON.stringify(cfg));
@@ -561,6 +575,7 @@ function schreibenLokal(){
 }
 const basis=()=>cfg.db&&cfg.hid?cfg.db.replace(/\/$/,"")+"/haushalte/"+cfg.hid:null;
 function setPfad(o,pfad,daten){
+  aufgabenVersion++;    /* aufListe()-Zwischenspeicher verwerfen - siehe dort */
   const p=pfad.split("/").filter(Boolean);
   if(!p.length){S=daten?{...leer(),...daten}:leer();return;}
   let z=o;
@@ -722,7 +737,7 @@ function zusammenfuehren(fern){
     neu[f]=raus;
   });
   neu.einst={...((fern&&fern.einst)||{}),...(S.einst||{})};
-  S=neu; farbenAuffrischen(); schreibenLokal();
+  S=neu; aufgabenVersion++; farbenAuffrischen(); schreibenLokal();
   /* Alles, was die Gegenseite noch nicht kennt, hochschieben - dazu gehören
      ausdrücklich auch die Grabsteine und die dadurch entfernten Einträge. */
   const auszug=z=>JSON.stringify({aufgaben:(z&&z.aufgaben)||{},notizen:(z&&z.notizen)||{},
@@ -796,7 +811,20 @@ if(typeof addEventListener!=="undefined"){
 
 /* ---------- Aufgaben ---------- */
 const kat=k=>S.kategorien[k]||{n:"Ohne Liste",f:"#8E8981"};
-const aufListe=()=>Object.entries(S.aufgaben||{}).map(([id,a])=>({id,...a}));
+/* aufListe() wird pro Render viele Male aufgerufen (gruppen(), flach(),
+   kinderVon() je Zeile ...) und baute bisher jedes Mal die komplette Liste
+   neu aus S.aufgaben auf. Der Zwischenspeicher hält den letzten Aufbau fest
+   und wird nur verworfen, wenn sich S seit dem letzten Aufbau wirklich
+   geändert hat (Zähler in setPfad() sowie bei den beiden Stellen, die S
+   komplett ersetzen). */
+let aufgabenVersion=0, aufListeVersion=-1, aufListeCache=[];
+const aufListe=()=>{
+  if(aufListeVersion!==aufgabenVersion){
+    aufListeCache=Object.entries(S.aufgaben||{}).map(([id,a])=>({id,...a}));
+    aufListeVersion=aufgabenVersion;
+  }
+  return aufListeCache;
+};
 const offen=a=>!a.fertig;
 const sortiert=arr=>arr.sort((a,b)=>(a.pos||0)-(b.pos||0)||(a.erstellt||0)-(b.erstellt||0));
 
@@ -1108,6 +1136,7 @@ function aufgabeLoeschenFragen(id,ausDialog){
 }
 function aufgabeLoeschen(id){
   const kopie=S.aufgaben[id]; if(!kopie) return;
+  clearTimeout(aufSpeicherTimer);   /* ein noch wartender Titel/Notiz-Rest wird mit der Aufgabe hinfällig */
   /* Unteraufgaben ohne ihre Hauptaufgabe wären Waisen: sie gehen mit und kommen
      mit zurück. */
   const kinder=kinderVon(id).map(k=>({id:k.id,daten:S.aufgaben[k.id]}));
@@ -1181,6 +1210,13 @@ function dndGriff(ev,containerId,art){
     startX:ev.clientX, startSeite:ev.clientY+versatzY(),
     zeigerX:ev.clientX, zeigerY:ev.clientY,
     rects:null, schritt:0, zone:null, dropWann:null};
+  /* Schon ab der Berührung sperren, nicht erst wenn die 8px-Schwelle
+     überschritten ist: kommt zwischen Berühren und Schwelle ein render() dazu
+     (Sync-Update, ablaufender Hinweis), würden zeile/kinder/box aus dem
+     Dokument gelöst - dndStarten() misst dann an bereits verwaisten Knoten
+     und rechnet mit lauter Null-Rechtecken. dndAufraeumen() setzt die Sperre
+     in jedem Fall zurück, auch wenn aus der Berührung nie ein Zug wurde. */
+  dndSperre=true;
   addEventListener("pointermove",dndBewegen,{passive:false});
   addEventListener("pointerup",dndLoslassen,true);
   addEventListener("pointercancel",dndAbbrechen,true);
@@ -1787,10 +1823,16 @@ function vListen(){
 
   const ohnePasst=a=>ohneDatum(a)&&!listeVon(a);
   const ohneListe=gruppen(ohnePasst);
-  if(aufSuche.trim()) return hinweisLeiste()+sucheFeld()+`<div id="suchtreffer">${sucheTreffer()}</div>`;
-  return hinweisLeiste() + sucheFeld() + chips + bloecke
-    + (ohneListe.length&&katFilter==="alle"
-      ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${flach(ohnePasst).length}</span></div>${gruppenHtml(ohneListe,{schnell:true})}`:"");
+  /* Beide Blöcke stehen immer im Dokument, nur per hidden umgeschaltet -
+     dadurch bleibt #asuche beim Tippen unangetastet und muss nicht extra neu
+     fokussiert werden, siehe aufSucheAendern(). */
+  const suchAktiv=!!aufSuche.trim();
+  return hinweisLeiste() + sucheFeld()
+    + `<div id="listeninhalt"${suchAktiv?" hidden":""}>` + chips + bloecke
+      + (ohneListe.length&&katFilter==="alle"
+        ? `<div class="sect"><h2>Ohne Liste</h2><span class="zahl">${flach(ohnePasst).length}</span></div>${gruppenHtml(ohneListe,{schnell:true})}`:"")
+      + `</div>`
+    + `<div id="suchtreffer"${suchAktiv?"":" hidden"}>${suchAktiv?sucheTreffer():""}</div>`;
 }
 function listenFilterWaehlen(){
   const alle=aufListe(), ohneDatum=a=>!a.fertig&&!a.wann;
@@ -1826,15 +1868,18 @@ function sucheTreffer(){
           <b>${n.archiv?'<span class="mini">Archiv · </span>':""}${esc(n.titel||"Ohne Titel")}</b>
           <span>${ausschnitt(n,aufSuche)}</span></button>`;}).join(""):"");
 }
-/* Nur den Trefferblock austauschen: ein vollständiges Neuzeichnen bei jedem
-   Buchstaben lässt auf dem Handy die Tastatur zucken und den Cursor springen. */
+/* Nur den Trefferblock austauschen, nie das ganze #view: ein vollständiges
+   Neuzeichnen bei jedem Buchstaben lässt auf dem Handy die Tastatur zucken
+   und den Cursor springen. #listeninhalt und #suchtreffer stehen beide immer
+   im Dokument (vListen()), hier wird nur zwischen ihnen umgeschaltet. */
 function aufSucheAendern(v){
   aufSuche=v;
-  const ziel=document.getElementById("suchtreffer");
-  if(ziel&&v.trim()){ ziel.innerHTML=sucheTreffer(); return; }
-  render();
-  const e=document.getElementById("asuche");
-  if(e&&e.focus){e.focus(); if(e.setSelectionRange)try{e.setSelectionRange(v.length,v.length)}catch(x){}}
+  const treffer=document.getElementById("suchtreffer"), inhalt=document.getElementById("listeninhalt");
+  if(!treffer||!inhalt){ render(); return; }   /* Sicherheitsnetz, falls die Struktur fehlt */
+  const aktiv=!!v.trim();
+  inhalt.hidden=aktiv;
+  treffer.hidden=!aktiv;
+  if(aktiv) treffer.innerHTML=sucheTreffer();
 }
 function sammeln(katId){
   const el=document.getElementById("neu_"+katId); if(!el||!el.value.trim())return;
@@ -1843,7 +1888,25 @@ function sammeln(katId){
   const neu=document.getElementById("neu_"+katId); if(neu&&neu.focus)neu.focus();
 }
 
-/* ---------- Aufgabe bearbeiten ---------- */
+/* ---------- Aufgabe bearbeiten ----------
+   Titel und Notiz speicherten bisher bei jedem Tastendruck einzeln - anders
+   als der Notizeditor (notizMerken(), 600ms), der genau das schon vermeidet.
+   Bei größeren Beständen bremste das spürbar, weil jede Änderung den
+   gesamten Zustand serialisiert und in die Warteschlange stellt. Gleiches
+   Muster wie dort: erst 400ms nach der letzten Eingabe wirklich schreiben. */
+let aufSpeicherTimer=null;
+function aufgabeMerken(id){
+  clearTimeout(aufSpeicherTimer);
+  aufSpeicherTimer=setTimeout(()=>aufgabeMerkenSofort(id),400);
+}
+function aufgabeMerkenSofort(id){
+  if(!S.aufgaben[id]) return;
+  const txt=document.getElementById("atxt"), notiz=document.getElementById("anotiz");
+  const felder={};
+  if(txt) felder.t=txt.value.trim()||"Ohne Titel";
+  if(notiz) felder.notiz=notiz.value.trim()||null;
+  if(Object.keys(felder).length) aufAendern(id,felder,false);
+}
 function aufgabeOeffnen(id){
   const a=S.aufgaben[id]; if(!a) return;
   offenAuf=id;                       /* damit das Blatt nach dem Ziehen mitkommt */
@@ -1856,7 +1919,7 @@ function aufgabeOeffnen(id){
     const fertigK=kinder.filter(x=>x.fertig).length;
     return `<div class="sheet-kopf"><h2>${oben?"Unteraufgabe":"Aufgabe"}</h2>
         <button class="btn btn-ghost btn-s" onclick="closeSheet()" aria-label="Schließen">✕</button></div>
-      <textarea id="atxt" rows="2" oninput="aufAendern('${id}',{t:this.value.trim()||'Ohne Titel'},false)">${esc(b.t)}</textarea>
+      <textarea id="atxt" rows="2" oninput="aufgabeMerken('${id}')">${esc(b.t)}</textarea>
       ${oben?`<button class="btn btn-s btn-wide" style="margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px"
             onclick="aufgabeOeffnen('${b.eltern}')">${ICON_UNTER}gehört zu „${esc(oben.t.slice(0,38))}“</button>`
         :`<label class="fl">Unteraufgaben</label>
@@ -1915,7 +1978,7 @@ function aufgabeOeffnen(id){
           wdhSchritt(b)&&wdhSchritt(b).einheit==="woche"&&typeof b.wdhTag==="number"?" Immer "+TAGE[b.wdhTag]+"s.":""}</p>`:""}
       <label class="fl" for="anotiz">Notiz dazu</label>
       <textarea id="anotiz" rows="3" placeholder="Details, Telefonnummer, Link …"
-        oninput="aufAendern('${id}',{notiz:this.value.trim()||null},false)">${esc(b.notiz||"")}</textarea>
+        oninput="aufgabeMerken('${id}')">${esc(b.notiz||"")}</textarea>
       <label class="fl">Notiz</label>
       ${b.notizId&&S.notizen[b.notizId]
         ? `<div class="row-btns"><button class="btn btn-s" style="flex:1" onclick="closeSheet();notizOeffnen('${b.notizId}')">„${esc((S.notizen[b.notizId].titel||"Ohne Titel").slice(0,40))}" öffnen</button>
@@ -2800,7 +2863,12 @@ function openSheet(html,behalten){
   chipsHeranholen(document.getElementById("sheet"));
 }
 function closeSheet(){
+  /* Ein noch nicht geschriebener Titel/Notiz-Rest darf beim Schließen nicht
+     verloren gehen - deshalb hier sofort nachholen, solange #atxt/#anotiz
+     noch existieren, statt auf die 400ms zu warten. */
+  const auf=offenAuf;
   offenAuf=null;
+  if(auf){ clearTimeout(aufSpeicherTimer); aufgabeMerkenSofort(auf); }
   if(offeneNotiz){notizMerkenSofort();offeneNotiz=null;}
   document.getElementById("sheet").innerHTML="";
   document.body.style.overflow=""; render();
@@ -3028,7 +3096,7 @@ function importAusfuehren(){
   catch(e){ alert("Das ist kein gültiges JSON."); return; }
   if(!d||typeof d!=="object"||(!d.aufgaben&&!d.notizen)){alert("Darin stecken weder Aufgaben noch Notizen.");return;}
   if(!confirm("Aktuellen Stand ersetzen?"))return;
-  S={...leer(),...d};
+  S={...leer(),...d}; aufgabenVersion++;
   schreibenLokal(); if(basis())senden("",S);
   closeSheet(); go("heute");
 }
@@ -3091,10 +3159,17 @@ if(typeof document!=="undefined"&&document.getElementById){
     syncPruefen();
   },30000);
   document.addEventListener("visibilitychange",()=>{
-    if(document.visibilityState!=="visible") return;
+    if(document.visibilityState!=="visible"){
+      /* Sicherheitsnetz für das Mikrotask-Sammelbecken in schreibenLokal():
+         verschwindet die Seite (Tab-Wechsel, App zu), wird sofort geschrieben,
+         statt auf den nächsten Aufruf zu warten. */
+      if(schreibenAusstehend) schreibenSofort();
+      return;
+    }
     if(heute()!==letzterTag){letzterTag=heute();render();}
     syncPruefen();
   });
+  addEventListener("pagehide",()=>{ if(schreibenAusstehend) schreibenSofort(); });
 }
 
 </script>
