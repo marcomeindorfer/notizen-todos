@@ -1,10 +1,11 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.6**, Stand 8. September 2026. Datei rund 181 KB, 3102 Zeilen.
+**Version 2.7**, Stand 8. September 2026. Datei rund 185 KB, 3177 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
-**Für 2.6 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - die Änderung
-entstand ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal laufen lassen.
+**Für 2.6 und 2.7 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - beide
+Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal
+laufen lassen.
 
 Voraussetzung: Lies zuerst `00-Grundlagen-und-Infrastruktur.md`.
 
@@ -37,7 +38,7 @@ S = {
   notizen:     { id: notizObjekt },
   kategorien:  { id: {n, f, art, pos} },     // "Listen" in der Oberfläche
   einst:       { notizSort: "erstellt"|"geoeffnet"|"geaendert"|"eigen" },
-  gesendet:    { id: {t, an, erstellt, erledigt} },  // von mir zugewiesene Aufgaben, siehe Abschnitt 14
+  gesendet:    { id: {t, an, erstellt, erledigt} },  // von mir zugewiesene Aufgaben, siehe Abschnitt 15
   version:     "1.8"
 }
 ```
@@ -62,7 +63,7 @@ S = {
   wdhEinheit: "tag"|"woche"|"monat"|"jahr",   // nur bei "eigen"
   wdhTag: 0..6|null,          // fester Wochentag, wenn der Rhythmus in Wochen zählt
   asana: "1209876…"|null,     // Kennung aus einem Asana-Import, siehe Abschnitt 10
-  herkunft: "Marco"|null      // gesetzt, wenn eine verbundene Person sie zugewiesen hat, siehe Abschnitt 14
+  herkunft: "Marco"|null      // gesetzt, wenn eine verbundene Person sie zugewiesen hat, siehe Abschnitt 15
 }
 ```
 
@@ -546,7 +547,43 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.6 dazugekommen ist
+## 14. Was in Version 2.7 behoben wurde
+
+Ergebnis eines gezielten Code-Reviews auf Stabilität, Bedienung und Performance -
+keine sichtbar neue Funktion, nur die Mechanik dahinter überarbeitet.
+
+- **Drag-and-Drop-Race behoben.** `dndSperre` (verhindert Neuzeichnen während des
+  Ziehens) griff bisher erst, sobald die 8px-Schwelle überschritten war - siehe
+  Grundlagen Abschnitt 5 und Abschnitt 4 dieser Doku. Kam zwischen Berühren des
+  Griffs und Schwellenüberschreitung ein `render()` dazu (ein Sync-Update, ein
+  ablaufender Hinweis), verloren `zeile`/`kinder`/`box` ihren Platz im Dokument;
+  `dndStarten()` maß dann an verwaisten Knoten und konnte beim Loslassen eine
+  falsche Position übernehmen. Die Sperre greift jetzt schon bei Berührung.
+- **Titel und Notiz einer Aufgabe speichern gedebounced** (400ms), wie der
+  Notizeditor es schon länger tut - vorher schrieb jeder Tastendruck sofort den
+  kompletten Zustand und stellte ihn in die Sync-Warteschlange, spürbar bei
+  größeren Beständen. `closeSheet()` holt einen noch wartenden Rest sofort nach,
+  `aufgabeLoeschen()` verwirft ihn sauber.
+- **Mehrfaches Schreiben in `localStorage` gebündelt.** `mut()` rief
+  `schreibenLokal()` auf und gleich danach `senden()`, das intern noch einmal
+  schrieb - bei Löschungen kam über `grabstein()` ein drittes Mal dazu. Läuft
+  jetzt über ein Mikrotask-Sammelbecken zu einem einzigen Schreibvorgang
+  zusammen, mit Sicherheitsnetz bei `visibilitychange`/`pagehide`, damit beim
+  Wechseln oder Schließen der App nichts verloren geht.
+- **Suchfeld bleibt derselbe DOM-Knoten.** Die Listensuche fiel beim ersten und
+  beim letzten Zeichen auf ein vollständiges `render()` zurück, das `#asuche`
+  zerstörte und neu erzeugte (mit Refokussieren als Notbehelf danach) - auf dem
+  Handy konnte das die Tastatur kurz zucken lassen. `#listeninhalt` und
+  `#suchtreffer` stehen jetzt beide immer im Dokument und werden nur per
+  `hidden` umgeschaltet.
+- **`aufListe()` zwischenspeichert** die aus `S.aufgaben` abgeleitete Liste, statt
+  sie bei jedem der vielen Aufrufe pro Bildschirmaufbau (`gruppen()`, `flach()`,
+  `kinderVon()` je Zeile) neu zusammenzubauen. Verworfen wird der Zwischenspeicher
+  nur, wenn sich der Zustand seit dem letzten Aufbau tatsächlich geändert hat.
+
+**Noch nicht mit `tests/run.sh` geprüft**, siehe Kopf dieser Datei.
+
+## 15. Was in Version 2.6 dazugekommen ist
 
 **Aufgaben mit einer verbundenen Person teilen.** Zwei Menschen behalten je einen
 eigenen Haushalt (eigener Code, eigene Datenbank) - neu ist die Möglichkeit, sich
@@ -588,13 +625,13 @@ anderen Person zu schreiben, ohne dass sonst irgendetwas sichtbar wird.
   Zuweisung fehl, bietet der Hinweis „Erneut versuchen" an, sonst verläuft sie im
   Sand), sowie das Zurückziehen einer schon zugewiesenen Aufgabe.
 
-## 15. Was in Version 2.5 dazugekommen ist
+## 16. Was in Version 2.5 dazugekommen ist
 
 **Auswahl vor dem Asana-Import**, siehe Abschnitt 10: eine Liste zum Abhaken und ein
 Modus, der Aufgabe für Aufgabe fragt. Nicht alles, was in einem Projektexport steht,
 gehört hierher.
 
-## 16. Was in Version 2.4 dazugekommen ist
+## 17. Was in Version 2.4 dazugekommen ist
 
 1. **Import aus Asana**, siehe Abschnitt 10. Unteraufgaben aus „Parent task" hängen sich
    direkt in die Struktur aus 2.3 ein.
@@ -605,7 +642,7 @@ gehört hierher.
    „Benutzerdefiniert" ist der sechste Rhythmus und stand damit außerhalb des Bildes.
    `chipsHeranholen()` rollt beim Öffnen das Gewählte in die Mitte.
 
-## 17. Was in Version 2.3 dazugekommen ist
+## 18. Was in Version 2.3 dazugekommen ist
 
 **Unteraufgaben**, siehe Abschnitt 8. Dazu drei Dinge, die dabei aufgefallen sind:
 
@@ -620,7 +657,7 @@ gehört hierher.
 3. **`topfHeute()` liefert jetzt Gruppen und flache Listen.** Wer die Zahl braucht, nimmt
    `faelligFlach`/`ueberFlach`; wer zeichnet, nimmt `faellig`/`ueberfaellig`.
 
-## 18. Was in Version 2.2 geändert wurde
+## 19. Was in Version 2.2 geändert wurde
 
 1. **Doppelte Feldnamen beseitigt.** Das Blatt „Aufgabe für …" trug ein Eingabefeld mit der
    Kennung `neu` - dieselbe, die „Heute" und „Woche" schon auf der Seite dahinter benutzen.
@@ -652,7 +689,7 @@ gehört hierher.
 11. **Der Google-Notizen-Import ist entfallen**, siehe Abschnitt 7.
 12. **Einzahl und Mehrzahl** werden auseinandergehalten: „1 Notiz" statt „1 Notizen".
 
-## 19. Was in Version 2.0 dazugekommen ist
+## 20. Was in Version 2.0 dazugekommen ist
 
 Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neuerungen.js`):
 
@@ -678,7 +715,7 @@ Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neu
     Namen bleibt alles anonym wie bisher. Bewusst abschaltbar, weil eine Buchführung
     übereinander auch belasten kann.
 
-## 20. Was in Version 1.9 behoben wurde
+## 21. Was in Version 1.9 behoben wurde
 
 - **Änderungen konnten sich selbst rückgängig machen.** Abhaken, Zurücknehmen, Anheften,
   Archivieren, Verschieben, Liste wechseln, Wiederholung setzen - all das schrieb nur das
