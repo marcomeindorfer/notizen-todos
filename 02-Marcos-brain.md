@@ -1,8 +1,10 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.5**, Stand 27. August 2026. Datei rund 176 KB, 2994 Zeilen.
+**Version 2.6**, Stand 8. September 2026. Datei rund 181 KB, 3102 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
+**Für 2.6 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - die Änderung
+entstand ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal laufen lassen.
 
 Voraussetzung: Lies zuerst `00-Grundlagen-und-Infrastruktur.md`.
 
@@ -35,6 +37,7 @@ S = {
   notizen:     { id: notizObjekt },
   kategorien:  { id: {n, f, art, pos} },     // "Listen" in der Oberfläche
   einst:       { notizSort: "erstellt"|"geoeffnet"|"geaendert"|"eigen" },
+  gesendet:    { id: {t, an, erstellt, erledigt} },  // von mir zugewiesene Aufgaben, siehe Abschnitt 14
   version:     "1.8"
 }
 ```
@@ -58,7 +61,8 @@ S = {
   wdhZahl: 1..99,             // nur bei "eigen"
   wdhEinheit: "tag"|"woche"|"monat"|"jahr",   // nur bei "eigen"
   wdhTag: 0..6|null,          // fester Wochentag, wenn der Rhythmus in Wochen zählt
-  asana: "1209876…"|null      // Kennung aus einem Asana-Import, siehe Abschnitt 10
+  asana: "1209876…"|null,     // Kennung aus einem Asana-Import, siehe Abschnitt 10
+  herkunft: "Marco"|null      // gesetzt, wenn eine verbundene Person sie zugewiesen hat, siehe Abschnitt 14
 }
 ```
 
@@ -542,13 +546,55 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.5 dazugekommen ist
+## 14. Was in Version 2.6 dazugekommen ist
+
+**Aufgaben mit einer verbundenen Person teilen.** Zwei Menschen behalten je einen
+eigenen Haushalt (eigener Code, eigene Datenbank) - neu ist die Möglichkeit, sich
+einmalig zu verbinden und danach gezielt einzelne Aufgaben in den Haushalt der
+anderen Person zu schreiben, ohne dass sonst irgendetwas sichtbar wird.
+
+- **Verbinden** unter „Mehr → Aufgaben teilen": Name der Person plus ihr Code
+  (derselbe 20-Zeichen-Code wie beim eigenen Gerätesync). Der eigene Gerätename
+  muss vorher gesetzt sein - er erscheint als Absender bei der anderen Person.
+  Beim Verbinden legt `partnerVerbinden()` gleich eine Liste `k_von_<eigenerSlug>`
+  im Haushalt der anderen Person an, benannt „Von <eigener Name>".
+- **Zuweisen** geht über den neuen Zielknopf „Bei <Name>" in der Schnelleingabe
+  (`schnellBei`). `aufgabeFuerPartner()` schreibt direkt und ohne Warteschlange
+  (`partnerSchicken()`, ein einzelner PUT) in `aufgaben/<id>` des fremden
+  Haushalts, mit `kat` auf die reservierte Liste und `wann:null` - **bewusst ohne
+  Datum, Wiederholung oder eigenen Listen-Tag**, weil die App der anderen Person
+  diese Listen nicht kennt und die Aufgabe ohnehin erst nach einem bewussten Klick
+  in ihre Liste in den Tag wandern soll, nicht von selbst im Tagesgeschäft
+  auftauchen. Das ist die Antwort auf „nicht alles direkt sichtbar, man muss aktiv
+  reinklicken" - dieselbe Mechanik, mit der auch gesammelte Aufgaben ohne Termin
+  schon immer nur in ihrer Liste stehen.
+- **Kennzeichnung:** Das neue Feld `herkunft` an der Aufgabe (getrennt vom
+  bestehenden `von`, das „wer hat abgehakt" bedeutet) zeigt in der Zeile ein
+  Badge „von <Name>" - bleibt auch erhalten, wenn die Aufgabe später in eine
+  andere Liste verschoben wird.
+- **Rückmeldung bei Erledigung:** Eine neue, eigene Sammlung `gesendet` (Abschnitt 2)
+  merkt sich, was zugewiesen wurde. Hakt die andere Person die Aufgabe ab, schreibt
+  `haken()` zusätzlich den Zeitstempel nach `gesendet/<id>/erledigt` im Haushalt der
+  absendenden Person - dieselbe Kennung `id` verbindet beide Seiten. Unter „Mehr"
+  steht dadurch, wie viele zugewiesene Aufgaben noch offen sind.
+- **Das Vertrauensmodell bleibt unverändert** (Grundlagen, Abschnitt 4): Wer den
+  Code der anderen Person kennt, käme technisch an deren ganzen Haushalt heran,
+  nicht nur an die geteilte Liste - die App selbst schreibt aber ausschließlich in
+  diese eine Liste. Eine echte Beschränkung auf „nur Aufgaben, nicht Notizen" bräuchte
+  entweder zwei getrennte Firebase-Haushalte je Person (einen nur für Aufgaben, der
+  allein geteilt wird) oder echte Firebase-Auth mit Regeln je Nutzer - beides bewusst
+  zurückgestellt, weil es dem „eine Datei, kein SDK"-Grundsatz zuwiderläuft.
+- **Bewusst nicht gebaut:** Offline-Warteschlange für Zuweisungen (schlägt eine
+  Zuweisung fehl, bietet der Hinweis „Erneut versuchen" an, sonst verläuft sie im
+  Sand), sowie das Zurückziehen einer schon zugewiesenen Aufgabe.
+
+## 15. Was in Version 2.5 dazugekommen ist
 
 **Auswahl vor dem Asana-Import**, siehe Abschnitt 10: eine Liste zum Abhaken und ein
 Modus, der Aufgabe für Aufgabe fragt. Nicht alles, was in einem Projektexport steht,
 gehört hierher.
 
-## 15. Was in Version 2.4 dazugekommen ist
+## 16. Was in Version 2.4 dazugekommen ist
 
 1. **Import aus Asana**, siehe Abschnitt 10. Unteraufgaben aus „Parent task" hängen sich
    direkt in die Struktur aus 2.3 ein.
@@ -559,7 +605,7 @@ gehört hierher.
    „Benutzerdefiniert" ist der sechste Rhythmus und stand damit außerhalb des Bildes.
    `chipsHeranholen()` rollt beim Öffnen das Gewählte in die Mitte.
 
-## 16. Was in Version 2.3 dazugekommen ist
+## 17. Was in Version 2.3 dazugekommen ist
 
 **Unteraufgaben**, siehe Abschnitt 8. Dazu drei Dinge, die dabei aufgefallen sind:
 
@@ -574,7 +620,7 @@ gehört hierher.
 3. **`topfHeute()` liefert jetzt Gruppen und flache Listen.** Wer die Zahl braucht, nimmt
    `faelligFlach`/`ueberFlach`; wer zeichnet, nimmt `faellig`/`ueberfaellig`.
 
-## 17. Was in Version 2.2 geändert wurde
+## 18. Was in Version 2.2 geändert wurde
 
 1. **Doppelte Feldnamen beseitigt.** Das Blatt „Aufgabe für …" trug ein Eingabefeld mit der
    Kennung `neu` - dieselbe, die „Heute" und „Woche" schon auf der Seite dahinter benutzen.
@@ -606,7 +652,7 @@ gehört hierher.
 11. **Der Google-Notizen-Import ist entfallen**, siehe Abschnitt 7.
 12. **Einzahl und Mehrzahl** werden auseinandergehalten: „1 Notiz" statt „1 Notizen".
 
-## 18. Was in Version 2.0 dazugekommen ist
+## 19. Was in Version 2.0 dazugekommen ist
 
 Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neuerungen.js`):
 
@@ -632,7 +678,7 @@ Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neu
     Namen bleibt alles anonym wie bisher. Bewusst abschaltbar, weil eine Buchführung
     übereinander auch belasten kann.
 
-## 19. Was in Version 1.9 behoben wurde
+## 20. Was in Version 1.9 behoben wurde
 
 - **Änderungen konnten sich selbst rückgängig machen.** Abhaken, Zurücknehmen, Anheften,
   Archivieren, Verschieben, Liste wechseln, Wiederholung setzen - all das schrieb nur das

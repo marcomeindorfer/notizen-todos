@@ -416,7 +416,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="2.5";
+const VERSION="2.6";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -479,9 +479,11 @@ const STARTKAT=()=>({
   k_arb:{n:"Arbeit",f:"#2C6E9B",art:"beides",pos:2},
   k_idee:{n:"Ideen",f:"#A0640B",art:"beides",pos:3}
 });
-const leer=()=>({aufgaben:{},notizen:{},kategorien:STARTKAT(),einst:{},tot:{},version:VERSION});
+const leer=()=>({aufgaben:{},notizen:{},kategorien:STARTKAT(),einst:{},tot:{},gesendet:{},version:VERSION});
 let S=leer();
-let cfg={db:"",hid:"",name:""};
+/* partner: {hid,name} einer verbundenen Person - eigener Haushalt bleibt
+   getrennt, nur einzelne Aufgaben werden gezielt in ihren Haushalt geschrieben. */
+let cfg={db:"",hid:"",name:"",partner:null};
 let tab="heute", es=null, syncState="lokal", queue=[];
 const SYNCTEXT={lokal:"nur auf diesem Gerät",verbindet:"verbindet …",live:"live verbunden",wartet:"wartet auf Verbindung",getrennt:"getrennt, versucht erneut",verweigert:"Zugriff verweigert",fehlt:"Datenbank nicht gefunden"};
 const SYNC_FEHLER={
@@ -535,7 +537,7 @@ function lesenLokal(){
   try{const v=localStorage.getItem(KEY); if(v)S={...leer(),...JSON.parse(v)};}catch(e){}
   try{const c=localStorage.getItem(KEY+".cfg"); if(c)cfg={...cfg,...JSON.parse(c)};}catch(e){}
   try{const q=localStorage.getItem(KEY+".q"); if(q)queue=JSON.parse(q);}catch(e){}
-  ["aufgaben","notizen","kategorien","einst","tot"].forEach(f=>{if(!S[f]||typeof S[f]!=="object")S[f]={};});
+  ["aufgaben","notizen","kategorien","einst","tot","gesendet"].forEach(f=>{if(!S[f]||typeof S[f]!=="object")S[f]={};});
   if(!Object.keys(S.kategorien).length)S.kategorien=STARTKAT();
   farbenAuffrischen();
   totAufraeumen();
@@ -567,6 +569,22 @@ function setPfad(o,pfad,daten){
 }
 /* Wurzel und Unterpfad brauchen unterschiedliche Adressen */
 const adresse=pfad=>{const b=basis();return pfad?b+"/"+pfad+".json":b+".json";};
+
+/* ---------- Geteilte Aufgaben mit einer verbundenen Person ----------
+   Getrennte Haushalte bleiben getrennt - nur einzelne Aufgaben werden gezielt
+   in den Haushalt der anderen Person geschrieben, direkt und ohne
+   Warteschlange. Das genügt für den seltenen, bewussten Vorgang „etwas
+   zuweisen"; anders als bei der laufenden Synchronisierung des eigenen
+   Haushalts wäre eine Offline-Warteschlange hier mehr Aufwand als Nutzen. */
+const basisPartner=()=>cfg.db&&cfg.partner&&cfg.partner.hid?cfg.db.replace(/\/$/,"")+"/haushalte/"+cfg.partner.hid:null;
+const adressePartner=pfad=>{const b=basisPartner();return b?b+"/"+pfad+".json":null;};
+async function partnerSchicken(pfad,wert){
+  const url=adressePartner(pfad); if(!url) return false;
+  try{
+    const res=await fetch(url,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(wert)});
+    return res.ok;
+  }catch(e){ return false; }
+}
 
 /* Bei diesen beiden Zuständen hilft kein erneuter Versuch - weiterzusenden würde
    den Fehler nur verschleiern, statt ihn zu zeigen. */
@@ -691,7 +709,7 @@ function zusammenfuehren(fern){
   Object.entries(S.tot||{}).forEach(([k,t])=>{ if(+t>+(tot[k]||0)) tot[k]=+t; });
   neu.tot=tot;
   S.tot=tot;                                   /* damit istTot gleich den vollen Stand sieht */
-  ["aufgaben","notizen","kategorien"].forEach(f=>{
+  ["aufgaben","notizen","kategorien","gesendet"].forEach(f=>{
     const lokal=S[f]||{}, entfernt=(fern&&fern[f])||{};
     const raus={};
     new Set([...Object.keys(entfernt),...Object.keys(lokal)]).forEach(k=>{
@@ -708,7 +726,7 @@ function zusammenfuehren(fern){
   /* Alles, was die Gegenseite noch nicht kennt, hochschieben - dazu gehören
      ausdrücklich auch die Grabsteine und die dadurch entfernten Einträge. */
   const auszug=z=>JSON.stringify({aufgaben:(z&&z.aufgaben)||{},notizen:(z&&z.notizen)||{},
-    kategorien:(z&&z.kategorien)||{},tot:(z&&z.tot)||{}});
+    kategorien:(z&&z.kategorien)||{},tot:(z&&z.tot)||{},gesendet:(z&&z.gesendet)||{}});
   if(auszug(fern)!==auszug(neu)) senden("",S);
   if(vorher!==JSON.stringify(S)) render();
 }
@@ -972,6 +990,10 @@ function naechsterTermin(a){
 }
 function haken(id){
   const a=S.aufgaben[id]; if(!a) return;
+  /* Kam die Aufgabe von einer verbundenen Person, meldet sich der Erledigt-
+     Status leise in ihrem Haushalt zurück - ohne dass sonst irgendetwas von
+     dieser Seite für sie sichtbar wird. */
+  if(a.herkunft&&cfg.partner) partnerSchicken("gesendet/"+id+"/erledigt",a.fertig?null:Date.now());
   if(a.fertig){ aufAendern(id,{fertig:null}); return; }
   const offeneKinder=kinderVon(id).filter(offen);
   if(a.wdh){
@@ -1415,6 +1437,7 @@ function aufZeile(a,opt={}){
     if(tage>=LIEGT_AB) meta.push(`<span class="mini liegt">liegt seit ${tage} Tagen</span>`);
   }
   if(a.fertig&&a.von) meta.push(`<span class="mini">✓ ${esc(a.von)}</span>`);
+  if(a.herkunft) meta.push(`<span class="mini" style="color:var(--akz)">von ${esc(a.herkunft)}</span>`);
   /* Steht eine Unteraufgabe einmal für sich - in der Suche, im Erledigten, im
      Wochentopf -, gehört ihr Zusammenhang an die Zeile. */
   const oben=hauptVon(a);
@@ -1529,7 +1552,7 @@ function neuAnlegen(wann,katId,feldId){
    Auf der Notizansicht legt derselbe Knopf eine Notiz an - das ist dort das,
    was man erwartet. Nach dem Anlegen bleibt das Fenster offen, damit mehrere
    Dinge am Stück hineingehen. */
-let schnellWohin="heute", schnellWdh="";
+let schnellWohin="heute", schnellWdh="", schnellBei="mir";
 const SCHNELL_ZIELE=[["heute","Heute"],["morgen","Morgen"],["woche","Diese Woche"],["sammeln","Nur sammeln"]];
 /* Die vier gebräuchlichen Rhythmen direkt beim Anlegen. Alles Feinere - „alle 3
    Wochen" - schreibt man mit oder stellt es hinterher im Blatt ein. */
@@ -1540,19 +1563,23 @@ function daumenKnopf(){
   schnellOeffnen();
 }
 function schnellOeffnen(){
+  schnellBei="mir";     /* nie stillschweigend beim letzten Ziel „Partner" stehen bleiben */
   const koerper=()=>`<div class="sheet-kopf"><h2>Schnell eintragen</h2>
       <button class="btn btn-ghost btn-s" onclick="closeSheet()" aria-label="Schließen">✕</button></div>
     <div class="schnell" style="margin-top:8px">
       <input type="text" id="schnellfeld" placeholder="Aufgabe eintippen …"
         onkeydown="if(event.key==='Enter')schnellAnlegen()">
       <button class="btn btn-primary" onclick="schnellAnlegen()">+</button></div>
+    ${cfg.partner?`<div class="chips" style="padding-bottom:4px">
+      ${[["mir","Bei mir"],["partner","Bei "+cfg.partner.name]].map(([w,l])=>`<button class="chip" aria-pressed="${schnellBei===w}"
+        onclick="schnellBeiWaehlen(this,'${w}')">${esc(l)}</button>`).join("")}</div>`:""}
     <div class="chips" style="padding-bottom:4px">
       ${SCHNELL_ZIELE.map(([w,l])=>`<button class="chip" aria-pressed="${schnellWohin===w}"
         onclick="schnellZiel(this,'${w}')">${l}</button>`).join("")}</div>
     <div class="chips" style="padding-bottom:4px">
       ${SCHNELL_WDH.map(([w,l])=>`<button class="chip" aria-pressed="${schnellWdh===w}"
         onclick="schnellRhythmus(this,'${w}')">${l}</button>`).join("")}</div>
-    <p class="note" style="margin-top:10px">„morgen", „Freitag", „14.9.", „#Geburt", „alle 3 Wochen" oder „jeden Montag" mitschreiben, das schlägt die Auswahl hier.</p>
+    <p class="note" style="margin-top:10px">${cfg.partner?`Bei „Bei ${esc(cfg.partner.name)}“ gewählt: Datum und Wiederholung unten werden nicht übernommen, die Aufgabe landet einfach in ihrer/seiner Liste „Von …“. `:""}„morgen", „Freitag", „14.9.", „#Geburt", „alle 3 Wochen" oder „jeden Montag" mitschreiben, das schlägt die Auswahl hier.</p>
     <button class="btn btn-primary btn-wide fertig-knopf" onclick="closeSheet()">Fertig</button>`;
   openSheet(koerper(),true);
   setTimeout(()=>{const e=document.getElementById("schnellfeld"); if(e&&e.focus)e.focus();},60);
@@ -1561,6 +1588,10 @@ function schnellOeffnen(){
    halb Getippte weg, sobald man das Ziel gewechselt hat. */
 function schnellZiel(el,wohin){
   schnellWohin=wohin;
+  schnellReihe(el);
+}
+function schnellBeiWaehlen(el,w){
+  schnellBei=w;
   schnellReihe(el);
 }
 function schnellRhythmus(el,w){
@@ -1576,6 +1607,11 @@ function schnellAnlegen(){
   const el=document.getElementById("schnellfeld"); if(!el) return;
   const t=el.value; if(!t.trim()) return;
   el.value="";
+  if(schnellBei==="partner"&&cfg.partner){
+    aufgabeFuerPartner(t);
+    const neu=document.getElementById("schnellfeld"); if(neu&&neu.focus)neu.focus();
+    return;
+  }
   const wann=schnellWohin==="heute"?heute():schnellWohin==="morgen"?morgen():schnellWohin==="woche"?"woche":null;
   aufgabeAnlegen(t,wann,null,null,schnellWdh?{wdh:schnellWdh}:null);
   hinweis(schnellWdh?"Eingetragen, wiederholt sich "+WDH[schnellWdh].toLowerCase()+".":"Eingetragen.");
@@ -2852,6 +2888,25 @@ function vMehr(){
       <p class="note" style="margin-top:8px">Du kannst dasselbe Firebase-Projekt wie beim Küchenplan nutzen. Nimm aber einen <b>eigenen Code</b>, sonst vermischen sich die Daten beider Apps. Die vorhandenen Regeln passen unverändert.</p>
     </div>
 
+    <div class="sect"><h2>Aufgaben teilen</h2></div>
+    <div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
+      ${cfg.partner?`
+        <p class="note">Verbunden mit <b style="color:var(--ink)">${esc(cfg.partner.name)}</b>. Über den Zielknopf „Bei ${esc(cfg.partner.name)}“ in der Schnelleingabe landet eine Aufgabe direkt in ihrer/seiner Liste „Von ${esc((cfg.name||"").trim()||"mir")}“ - ohne sonst irgendwo aufzutauchen.</p>
+        <div class="row-btns" style="margin-top:8px">
+          <button class="btn btn-s" onclick="partnerTrennen()">Verbindung trennen</button>
+        </div>
+        ${gesendetUebersicht()}
+      `:`
+        <p class="note">Verbindet euch, um euch gegenseitig gezielt eine Aufgabe in die Liste zu schreiben - nicht die ganze App wird geteilt, nur das, was ausdrücklich zugewiesen wird. Wer den Code kennt, hätte technisch Zugriff auf den ganzen Haushalt der anderen Person, genau wie beim Verbinden zweier eigener Geräte oben - die App selbst schreibt aber ausschließlich in die eine geteilte Liste.</p>
+        <label class="fl" for="pname">Name der Person</label>
+        <input type="text" id="pname" placeholder="z. B. Leonie">
+        <label class="fl" for="pcode">Ihr/sein Code für diese App</label>
+        <input type="text" id="pcode" placeholder="mindestens 20 Zeichen">
+        <button class="btn btn-s btn-primary" style="margin-top:10px" onclick="partnerVerbinden()">Verbinden</button>
+        <p class="note" style="margin-top:9px">Den eigenen Code findet die andere Person oben unter „Code für diese App“ in ihrer/seiner App. Dein Name muss dafür oben gesetzt sein, sonst weiß sie nicht, von wem eine Aufgabe kommt.</p>
+      `}
+    </div>
+
     <div class="sect"><h2>Umzug aus Asana</h2></div>
     <button class="btn btn-wide" onclick="asanaImport()">Asana-Export (CSV) einlesen</button>
     <p class="note" style="margin-top:9px">Projekt in Asana öffnen, „Exportieren/Drucken → CSV“. Unteraufgaben, Termine, Beschreibungen und Abschnitte kommen mit; was schon einmal übernommen wurde, bleibt beim nächsten Mal außen vor.</p>
@@ -2895,6 +2950,59 @@ function cfgSpeichern(){
   cfg.hid=document.getElementById("hid").value.trim();
   if(cfg.hid&&cfg.hid.length<20){alert("Der Code muss mindestens 20 Zeichen haben - so verlangen es die Firebase-Regeln.");return;}
   schreibenLokal(); verbinden(); render();
+}
+
+/* ---------- Geteilte Aufgaben mit einer verbundenen Person ----------
+   Beide behalten ihren eigenen Haushalt. Wer sich verbindet, kennt aber den
+   Code der anderen Person und kommt damit technisch an deren ganzen Haushalt -
+   genau wie beim Verbinden zweier eigener Geräte (Abschnitt „Sync"). Neu ist
+   nur die Konvention: geschrieben wird ausschließlich in eine eigens dafür
+   angelegte Liste „Von <Name>", die bei der anderen Person nicht von selbst
+   im Tagesgeschäft auftaucht - sie muss aktiv hineinklicken. */
+const eigenerSlug=()=>slug(cfg.name||"");
+function partnerVerbinden(){
+  const name=(document.getElementById("pname").value||"").trim();
+  const code=(document.getElementById("pcode").value||"").trim();
+  if(!(cfg.name||"").trim()){ alert('Trag zuerst oben „Dein Name auf diesem Gerät" ein - sonst weiß die andere Person nicht, von wem eine Aufgabe kommt.'); return; }
+  if(!name){ alert("Wie heißt die Person?"); return; }
+  if(code.length<20){ alert("Der Code muss mindestens 20 Zeichen haben."); return; }
+  cfg.partner={hid:code,name}; schreibenLokal(); render();
+  /* Die Liste, in der die andere Person meine Aufgaben findet, richte ich bei
+     ihr gleich mit ein - sie muss dafür nichts extra tun. */
+  partnerSchicken("kategorien/k_von_"+eigenerSlug(),{n:"Von "+(cfg.name||"").trim(),f:"#0E6E68",art:"beides",pos:-1000})
+    .then(ok=>hinweis(ok?"Mit "+name+" verbunden.":"Verbunden, aber die Liste bei "+name+" konnte gerade nicht angelegt werden - sie entsteht spätestens bei der ersten Zuweisung."));
+}
+function partnerTrennen(){
+  if(!cfg.partner) return;
+  if(!confirm("Verbindung zu "+cfg.partner.name+" wirklich trennen? Bereits zugewiesene Aufgaben bleiben bei ihr/ihm stehen.")) return;
+  cfg.partner=null; schreibenLokal(); render();
+}
+/* Aufgabe direkt in den Haushalt der verbundenen Person schreiben, in deren
+   reservierte Liste „Von <mein Name>". Bewusst ohne Datum, Wiederholung oder
+   Listen-Tag: die App der anderen Person kennt meine Listen nicht, und die
+   Aufgabe soll ohnehin erst nach einem bewussten Blick in diese Liste in
+   ihren Tag wandern - nicht von selbst im Tagesgeschäft auftauchen. */
+async function aufgabeFuerPartner(text){
+  const t=text.trim(); if(!t||!cfg.partner) return;
+  const id="a"+id6();
+  const eigenerName=(cfg.name||"").trim();
+  const katId="k_von_"+eigenerSlug();
+  const a={t,wann:null,kat:katId,eltern:null,fertig:null,herkunft:eigenerName,erstellt:Date.now(),pos:naechstePos(),ts:Date.now()};
+  const ok=await partnerSchicken("aufgaben/"+id,a);
+  mut("gesendet/"+id,{t,an:cfg.partner.name,erstellt:Date.now(),erledigt:null,ts:Date.now()},false);
+  hinweis(ok?"An "+cfg.partner.name+" geschickt.":"Konnte gerade nicht an "+cfg.partner.name+" gesendet werden.",
+    ok?null:"Erneut versuchen",
+    ok?null:()=>{ partnerSchicken("aufgaben/"+id,a).then(o2=>hinweis(o2?"An "+cfg.partner.name+" geschickt.":"Noch immer nicht erreichbar.")); });
+}
+/* Kurze Übersicht unter „Mehr": was wurde zugewiesen, was ist noch offen. */
+function gesendetUebersicht(){
+  const liste=Object.entries(S.gesendet||{}).map(([id,g])=>({...g,id})).sort((a,b)=>b.erstellt-a.erstellt).slice(0,8);
+  if(!liste.length) return "";
+  const offen=liste.filter(g=>!g.erledigt).length;
+  return `<div style="margin-top:12px">
+    <p class="note"><b style="color:var(--ink)">${offen}</b> ${offen===1?"zugewiesene Aufgabe noch offen":"zugewiesene Aufgaben noch offen"}.</p>
+    ${liste.map(g=>`<div class="rbzeile">${g.erledigt?`<s>${esc(g.t)}</s>`:`<span>${esc(g.t)}</span>`}<span class="mini">${esc(g.an)}</span></div>`).join("")}
+  </div>`;
 }
 async function hochladen(){
   if(!confirm("Den Stand dieses Geräts in die Datenbank schreiben? Ein dort vorhandener Stand wird überschrieben."))return;
