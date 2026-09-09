@@ -1,9 +1,9 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.11**, Stand 9. September 2026. Datei rund 189 KB, 3235 Zeilen.
+**Version 2.12**, Stand 9. September 2026. Datei rund 190 KB, 3252 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
-**Für 2.6 bis 2.11 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
+**Für 2.6 bis 2.12 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
 Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal
 laufen lassen.
 
@@ -547,7 +547,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.8 bis 2.11 dazugekommen ist
+## 14. Was in Version 2.8 bis 2.12 dazugekommen ist
 
 **„Verbindung testen"** unter „Mehr → Aufgaben teilen" (nur sichtbar, wenn schon
 verbunden). Grund: Ein erfolgreicher `partnerSchicken()`-PUT beweist nur, dass ein
@@ -600,6 +600,26 @@ gewohnt lief. `schnellBei` bleibt jetzt stehen, genau wie `schnellWohin` und
 `schnellWdh` es schon immer taten - der Chip zeigt beim Öffnen sichtbar, was
 zuletzt gewählt war, und ein falsch stehen gebliebenes Ziel fällt beim Hinsehen
 auf, statt unsichtbar zu wirken.
+
+**2.12 (Architekturfehler, betraf mehr als nur diese Funktion):** Nach der
+2.11-Korrektur blieb der Praxisfall bestehen - jetzt ganz ohne jede Rückmeldung,
+auch kein `alert()` mehr. Ursache: `hinweisLeiste()` wurde bisher **innerhalb**
+von `#view` gezeichnet (in `vHeute()`, `vWoche()`, `vListen()` beziehungsweise
+im `render()`-Wrapper für „Notizen"/„Mehr"). Das „Schnell eintragen"-Blatt liegt
+aber als Vollbild-Ebene (`.sheet`, `z-index:50`) über dem gesamten `#view` -
+jede Rückmeldung, die entsteht, während ein Blatt offen ist (nicht nur beim
+Zuweisen; grundsätzlich jeder `hinweis()`-Aufruf während eines offenen Blatts),
+landete unsichtbar dahinter und verschwand nach 7 Sekunden ungesehen. Das
+erklärte rückblickend auch, warum in 2.10 kein `alert()` auffiel: Der
+Schreibversuch war zu dem Zeitpunkt vermutlich längst erfolgreich, nur die
+Bestätigung dafür war nie zu sehen.
+
+Neu: ein eigener, fest positionierter Bereich `#hinweisbereich` (`z-index:60`,
+über dem Blatt) direkt im HTML-Grundgerüst, unabhängig von `#view`. `render()`
+zeichnet ihn am Ende jedes Durchlaufs übers `hinweisRendern()`; `hinweis()`,
+`hinweisWeg()` und `hinweisAktion()` rufen ihn zusätzlich **direkt** auf, damit
+ein Hinweis auch dann erscheint, wenn `render()` selbst gerade wegen eines
+laufenden Zugs nichts zeichnet (`dndSperre`, siehe Grundlagen Abschnitt 5).
 
 ## 15. Was in Version 2.7 behoben wurde
 
