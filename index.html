@@ -424,7 +424,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="2.13";
+const VERSION="2.14";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -498,7 +498,7 @@ const SYNC_FEHLER={
   verweigert:"Die Datenbank verweigert den Zugriff. Prüft die Sicherheitsregeln in Firebase und ob der Code mindestens 20 Zeichen hat.",
   fehlt:"Unter dieser Datenbank-URL antwortet niemand. Prüft die URL aus der Firebase-Konsole."};
 let katFilter="alle", notizSuche="", notizFilter="aktiv", wochenVersatz=0, offenAuf=null;
-let sortAn=false, aufSuche="", hinweisDaten=null, hinweisTimer=null, wocheFertig=true;
+let sortAn=false, aufSuche="", hinweisDaten=null, hinweisTimer=null, wocheFertig=false;
 const WDH={taeglich:"Täglich",zweitaeglich:"Alle 2 Tage",woechentlich:"Wöchentlich",
   monatlich:"Monatlich",jaehrlich:"Jährlich",eigen:"Benutzerdefiniert"};
 /* Jeder Rhythmus ist im Grunde eine Zahl und eine Einheit. Die benannten sind nur
@@ -1493,7 +1493,11 @@ function aufZeile(a,opt={}){
   const h=heute();
   const spaet=!a.fertig&&a.wann&&/^\d{4}-/.test(a.wann)&&a.wann<h;
   const meta=[];
-  if(k) meta.push(`<span class="mini"><i class="punkt" style="background:${k.f}"></i> ${esc(k.n)}</span>`);
+  /* Bei einer zugewiesenen Aufgabe heißt die Liste "Von <Name>" - zusammen
+     mit dem Herkunfts-Badge weiter unten stünde dieselbe Information zweimal
+     in der Zeile. Das Badge ist das direktere von beiden, die Liste bleibt
+     als Fundort (Reiter unter "Listen") unverändert bestehen. */
+  if(k&&!a.herkunft) meta.push(`<span class="mini"><i class="punkt" style="background:${k.f}"></i> ${esc(k.n)}</span>`);
   if(opt.datum&&a.wann){
     if(a.wann==="woche") meta.push(`<span class="mini">Diese Woche</span>`);
     else if(a.wann==="danach") meta.push(`<span class="mini">Danach</span>`);
@@ -1805,6 +1809,7 @@ function vWoche(){
         · ${kw(wochenStart(wochenVersatz))}</button>
       <button class="btn btn-s" onclick="wochenVersatz++;render()">›</button></div>`;
 
+  const heut=heute();
   const bloecke=tage.map(d=>{
     const offenAmTag=a=>a.wann===d&&!a.fertig;
     const gOffen=gruppen(offenAmTag);
@@ -1812,11 +1817,19 @@ function vWoche(){
     const erledigtT=alle.filter(a=>a.wann===d&&a.fertig).sort((x,y)=>(y.fertig||0)-(x.fertig||0));
     const fertigT=erledigtT.length;
     const zeigErledigt=wocheFertig&&fertigT;
+    const hatInhalt=gOffen.length||zeigErledigt;
+    /* Ein vergangener Tag ohne sichtbaren Eintrag steht nur im Weg - wurde
+       an dem Tag alles erledigt (und Erledigte sind ausgeblendet), fängt die
+       Übersicht direkt beim nächsten Tag mit etwas Offenem an. Steht dort
+       tatsächlich noch etwas offen, zählt "hatInhalt" das mit und der Tag
+       bleibt oben stehen. Heute und die Zukunft werden nie übersprungen -
+       "frei" ist dort eine Aussage, in der Vergangenheit nur Lärm. */
+    if(d<heut&&!hatInhalt) return "";
     const inhalt=gruppenHtml(gOffen)+(zeigErledigt?aufListeHtml(erledigtT):"");
-    return `<div class="tagblock ${d===heute()?"heute":""}">
-      <div class="tagblock-h"><b>${TAGE[wochentag(d)]}${d===heute()?" · heute":""}</b>
+    return `<div class="tagblock ${d===heut?"heute":""}">
+      <div class="tagblock-h"><b>${TAGE[wochentag(d)]}${d===heut?" · heute":""}</b>
         <span>${ausIso(d).getDate()}.${ausIso(d).getMonth()+1}.${offeneT.length?" · "+offeneT.length+" OFFEN":""}${fertigT?" · "+fertigT+" ERLEDIGT":""}</span></div>
-      ${gOffen.length||zeigErledigt?inhalt:`<div class="leer">frei - <button class="btn btn-ghost btn-s" style="padding:0" onclick="schnellFuer('${d}')">etwas eintragen</button></div>`}
+      ${hatInhalt?inhalt:`<div class="leer">frei - <button class="btn btn-ghost btn-s" style="padding:0" onclick="schnellFuer('${d}')">etwas eintragen</button></div>`}
     </div>`;}).join("");
 
   const wochePasst=a=>!a.fertig&&a.wann==="woche";

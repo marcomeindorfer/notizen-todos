@@ -1,9 +1,9 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.13**, Stand 9. September 2026. Datei rund 193 KB, 3311 Zeilen.
+**Version 2.14**, Stand 9. September 2026. Datei rund 194 KB, 3324 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
-**Für 2.6 bis 2.13 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
+**Für 2.6 bis 2.14 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
 Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal
 laufen lassen.
 
@@ -124,9 +124,11 @@ um Mitternacht von allein, weil er am Zeitstempel `fertig` hängt. Der erklären
 darunter ist in 2.2 entfallen, das Verhalten bleibt.
 
 ### Woche
-Sieben Tageskarten mit Vor- und Zurück-Blättern über Wochen. Erledigte sind
-**standardmäßig sichtbar** und lassen sich ausblenden. Darunter zwei Sammelabschnitte:
-„Diese Woche, ohne festen Tag" und „Danach".
+Sieben Tageskarten mit Vor- und Zurück-Blättern über Wochen. Erledigte sind seit
+2.14 **standardmäßig ausgeblendet** und lassen sich einblenden. Ein vergangener
+Tag ganz ohne sichtbaren Eintrag wird dabei übersprungen, siehe Abschnitt 14
+(Version 2.14). Darunter zwei Sammelabschnitte: „Diese Woche, ohne festen Tag"
+und „Danach".
 
 ### Listen
 Die Listen stehen seit 2.2 als **Reiter** oben, jeder mit der Zahl der offenen Aufgaben;
@@ -547,7 +549,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.8 bis 2.13 dazugekommen ist
+## 14. Was in Version 2.8 bis 2.14 dazugekommen ist
 
 **„Verbindung testen"** unter „Mehr → Aufgaben teilen" (nur sichtbar, wenn schon
 verbunden). Grund: Ein erfolgreicher `partnerSchicken()`-PUT beweist nur, dass ein
@@ -647,6 +649,25 @@ Test):**
   nachdem die andere Seite sie sicher hat. Unteraufgaben werden nicht
   mitgenommen, sondern eigenständig - dieselbe Selbstheilung wie bei jeder
   anderen verwaisten Unteraufgabe (Abschnitt 8).
+
+**2.14 (drei weitere Rückmeldungen aus dem Praxistest):**
+
+- **Kein doppeltes „von Marco" mehr in der Zeile.** Eine zugewiesene Aufgabe
+  trägt `kat` (die Liste „Von Marco") *und* `herkunft` - beides zusammen zeigte
+  dieselbe Zugehörigkeit zweimal in der Zeile (Listenname als Punkt-Badge, dann
+  noch einmal als Herkunfts-Badge). `aufZeile()` zeigt das Listen-Badge jetzt
+  nicht mehr, wenn `herkunft` gesetzt ist - das Herkunfts-Badge allein reicht,
+  die Liste bleibt als Fundort unter „Listen" unverändert bestehen.
+- **„Woche" blendet Erledigtes jetzt standardmäßig aus** (`wocheFertig`
+  startet mit `false` statt `true`) - für den schnelleren Überblick.
+- **Leere vergangene Tage werden übersprungen.** War an einem Tag vor heute
+  alles erledigt (und Erledigte sind ausgeblendet), taucht der Tag gar nicht
+  erst auf - die Übersicht beginnt direkt beim nächsten Tag mit etwas
+  Sichtbarem. Steht an einem vergangenen Tag noch etwas offen, bleibt er wie
+  gehabt oben stehen. Heute und die Zukunft werden nie übersprungen, ein
+  freier Tag dort ist eine Aussage („frei - etwas eintragen"), kein Lärm wie in
+  der Vergangenheit. Schaltet man Erledigte wieder ein, kommen übersprungene
+  Tage mit nur erledigten Einträgen automatisch zurück.
 
 ## 15. Was in Version 2.7 behoben wurde
 
