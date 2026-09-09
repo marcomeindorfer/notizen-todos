@@ -416,7 +416,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="2.10";
+const VERSION="2.11";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -1617,7 +1617,13 @@ function daumenKnopf(){
   schnellOeffnen();
 }
 function schnellOeffnen(){
-  schnellBei="mir";     /* nie stillschweigend beim letzten Ziel „Partner" stehen bleiben */
+  /* schnellBei bleibt bewusst stehen, genau wie schnellWohin/schnellWdh - der
+     Chip zeigt beim Öffnen sichtbar, was zuletzt gewählt war. Ein stiller
+     Reset auf "mir" bei jedem Öffnen sah harmlos aus, hat aber genau das
+     Gegenteil bewirkt: Wurde zwischen Chip-Wahl und Absenden aus irgendeinem
+     Grund noch einmal geöffnet, verschwand die Wahl "Bei <Partner>" spurlos -
+     die Aufgabe landete dann normal (samt "Eingetragen."-Hinweis!) bei einem
+     selbst statt beim Partner, ohne jede Fehlermeldung. */
   const koerper=()=>`<div class="sheet-kopf"><h2>Schnell eintragen</h2>
       <button class="btn btn-ghost btn-s" onclick="closeSheet()" aria-label="Schließen">✕</button></div>
     <div class="schnell" style="margin-top:8px">

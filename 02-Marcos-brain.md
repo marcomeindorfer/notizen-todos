@@ -1,9 +1,9 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.10**, Stand 9. September 2026. Datei rund 189 KB, 3229 Zeilen.
+**Version 2.11**, Stand 9. September 2026. Datei rund 189 KB, 3235 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
-**Für 2.6 bis 2.10 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
+**Für 2.6 bis 2.11 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
 Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal
 laufen lassen.
 
@@ -547,7 +547,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.8/2.9/2.10 dazugekommen ist
+## 14. Was in Version 2.8 bis 2.11 dazugekommen ist
 
 **„Verbindung testen"** unter „Mehr → Aufgaben teilen" (nur sichtbar, wenn schon
 verbunden). Grund: Ein erfolgreicher `partnerSchicken()`-PUT beweist nur, dass ein
@@ -586,6 +586,20 @@ das ein Absturz gewesen; der Name wird jetzt vor dem `await` gesichert. Die
 eigentliche Ursache des Praxisfalls war zum Zeitpunkt dieses Eintrags noch nicht
 gefunden - die Fehlermeldung aus `alert()` sollte sie beim nächsten Versuch
 zeigen.
+
+**2.11 (die eigentliche Ursache):** Weder Hinweis noch `alert()` erschienen -
+das war der entscheidende Hinweis, dass `aufgabeFuerPartner()` gar nicht erst
+aufgerufen wurde. Ursache: `schnellOeffnen()` setzte `schnellBei` bei **jedem**
+Öffnen des Schnelleingabe-Fensters still auf `"mir"` zurück
+(„nie stillschweigend beim letzten Ziel Partner stehen bleiben" - Version 2.6).
+Wurde das Fenster zwischen Chip-Wahl und Absenden aus irgendeinem Grund noch
+einmal geöffnet, verschwand die Wahl „Bei Leonie" spurlos: Die Aufgabe landete
+danach ganz normal (samt „Eingetragen."-Hinweis) im eigenen Haushalt statt bei
+der Partnerin - ohne jede Fehlermeldung, weil aus Sicht der App ja alles wie
+gewohnt lief. `schnellBei` bleibt jetzt stehen, genau wie `schnellWohin` und
+`schnellWdh` es schon immer taten - der Chip zeigt beim Öffnen sichtbar, was
+zuletzt gewählt war, und ein falsch stehen gebliebenes Ziel fällt beim Hinsehen
+auf, statt unsichtbar zu wirken.
 
 ## 15. Was in Version 2.7 behoben wurde
 
