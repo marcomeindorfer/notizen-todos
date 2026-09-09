@@ -1,11 +1,11 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.8**, Stand 9. September 2026. Datei rund 188 KB, 3218 Zeilen.
+**Version 2.9**, Stand 9. September 2026. Datei rund 188 KB, 3220 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
-**Für 2.6 bis 2.8 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
-drei Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten
-einmal laufen lassen.
+**Für 2.6 bis 2.9 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
+Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal
+laufen lassen.
 
 Voraussetzung: Lies zuerst `00-Grundlagen-und-Infrastruktur.md`.
 
@@ -547,7 +547,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.8 dazugekommen ist
+## 14. Was in Version 2.8/2.9 dazugekommen ist
 
 **„Verbindung testen"** unter „Mehr → Aufgaben teilen" (nur sichtbar, wenn schon
 verbunden). Grund: Ein erfolgreicher `partnerSchicken()`-PUT beweist nur, dass ein
@@ -564,6 +564,14 @@ erreichbar aber leer (Verdacht auf falschen Code), oder erreichbar mit Aufgaben-
 Anzahl und ob die eigene „Von <Name>"-Liste dort tatsächlich angelegt ist. Der
 hinterlegte Code steht jetzt außerdem als Klartext da, zum Abgleich mit dem, was
 auf dem Gerät der anderen Person unter „Code für diese App" steht.
+
+**2.9 (Nachtrag, noch am selben Tag):** `adressePartner()` hängte bei leerem Pfad
+ein `"/"` zu viel an, und `partnerLesen()` hängte zusätzlich noch einmal `.json`
+an eine bereits fertige Adresse - der erste Testlauf von „Verbindung testen"
+meldete deshalb fälschlich „Verbindung fehlgeschlagen", obwohl die eigentliche
+Verbindung (`partnerSchicken()`, immer mit nicht-leerem Pfad) davon gar nicht
+betroffen war. `adressePartner()` unterscheidet jetzt wie `adresse()` zwischen
+leerem und gefülltem Pfad.
 
 ## 15. Was in Version 2.7 behoben wurde
 
