@@ -1,9 +1,9 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.12**, Stand 9. September 2026. Datei rund 190 KB, 3252 Zeilen.
+**Version 2.13**, Stand 9. September 2026. Datei rund 193 KB, 3311 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
-**Für 2.6 bis 2.12 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
+**Für 2.6 bis 2.13 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
 Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal
 laufen lassen.
 
@@ -547,7 +547,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.8 bis 2.12 dazugekommen ist
+## 14. Was in Version 2.8 bis 2.13 dazugekommen ist
 
 **„Verbindung testen"** unter „Mehr → Aufgaben teilen" (nur sichtbar, wenn schon
 verbunden). Grund: Ein erfolgreicher `partnerSchicken()`-PUT beweist nur, dass ein
@@ -620,6 +620,33 @@ zeichnet ihn am Ende jedes Durchlaufs übers `hinweisRendern()`; `hinweis()`,
 `hinweisWeg()` und `hinweisAktion()` rufen ihn zusätzlich **direkt** auf, damit
 ein Hinweis auch dann erscheint, wenn `render()` selbst gerade wegen eines
 laufenden Zugs nichts zeichnet (`dndSperre`, siehe Grundlagen Abschnitt 5).
+
+**2.13 (drei kleinere Ergänzungen, Praxisrückmeldung nach dem ersten echten
+Test):**
+
+- **„Fertig" trägt einen wartenden Rest zuerst noch ein.** Sowohl in „Schnell
+  eintragen" als auch im Blatt „Aufgabe für …" schloss „Fertig" das Blatt
+  bisher kommentarlos, auch wenn noch etwas Getipptes im Feld stand - nur ein
+  Tipp auf „+" hat wirklich angelegt. `schnellFertig()`/`neuFertig()` holen das
+  jetzt nach, bevor sie schließen. Ein doppeltes Anlegen (erst „+", dann
+  „Fertig") ist ausgeschlossen, weil das Feld nach dem „+" schon leer ist.
+- **Die „Wann"-Auswahl gilt jetzt auch beim Zuweisen.** `aufgabeFuerPartner()`
+  ignorierte Datum bisher grundsätzlich - „Bei Leonie" landete immer nur in
+  ihrer Liste „Von Marco", man musste selbst noch „Heute" antippen. Jetzt gilt
+  dieselbe Auswahl wie bei einer eigenen Aufgabe: „Heute"/„Morgen"/„Diese
+  Woche" landet direkt im normalen Tagesgeschäft der anderen Person, „Nur
+  sammeln" bleibt der Weg über die Liste, in die aktiv hineingeklickt werden
+  muss.
+- **Eine bestehende, eigene Aufgabe lässt sich nachträglich weitergeben** -
+  neuer Knopf „An <Name>" im Bearbeiten-Blatt jeder Aufgabe (nur sichtbar, wenn
+  verbunden). Bisher ging das nur beim Neuanlegen über die Schnelleingabe;
+  über das obere Eingabefeld auf „Heute" oder für eine schon länger offene
+  Aufgabe gab es keinen Weg. `aufgabeWeitergeben()` überträgt die ganze Aufgabe
+  (Wann, Wiederholung, Notiz-Text - `notizId` und `kat` ergeben im fremden
+  Haushalt keinen Sinn und werden ersetzt) und löscht die eigene Fassung erst,
+  nachdem die andere Seite sie sicher hat. Unteraufgaben werden nicht
+  mitgenommen, sondern eigenständig - dieselbe Selbstheilung wie bei jeder
+  anderen verwaisten Unteraufgabe (Abschnitt 8).
 
 ## 15. Was in Version 2.7 behoben wurde
 

@@ -424,7 +424,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="2.12";
+const VERSION="2.13";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -1655,8 +1655,8 @@ function schnellOeffnen(){
     <div class="chips" style="padding-bottom:4px">
       ${SCHNELL_WDH.map(([w,l])=>`<button class="chip" aria-pressed="${schnellWdh===w}"
         onclick="schnellRhythmus(this,'${w}')">${l}</button>`).join("")}</div>
-    <p class="note" style="margin-top:10px">${cfg.partner?`Bei „Bei ${esc(cfg.partner.name)}“ gewählt: Datum und Wiederholung unten werden nicht übernommen, die Aufgabe landet einfach in ihrer/seiner Liste „Von …“. `:""}„morgen", „Freitag", „14.9.", „#Geburt", „alle 3 Wochen" oder „jeden Montag" mitschreiben, das schlägt die Auswahl hier.</p>
-    <button class="btn btn-primary btn-wide fertig-knopf" onclick="closeSheet()">Fertig</button>`;
+    <p class="note" style="margin-top:10px">${cfg.partner?`Bei „Bei ${esc(cfg.partner.name)}“ gewählt: Das Datum oben gilt wie gewohnt - mit „Heute"/„Morgen"/„Diese Woche" landet die Aufgabe direkt in ihrem/seinem normalen Tagesgeschäft, bei „Nur sammeln" in der Liste „Von …“, in die aktiv hineingeklickt werden muss. Wiederholung unten wird nicht übernommen. `:""}„morgen", „Freitag", „14.9.", „#Geburt", „alle 3 Wochen" oder „jeden Montag" mitschreiben, das schlägt die Auswahl hier.</p>
+    <button class="btn btn-primary btn-wide fertig-knopf" onclick="schnellFertig()">Fertig</button>`;
   openSheet(koerper(),true);
   setTimeout(()=>{const e=document.getElementById("schnellfeld"); if(e&&e.focus)e.focus();},60);
 }
@@ -1683,15 +1683,30 @@ function schnellAnlegen(){
   const el=document.getElementById("schnellfeld"); if(!el) return;
   const t=el.value; if(!t.trim()) return;
   el.value="";
+  const wann=schnellWohin==="heute"?heute():schnellWohin==="morgen"?morgen():schnellWohin==="woche"?"woche":null;
   if(schnellBei==="partner"&&cfg.partner){
-    aufgabeFuerPartner(t);
+    /* Dieselbe Wann-Auswahl wie bei einer eigenen Aufgabe: mit Datum landet
+       die Aufgabe direkt im normalen Tagesgeschäft der anderen Person, "Nur
+       sammeln" ist der Weg über die Liste "Von <Name>", in die man aktiv
+       hineinklicken muss. */
+    aufgabeFuerPartner(t,wann);
     const neu=document.getElementById("schnellfeld"); if(neu&&neu.focus)neu.focus();
     return;
   }
-  const wann=schnellWohin==="heute"?heute():schnellWohin==="morgen"?morgen():schnellWohin==="woche"?"woche":null;
   aufgabeAnlegen(t,wann,null,null,schnellWdh?{wdh:schnellWdh}:null);
   hinweis(schnellWdh?"Eingetragen, wiederholt sich "+WDH[schnellWdh].toLowerCase()+".":"Eingetragen.");
   const neu=document.getElementById("schnellfeld"); if(neu&&neu.focus)neu.focus();
+}
+/* "Fertig" schloss das Blatt bisher kommentarlos, auch wenn noch etwas
+   Getipptes im Feld stand - man musste extra auf "+" tippen, sonst ging der
+   Rest verloren. Jetzt trägt "Fertig" einen wartenden Rest zuerst noch ein.
+   schnellAnlegen() selbst bricht bei leerem Feld ab, ein doppeltes Anlegen
+   (Tipp auf "+", danach auf "Fertig") ist dadurch ausgeschlossen - das Feld
+   ist zu dem Zeitpunkt schon leer. */
+function schnellFertig(){
+  const el=document.getElementById("schnellfeld");
+  if(el&&el.value.trim()) schnellAnlegen();
+  closeSheet();
 }
 
 /* ---------- Heute: schneller Zugriff auf Notizen ---------- */
@@ -1830,8 +1845,15 @@ function schnellFuer(d){
       <input type="text" id="neublatt" placeholder="Aufgabe …" onkeydown="if(event.key==='Enter')neuAnlegen('${d}','','neublatt')">
       <button class="btn btn-primary" onclick="neuAnlegen('${d}','','neublatt')">+</button></div>
     <p class="note" style="margin:2px 0 0">Mehrere hintereinander gehen auch, das Blatt bleibt offen.</p>
-    <button class="btn btn-primary btn-wide fertig-knopf" onclick="closeSheet()">Fertig</button>`);
+    <button class="btn btn-primary btn-wide fertig-knopf" onclick="neuFertig('${d}','','neublatt')">Fertig</button>`);
   setTimeout(()=>{const e=document.getElementById("neublatt");if(e&&e.focus)e.focus();},60);
+}
+/* Wie schnellFertig(): ein noch nicht abgeschickter Rest im Feld wird beim
+   Schließen mit übernommen, statt stillschweigend zu verschwinden. */
+function neuFertig(wann,katId,feldId){
+  const el=document.getElementById(feldId||"neu");
+  if(el&&el.value.trim()) neuAnlegen(wann,katId,feldId);
+  closeSheet();
 }
 
 /* ---------- Listen (Vorräte ohne Datum) ---------- */
@@ -2026,6 +2048,7 @@ function aufgabeOeffnen(id){
         : `<button class="btn btn-s btn-wide" onclick="notizZuAufgabe('${id}')">Notiz dazu anlegen</button>`}
       <button class="btn btn-primary btn-wide fertig-knopf" onclick="closeSheet()">Fertig</button>
       <div class="aktionen">
+        ${cfg.partner?`<button class="ak-akz" onclick="aufgabeWeitergeben('${id}')">${ICON_TEILEN}An ${esc(cfg.partner.name)}</button>`:""}
         <button class="ak-akz" onclick="verdoppeln('${id}')">${ICON_KOPIE}Duplizieren</button>
         ${oben
           ? `<button class="ak-gold" onclick="herausloesen('${id}')">${ICON_LOESEN}Herauslösen</button>`
@@ -3116,7 +3139,7 @@ async function partnerTesten(){
    Listen-Tag: die App der anderen Person kennt meine Listen nicht, und die
    Aufgabe soll ohnehin erst nach einem bewussten Blick in diese Liste in
    ihren Tag wandern - nicht von selbst im Tagesgeschäft auftauchen. */
-async function aufgabeFuerPartner(text){
+async function aufgabeFuerPartner(text,wann){
   const t=text.trim(); if(!t||!cfg.partner) return;
   /* Ohne dieses Netz verschwand ein unerwarteter Fehler bisher spurlos: die
      Funktion läuft als "fire and forget" aus schnellAnlegen() heraus, eine
@@ -3127,7 +3150,12 @@ async function aufgabeFuerPartner(text){
     const eigenerName=(cfg.name||"").trim();
     const katId="k_von_"+eigenerSlug();
     const partnerName=cfg.partner.name;    /* vor dem await sichern, falls sich cfg.partner währenddessen ändert */
-    const a={t,wann:null,kat:katId,eltern:null,fertig:null,herkunft:eigenerName,erstellt:Date.now(),pos:naechstePos(),ts:Date.now()};
+    /* Mit Datum (z.B. "Heute") landet die Aufgabe bei der anderen Person direkt
+       im normalen Tagesgeschäft, genau wie eine eigene Aufgabe - die Liste
+       "Von <Name>" bleibt nur für "Nur sammeln" der Weg, über den man aktiv
+       hineinklicken muss. `kat` bleibt in jedem Fall gesetzt, damit die
+       Zugehörigkeit und das Badge "von <Name>" erhalten bleiben. */
+    const a={t,wann:wann||null,kat:katId,eltern:null,fertig:null,herkunft:eigenerName,erstellt:Date.now(),pos:naechstePos(),ts:Date.now()};
     const ok=await partnerSchicken("aufgaben/"+id,a);
     mut("gesendet/"+id,{t,an:partnerName,erstellt:Date.now(),erledigt:null,ts:Date.now()},false);
     hinweis(ok?"An "+partnerName+" geschickt.":"Konnte gerade nicht an "+partnerName+" gesendet werden.",
@@ -3135,6 +3163,37 @@ async function aufgabeFuerPartner(text){
       ok?null:()=>{ partnerSchicken("aufgaben/"+id,a).then(o2=>hinweis(o2?"An "+partnerName+" geschickt.":"Noch immer nicht erreichbar.")); });
   }catch(e){
     alert("Beim Zuweisen ist etwas schiefgelaufen: "+(e&&e.message?e.message:e));
+  }
+}
+/* Eine schon bestehende, eigene Aufgabe nachträglich weitergeben - der Weg für
+   alles, was nicht über die Schnelleingabe entstanden ist (etwa das obere
+   Eingabefeld auf "Heute" oder eine bereits länger offene Aufgabe). Anders als
+   beim direkten Zuweisen bleibt hier nicht nur der Text, sondern die ganze
+   Aufgabe erhalten (Wann, Wiederholung, Notiz) - `notizId` und `kat` ergeben
+   im Haushalt der anderen Person aber keinen Sinn und werden ersetzt. Die
+   eigene Fassung verschwindet erst, wenn die andere Seite sie sicher hat. */
+async function aufgabeWeitergeben(id){
+  const b=S.aufgaben[id]; if(!b||!cfg.partner) return;
+  const kinder=kinderVon(id);
+  if(!confirm("„"+b.t.slice(0,40)+(b.t.length>40?"…":"")+"“ an "+cfg.partner.name+" weitergeben? Bei dir verschwindet sie danach."
+    +(kinder.length?" "+(kinder.length===1?"Ihre Unteraufgabe bleibt":"Ihre "+kinder.length+" Unteraufgaben bleiben")+" bei dir und "+(kinder.length===1?"wird":"werden")+" eigenständig.":"")))
+    return;
+  try{
+    const eigenerName=(cfg.name||"").trim();
+    const katId="k_von_"+eigenerSlug();
+    const partnerName=cfg.partner.name;
+    const a={...b,kat:katId,eltern:null,fertig:null,notizId:null,herkunft:eigenerName,ts:Date.now(),pos:naechstePos()};
+    const ok=await partnerSchicken("aufgaben/"+id,a);
+    if(ok){
+      mut("gesendet/"+id,{t:b.t,an:partnerName,erstellt:Date.now(),erledigt:null,ts:Date.now()},false);
+      mut("aufgaben/"+id,null,false);
+      closeSheet();
+      hinweis("An "+partnerName+" weitergegeben.");
+    } else {
+      hinweis("Konnte gerade nicht an "+partnerName+" weitergegeben werden.","Erneut versuchen",()=>aufgabeWeitergeben(id));
+    }
+  }catch(e){
+    alert("Beim Weitergeben ist etwas schiefgelaufen: "+(e&&e.message?e.message:e));
   }
 }
 /* Kurze Übersicht unter „Mehr": was wurde zugewiesen, was ist noch offen. */
