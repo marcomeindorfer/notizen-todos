@@ -1,11 +1,11 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.7**, Stand 8. September 2026. Datei rund 185 KB, 3177 Zeilen.
+**Version 2.8**, Stand 9. September 2026. Datei rund 188 KB, 3218 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
-**Für 2.6 und 2.7 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - beide
-Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal
-laufen lassen.
+**Für 2.6 bis 2.8 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
+drei Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten
+einmal laufen lassen.
 
 Voraussetzung: Lies zuerst `00-Grundlagen-und-Infrastruktur.md`.
 
@@ -38,7 +38,7 @@ S = {
   notizen:     { id: notizObjekt },
   kategorien:  { id: {n, f, art, pos} },     // "Listen" in der Oberfläche
   einst:       { notizSort: "erstellt"|"geoeffnet"|"geaendert"|"eigen" },
-  gesendet:    { id: {t, an, erstellt, erledigt} },  // von mir zugewiesene Aufgaben, siehe Abschnitt 15
+  gesendet:    { id: {t, an, erstellt, erledigt} },  // von mir zugewiesene Aufgaben, siehe Abschnitt 16
   version:     "1.8"
 }
 ```
@@ -63,7 +63,7 @@ S = {
   wdhEinheit: "tag"|"woche"|"monat"|"jahr",   // nur bei "eigen"
   wdhTag: 0..6|null,          // fester Wochentag, wenn der Rhythmus in Wochen zählt
   asana: "1209876…"|null,     // Kennung aus einem Asana-Import, siehe Abschnitt 10
-  herkunft: "Marco"|null      // gesetzt, wenn eine verbundene Person sie zugewiesen hat, siehe Abschnitt 15
+  herkunft: "Marco"|null      // gesetzt, wenn eine verbundene Person sie zugewiesen hat, siehe Abschnitt 16
 }
 ```
 
@@ -547,7 +547,25 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.7 behoben wurde
+## 14. Was in Version 2.8 dazugekommen ist
+
+**„Verbindung testen"** unter „Mehr → Aufgaben teilen" (nur sichtbar, wenn schon
+verbunden). Grund: Ein erfolgreicher `partnerSchicken()`-PUT beweist nur, dass ein
+20+-Zeichen-Pfad angenommen wurde - nicht, dass es der Pfad der richtigen Person
+ist. Ein falsch abgetippter oder liegen gebliebener Test-Code sah bisher genauso
+aus wie eine funktionierende Verbindung: keine Fehlermeldung, aber die Aufgabe
+kommt drüben nie an, weil sie in einem fremden oder nicht existierenden Haushalt
+landet.
+
+`partnerTesten()` liest stattdessen (`partnerLesen()`, ein GET auf den hinterlegten
+Code) tatsächlich nach und meldet ehrlich, was es findet: keine eigene
+Datenbank-URL hinterlegt, Zugriff verweigert, Datenbank nicht gefunden, technisch
+erreichbar aber leer (Verdacht auf falschen Code), oder erreichbar mit Aufgaben-
+Anzahl und ob die eigene „Von <Name>"-Liste dort tatsächlich angelegt ist. Der
+hinterlegte Code steht jetzt außerdem als Klartext da, zum Abgleich mit dem, was
+auf dem Gerät der anderen Person unter „Code für diese App" steht.
+
+## 15. Was in Version 2.7 behoben wurde
 
 Ergebnis eines gezielten Code-Reviews auf Stabilität, Bedienung und Performance -
 keine sichtbar neue Funktion, nur die Mechanik dahinter überarbeitet.
@@ -583,7 +601,7 @@ keine sichtbar neue Funktion, nur die Mechanik dahinter überarbeitet.
 
 **Noch nicht mit `tests/run.sh` geprüft**, siehe Kopf dieser Datei.
 
-## 15. Was in Version 2.6 dazugekommen ist
+## 16. Was in Version 2.6 dazugekommen ist
 
 **Aufgaben mit einer verbundenen Person teilen.** Zwei Menschen behalten je einen
 eigenen Haushalt (eigener Code, eigene Datenbank) - neu ist die Möglichkeit, sich
@@ -625,13 +643,13 @@ anderen Person zu schreiben, ohne dass sonst irgendetwas sichtbar wird.
   Zuweisung fehl, bietet der Hinweis „Erneut versuchen" an, sonst verläuft sie im
   Sand), sowie das Zurückziehen einer schon zugewiesenen Aufgabe.
 
-## 16. Was in Version 2.5 dazugekommen ist
+## 17. Was in Version 2.5 dazugekommen ist
 
 **Auswahl vor dem Asana-Import**, siehe Abschnitt 10: eine Liste zum Abhaken und ein
 Modus, der Aufgabe für Aufgabe fragt. Nicht alles, was in einem Projektexport steht,
 gehört hierher.
 
-## 17. Was in Version 2.4 dazugekommen ist
+## 18. Was in Version 2.4 dazugekommen ist
 
 1. **Import aus Asana**, siehe Abschnitt 10. Unteraufgaben aus „Parent task" hängen sich
    direkt in die Struktur aus 2.3 ein.
@@ -642,7 +660,7 @@ gehört hierher.
    „Benutzerdefiniert" ist der sechste Rhythmus und stand damit außerhalb des Bildes.
    `chipsHeranholen()` rollt beim Öffnen das Gewählte in die Mitte.
 
-## 18. Was in Version 2.3 dazugekommen ist
+## 19. Was in Version 2.3 dazugekommen ist
 
 **Unteraufgaben**, siehe Abschnitt 8. Dazu drei Dinge, die dabei aufgefallen sind:
 
@@ -657,7 +675,7 @@ gehört hierher.
 3. **`topfHeute()` liefert jetzt Gruppen und flache Listen.** Wer die Zahl braucht, nimmt
    `faelligFlach`/`ueberFlach`; wer zeichnet, nimmt `faellig`/`ueberfaellig`.
 
-## 19. Was in Version 2.2 geändert wurde
+## 20. Was in Version 2.2 geändert wurde
 
 1. **Doppelte Feldnamen beseitigt.** Das Blatt „Aufgabe für …" trug ein Eingabefeld mit der
    Kennung `neu` - dieselbe, die „Heute" und „Woche" schon auf der Seite dahinter benutzen.
@@ -689,7 +707,7 @@ gehört hierher.
 11. **Der Google-Notizen-Import ist entfallen**, siehe Abschnitt 7.
 12. **Einzahl und Mehrzahl** werden auseinandergehalten: „1 Notiz" statt „1 Notizen".
 
-## 20. Was in Version 2.0 dazugekommen ist
+## 21. Was in Version 2.0 dazugekommen ist
 
 Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neuerungen.js`):
 
@@ -715,7 +733,7 @@ Zwölf Verbesserungen an der Bedienung, alle per Test abgesichert (`tests/07-neu
     Namen bleibt alles anonym wie bisher. Bewusst abschaltbar, weil eine Buchführung
     übereinander auch belasten kann.
 
-## 21. Was in Version 1.9 behoben wurde
+## 22. Was in Version 1.9 behoben wurde
 
 - **Änderungen konnten sich selbst rückgängig machen.** Abhaken, Zurücknehmen, Anheften,
   Archivieren, Verschieben, Liste wechseln, Wiederholung setzen - all das schrieb nur das

@@ -416,7 +416,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="2.7";
+const VERSION="2.8";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -599,6 +599,22 @@ async function partnerSchicken(pfad,wert){
     const res=await fetch(url,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(wert)});
     return res.ok;
   }catch(e){ return false; }
+}
+/* Lesender Gegenpart, nur für die Verbindungsprüfung unter "Mehr" - zeigt
+   ehrlich, was unter dem hinterlegten Code tatsächlich liegt, statt nur
+   "hat geklappt" zu behaupten. Ein erfolgreicher PUT beweist nämlich nur,
+   dass ein 20+-Zeichen-Pfad angenommen wurde - nicht, dass es der Pfad der
+   richtigen Person ist. Ein falsch abgetippter Code sähe sonst identisch
+   aus wie eine funktionierende Verbindung. */
+async function partnerLesen(pfad){
+  const url=adressePartner(pfad); if(!url) return {fehler:"kein-code"};
+  try{
+    const res=await fetch(url+".json");
+    if(res.status===401||res.status===403) return {fehler:"verweigert"};
+    if(res.status===404) return {fehler:"fehlt"};
+    if(!res.ok) return {fehler:"http",status:res.status};
+    return {daten:await res.json()};
+  }catch(e){ return {fehler:"netz"}; }
 }
 
 /* Bei diesen beiden Zuständen hilft kein erneuter Versuch - weiterzusenden würde
@@ -2960,9 +2976,12 @@ function vMehr(){
     <div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
       ${cfg.partner?`
         <p class="note">Verbunden mit <b style="color:var(--ink)">${esc(cfg.partner.name)}</b>. Über den Zielknopf „Bei ${esc(cfg.partner.name)}“ in der Schnelleingabe landet eine Aufgabe direkt in ihrer/seiner Liste „Von ${esc((cfg.name||"").trim()||"mir")}“ - ohne sonst irgendwo aufzutauchen.</p>
+        <p class="note" style="margin-top:4px">Hinterlegter Code: <span style="font-family:var(--mono,monospace)">${esc(cfg.partner.hid)}</span></p>
         <div class="row-btns" style="margin-top:8px">
+          <button class="btn btn-s" onclick="partnerTesten()" ${partnerTestErgebnis==="prueft"?"disabled":""}>Verbindung testen</button>
           <button class="btn btn-s" onclick="partnerTrennen()">Verbindung trennen</button>
         </div>
+        ${partnerTestErgebnis?`<p class="note" style="margin-top:8px">${partnerTestErgebnis==="prueft"?"Prüft …":esc(partnerTestErgebnis)}</p>`:""}
         ${gesendetUebersicht()}
       `:`
         <p class="note">Verbindet euch, um euch gegenseitig gezielt eine Aufgabe in die Liste zu schreiben - nicht die ganze App wird geteilt, nur das, was ausdrücklich zugewiesen wird. Wer den Code kennt, hätte technisch Zugriff auf den ganzen Haushalt der anderen Person, genau wie beim Verbinden zweier eigener Geräte oben - die App selbst schreibt aber ausschließlich in die eine geteilte Liste.</p>
@@ -3034,7 +3053,7 @@ function partnerVerbinden(){
   if(!(cfg.name||"").trim()){ alert('Trag zuerst oben „Dein Name auf diesem Gerät" ein - sonst weiß die andere Person nicht, von wem eine Aufgabe kommt.'); return; }
   if(!name){ alert("Wie heißt die Person?"); return; }
   if(code.length<20){ alert("Der Code muss mindestens 20 Zeichen haben."); return; }
-  cfg.partner={hid:code,name}; schreibenLokal(); render();
+  cfg.partner={hid:code,name}; partnerTestErgebnis=null; schreibenLokal(); render();
   /* Die Liste, in der die andere Person meine Aufgaben findet, richte ich bei
      ihr gleich mit ein - sie muss dafür nichts extra tun. */
   partnerSchicken("kategorien/k_von_"+eigenerSlug(),{n:"Von "+(cfg.name||"").trim(),f:"#0E6E68",art:"beides",pos:-1000})
@@ -3044,6 +3063,28 @@ function partnerTrennen(){
   if(!cfg.partner) return;
   if(!confirm("Verbindung zu "+cfg.partner.name+" wirklich trennen? Bereits zugewiesene Aufgaben bleiben bei ihr/ihm stehen.")) return;
   cfg.partner=null; schreibenLokal(); render();
+}
+/* Ehrliche Rückmeldung, ob der hinterlegte Code wirklich zum Haushalt der
+   verbundenen Person führt - siehe partnerLesen(). Ergebnis bleibt stehen,
+   bis der nächste Test läuft oder die Ansicht verlassen wird. */
+let partnerTestErgebnis=null;
+async function partnerTesten(){
+  if(!cfg.partner) return;
+  partnerTestErgebnis="prueft"; render();
+  const r=await partnerLesen("");
+  if(r.fehler==="kein-code") partnerTestErgebnis="Keine eigene Datenbank-URL hinterlegt - erst oben unter „Sync zwischen Geräten“ einrichten, der Code von "+cfg.partner.name+" braucht dieselbe Adresse.";
+  else if(r.fehler==="verweigert") partnerTestErgebnis="Zugriff verweigert (401/403). Entweder ist der Code von "+cfg.partner.name+" falsch abgetippt, oder die Firebase-Regeln lassen ihn nicht zu.";
+  else if(r.fehler==="fehlt") partnerTestErgebnis="Unter dieser Datenbank-URL antwortet niemand (404). Die Datenbank-URL selbst prüfen.";
+  else if(r.fehler) partnerTestErgebnis="Verbindung fehlgeschlagen ("+r.fehler+"). Ist "+cfg.partner.name+" gerade online und die URL stimmt?";
+  else if(r.daten==null) partnerTestErgebnis="Die Verbindung klappt technisch, aber unter diesem Code liegt noch gar nichts. Prüft, ob das wirklich "+cfg.partner.name+"s Code ist und nicht z. B. ein Beispiel- oder Testcode.";
+  else {
+    const katId="k_von_"+eigenerSlug();
+    const katDa=!!(r.daten.kategorien&&r.daten.kategorien[katId]);
+    const anzahlAufgaben=Object.keys(r.daten.aufgaben||{}).length;
+    partnerTestErgebnis="Verbindung erreichbar: insgesamt "+anzahlAufgaben+" "+(anzahlAufgaben===1?"Aufgabe":"Aufgaben")+" im Haushalt von "+cfg.partner.name+". Liste „Von "+((cfg.name||"").trim()||"mir")+"“ "
+      +(katDa?"ist dort angelegt.":"fehlt dort - das erklärt, warum Zuweisungen nicht auftauchen. Einmal „Verbindung trennen“ und neu verbinden, dann wird sie erneut angelegt.");
+  }
+  render();
 }
 /* Aufgabe direkt in den Haushalt der verbundenen Person schreiben, in deren
    reservierte Liste „Von <mein Name>". Bewusst ohne Datum, Wiederholung oder
