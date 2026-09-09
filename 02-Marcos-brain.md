@@ -1,9 +1,9 @@
 # Marco's brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.9**, Stand 9. September 2026. Datei rund 188 KB, 3220 Zeilen.
+**Version 2.10**, Stand 9. September 2026. Datei rund 189 KB, 3229 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
-**Für 2.6 bis 2.9 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
+**Für 2.6 bis 2.10 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
 Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal
 laufen lassen.
 
@@ -547,7 +547,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.8/2.9 dazugekommen ist
+## 14. Was in Version 2.8/2.9/2.10 dazugekommen ist
 
 **„Verbindung testen"** unter „Mehr → Aufgaben teilen" (nur sichtbar, wenn schon
 verbunden). Grund: Ein erfolgreicher `partnerSchicken()`-PUT beweist nur, dass ein
@@ -572,6 +572,20 @@ meldete deshalb fälschlich „Verbindung fehlgeschlagen", obwohl die eigentlich
 Verbindung (`partnerSchicken()`, immer mit nicht-leerem Pfad) davon gar nicht
 betroffen war. `adressePartner()` unterscheidet jetzt wie `adresse()` zwischen
 leerem und gefülltem Pfad.
+
+**2.10 (Nachtrag):** `aufgabeFuerPartner()` läuft als „fire and forget" ohne
+`await` aus `schnellAnlegen()` heraus - eine Ablehnung ohne `.catch()` zeigte
+sich bisher nirgends in der Oberfläche, weder als Erfolgs- noch als
+Fehlermeldung. Ein Praxisfall zeigte genau das: keine Rückmeldung nach dem
+Zuweisen, die Aufgabe kam nirgends an, „Verbindung testen" bestätigte aber eine
+funktionierende Verbindung samt angelegter Liste. Die Funktion fängt jetzt
+selbst jeden Fehler ab und zeigt ihn per `alert()`, statt ihn verschwinden zu
+lassen. Nebenbei behoben: `cfg.partner.name` wurde nach einem `await` gelesen -
+verschwindet die Verbindung währenddessen (Trennen auf einem anderen Tab), wäre
+das ein Absturz gewesen; der Name wird jetzt vor dem `await` gesichert. Die
+eigentliche Ursache des Praxisfalls war zum Zeitpunkt dieses Eintrags noch nicht
+gefunden - die Fehlermeldung aus `alert()` sollte sie beim nächsten Versuch
+zeigen.
 
 ## 15. Was in Version 2.7 behoben wurde
 

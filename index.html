@@ -416,7 +416,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* ===== Marco's brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Marco's brain";
-const VERSION="2.9";
+const VERSION="2.10";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -611,7 +611,7 @@ async function partnerSchicken(pfad,wert){
 async function partnerLesen(pfad){
   const url=adressePartner(pfad); if(!url) return {fehler:"kein-code"};
   try{
-    const res=await fetch(url);
+    const res=await fetch(url,{cache:"no-store"});   /* nie eine zwischengespeicherte, veraltete Antwort zeigen */
     if(res.status===401||res.status===403) return {fehler:"verweigert"};
     if(res.status===404) return {fehler:"fehlt"};
     if(!res.ok) return {fehler:"http",status:res.status};
@@ -3095,15 +3095,24 @@ async function partnerTesten(){
    ihren Tag wandern - nicht von selbst im Tagesgeschäft auftauchen. */
 async function aufgabeFuerPartner(text){
   const t=text.trim(); if(!t||!cfg.partner) return;
-  const id="a"+id6();
-  const eigenerName=(cfg.name||"").trim();
-  const katId="k_von_"+eigenerSlug();
-  const a={t,wann:null,kat:katId,eltern:null,fertig:null,herkunft:eigenerName,erstellt:Date.now(),pos:naechstePos(),ts:Date.now()};
-  const ok=await partnerSchicken("aufgaben/"+id,a);
-  mut("gesendet/"+id,{t,an:cfg.partner.name,erstellt:Date.now(),erledigt:null,ts:Date.now()},false);
-  hinweis(ok?"An "+cfg.partner.name+" geschickt.":"Konnte gerade nicht an "+cfg.partner.name+" gesendet werden.",
-    ok?null:"Erneut versuchen",
-    ok?null:()=>{ partnerSchicken("aufgaben/"+id,a).then(o2=>hinweis(o2?"An "+cfg.partner.name+" geschickt.":"Noch immer nicht erreichbar.")); });
+  /* Ohne dieses Netz verschwand ein unerwarteter Fehler bisher spurlos: die
+     Funktion läuft als "fire and forget" aus schnellAnlegen() heraus, eine
+     Ablehnung ohne .catch() zeigt sich nirgends in der Oberfläche - weder
+     Erfolgs- noch Fehlermeldung. */
+  try{
+    const id="a"+id6();
+    const eigenerName=(cfg.name||"").trim();
+    const katId="k_von_"+eigenerSlug();
+    const partnerName=cfg.partner.name;    /* vor dem await sichern, falls sich cfg.partner währenddessen ändert */
+    const a={t,wann:null,kat:katId,eltern:null,fertig:null,herkunft:eigenerName,erstellt:Date.now(),pos:naechstePos(),ts:Date.now()};
+    const ok=await partnerSchicken("aufgaben/"+id,a);
+    mut("gesendet/"+id,{t,an:partnerName,erstellt:Date.now(),erledigt:null,ts:Date.now()},false);
+    hinweis(ok?"An "+partnerName+" geschickt.":"Konnte gerade nicht an "+partnerName+" gesendet werden.",
+      ok?null:"Erneut versuchen",
+      ok?null:()=>{ partnerSchicken("aufgaben/"+id,a).then(o2=>hinweis(o2?"An "+partnerName+" geschickt.":"Noch immer nicht erreichbar.")); });
+  }catch(e){
+    alert("Beim Zuweisen ist etwas schiefgelaufen: "+(e&&e.message?e.message:e));
+  }
 }
 /* Kurze Übersicht unter „Mehr": was wurde zugewiesen, was ist noch offen. */
 function gesendetUebersicht(){
