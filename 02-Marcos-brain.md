@@ -1,17 +1,20 @@
-# Marco's brain
+# Brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.14**, Stand 9. September 2026. Datei rund 194 KB, 3324 Zeilen.
+**Version 2.15**, Stand 10. September 2026. Datei rund 179 KB, 3003 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
-**Für 2.6 bis 2.14 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
+**Für 2.6 bis 2.15 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
 Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal
 laufen lassen.
 
 Voraussetzung: Lies zuerst `00-Grundlagen-und-Infrastruktur.md`.
 
-Frühere Namen: die App hieß zwischenzeitlich *Tagwerk* und *Klarkopf*. Der interne
-Speicherschlüssel heißt deshalb bis heute `tagwerk.v1` und **darf nicht geändert werden**,
-sonst verwaisen alle Daten.
+Frühere Namen: **„Marco's brain"** bis Version 2.14, davor zwischenzeitlich *Tagwerk* und
+*Klarkopf*. Der interne Speicherschlüssel heißt deshalb bis heute `tagwerk.v1` und
+**darf nicht geändert werden**, sonst verwaisen alle Daten. `APP_NAME` in `index.html`
+und `name`/`short_name` in `manifest.json` tragen seit 2.15 „Brain" - Android übernimmt
+den neuen Namen und das Icon aber erst bei einer Neuinstallation, siehe Grundlagen
+Abschnitt 3.
 
 ---
 
@@ -401,81 +404,21 @@ nicht nur als Verknüpfung über „Zum Startbildschirm hinzufügen". Dafür bra
 
 ---
 
-## 10. Import aus Asana
+## 10. Entfallen: Import aus Asana
 
-Unter „Mehr → Asana-Export (CSV) einlesen". In Asana das Projekt öffnen,
-**Exportieren/Drucken → CSV**; mehrere Projekte auf einmal gehen auch.
+Bis Version 2.14 gab es unter „Mehr → Asana-Export (CSV) einlesen" einen vollständigen
+CSV-Import mit eigenem Zeilen-Parser, Spaltenzuordnung über Namen statt Position,
+Unteraufgaben-Auflösung über „Parent task", Vorschalter für Erledigte/Listenherkunft/alte
+Termine, sowie einer Auswahl-Ansicht zum Aussortieren einzelner Zeilen vor der Übernahme
+(einzeln oder „Nacheinander durchgehen"). Der Umzug war der eigentliche Zweck und ist
+erledigt; die Funktion ist in **2.15 auf Wunsch entfernt** worden, samt aller
+`asana*`-Funktionen und der zugehörigen CSS-Klassen `.awahl`/`.adurch`. Das Datenfeld
+`asana` an der Aufgabe (Abschnitt 2, zur Dublettenerkennung bei einem zweiten Durchlauf)
+ist unangetastet geblieben - es schreibt nur niemand mehr hinein, vorhandene Werte in
+älteren Aufgaben bleiben, wie sie sind.
 
-**Der CSV-Leser ist ein richtiger Leser**, kein `split(",")`. Asana schreibt Beschreibungen
-mit Kommas, Zeilenumbrüchen und verdoppelten Anführungszeichen in ein einziges Feld -
-daran zerbricht jede naive Trennung. `csvLesen()` läuft zeichenweise durch und kennt den
-Zustand „innerhalb von Anführungszeichen". Ein vorangestelltes Byte-Order-Mark fällt weg,
-sonst hieße die erste Spalte nicht „Task ID".
-
-**Spalten werden über ihre Namen gefunden**, nicht über ihre Stelle: Asana benennt sie je
-nach Sprache und Exportalter unterschiedlich, und Exporte enthalten Spalten, die hier
-niemanden interessieren. Was fehlt, fehlt eben.
-
-| Asana | Marco's brain |
-|---|---|
-| Name | Text der Aufgabe |
-| Notes | `notiz` an der Aufgabe |
-| Due Date | `wann` |
-| Completed At | `fertig` |
-| Created At | `erstellt` |
-| Section/Column, Projects oder Tags | Liste, wahlweise |
-| Parent task | `eltern` - wird zur Unteraufgabe |
-| Task ID | `asana`, damit ein zweiter Durchlauf nichts doppelt anlegt |
-
-**„Parent task"** enthält je nach Export die Kennung, den Namen oder `Name (Kennung)`.
-Alle drei werden aufgelöst, der volle Name zuerst - eine Aufgabe darf „Angebot (2)" heißen.
-Was sich nicht auflösen lässt, wird eine gewöhnliche Aufgabe statt einer verwaisten.
-Enkel hängen sich an den obersten Vorfahren, denn diese App kennt genau eine Ebene; ein
-Zähler bricht dabei auch einen Ring auf.
-
-Erst werden alle Kennungen vergeben, dann geschrieben - sonst zeigte eine Unteraufgabe auf
-eine Hauptaufgabe, die es noch nicht gibt.
-
-### Drei Schalter, ein Bericht
-
-Vor dem Import steht da, was passieren wird:
-
-- **Erledigte** weglassen (Vorgabe) oder mitnehmen.
-- **Liste kommt aus** Abschnitt (Vorgabe), Projekt, Etikett oder keiner. Fehlende Listen
-  werden angelegt, vorhandene über `slug()` wiedererkannt.
-- **Termine, die schon vorbei sind**, landen im Sammeln (Vorgabe) oder bleiben überfällig.
-  Ohne diesen Schalter kippt ein alter Asana-Rückstau als roter Berg in „Überfällig".
-
-Abschnittszeilen, die manche Exporte als eigene Zeile mitführen (`Type: section`), sind
-keine Aufgaben und werden übersprungen.
-
-### Aussortieren vor dem Import
-
-Ein Projektexport bringt regelmäßig Zeilen mit, die hier nichts verloren haben. Deshalb
-steht zwischen Lesen und Übernehmen eine Auswahl. Was `asanaMoeglich()` nach den Schaltern
-übrig lässt, steht als Liste da - Themen zuerst, ihre Punkte eingerückt darunter, damit zu
-sehen ist, was zusammengehört. **Antippen sortiert aus oder holt zurück.** In `asanaWahl`
-steht nur, was ausdrücklich abgewählt ist; die Vorgabe ist, dass alles mitkommt.
-
-Die Kopplung folgt derselben Regel wie überall in dieser App (`asanaSetzen()`):
-
-- Ein **Thema aussortieren** nimmt seine Punkte mit - allein wären sie zusammenhanglos.
-- Einen **Punkt zurückholen** holt sein Thema mit.
-- Ein **Thema zurückholen** holt seine Punkte *nicht* mit: wer sie einzeln abgewählt hat,
-  hat das so gemeint.
-
-Daneben **Alle** und **Keine** und, für lange Exporte, **Nacheinander durchgehen**
-(`asanaDurchgehen()`): eine Aufgabe je Blatt, zwei Knöpfe, Fortschrittsbalken, „‹ Zurück"
-für den letzten Griff und „Rest übernehmen" zum Abkürzen. Wer zweihundert Zeilen
-mitbringt, will sie nicht in einer Liste suchen, sondern durchgereicht bekommen. Das Blatt
-zeigt dabei den aktuellen Stand: was schon abgewählt ist, steht als „zurzeit aussortiert" da.
-
-Die Kennungen in den `onclick`-Attributen wären eine Falle - sie können aus einem
-Dateinamen mit Apostroph stammen und den JavaScript-String zerbrechen. Übergeben wird
-deshalb die Stelle in der Liste, nicht die Kennung.
-
-**Aussortiert heißt: kommt nicht in diese App.** In Asana ändert sich nichts, und das steht
-auch so im Blatt. Die App hat keinen Zugriff auf Asana und soll auch keinen vortäuschen.
+Wer den Import wiederhaben will, findet den letzten Stand in der Git-Historie des Repos,
+unmittelbar vor der Version-2.15-Änderung.
 
 ---
 
@@ -549,7 +492,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.8 bis 2.14 dazugekommen ist
+## 14. Was in Version 2.8 bis 2.15 dazugekommen ist
 
 **„Verbindung testen"** unter „Mehr → Aufgaben teilen" (nur sichtbar, wenn schon
 verbunden). Grund: Ein erfolgreicher `partnerSchicken()`-PUT beweist nur, dass ein
@@ -668,6 +611,28 @@ Test):**
   freier Tag dort ist eine Aussage („frei - etwas eintragen"), kein Lärm wie in
   der Vergangenheit. Schaltet man Erledigte wieder ein, kommen übersprungene
   Tage mit nur erledigten Einträgen automatisch zurück.
+
+**2.15 (Umbenennung, Aufräumen, erster Design-Feinschliff):**
+
+- **Umbenannt in „Brain".** `APP_NAME`, Seitentitel, Überschrift sowie `name`/`short_name`
+  in `manifest.json` - siehe Kopf dieser Datei zur Namensgeschichte und zur
+  Android-Neuinstallations-Einschränkung.
+- **Asana-Import komplett entfernt**, siehe Abschnitt 10 (jetzt „Entfallen").
+- **Konfetti beim Abhaken.** `konfetti()` lässt ein Dutzend kleiner Schnipsel in den drei
+  Farben der App (Akzent, Erledigt-Moos, Bernstein) vom Haken wegfliegen und dabei fallen -
+  reines CSS/DOM, keine Bibliothek, respektiert `prefers-reduced-motion`. Läuft zusätzlich
+  zum bestehenden Hupf/Puls-Effekt am Haken selbst, nicht statt dessen.
+- **Erster Durchgang eines visuellen Feinschliffs** in Richtung Things 3/Todoist/Linear/
+  Notion, ohne das bestehende Token-System (Farben, Radien, Schatten, Dark Mode) zu
+  ersetzen - es war dem Ziel bereits ungewöhnlich nah. Neu: ein dritter Schatten-Ton
+  `--schatten-schwebt` fürs Anheben bei Hover, echte Hover-Zustände für Aufgabenzeilen,
+  Notiz- und Wochenkarten, Chips, Knöpfe und die Navigation (bewusst auf
+  `@media (hover:hover) and (pointer:fine)` begrenzt, damit auf dem Handy nichts hängen
+  bleibt), sowie mehr Abstand zwischen Abschnitten (`.sect`-Rand von 24px/10px auf
+  28px/12px) und eine etwas luftigere Zeilenhöhe in der Aufgabenzeile (1.38 → 1.42).
+  Ausdrücklich **kein** Wechsel auf Tailwind/shadcn - das wäre ein Rewrite mit
+  Build-Pipeline gewesen und hätte gegen den „eine Datei, kein Framework"-Grundsatz
+  verstoßen, siehe Grundlagen Abschnitt 2.
 
 ## 15. Was in Version 2.7 behoben wurde
 

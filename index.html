@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#0E1214" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Marco's brain</title>
+<title>Brain</title>
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow">
 <link rel="manifest" href="manifest.json">
@@ -42,6 +42,7 @@
   --erf:#2C7A4C; --erf-bg:#E2F0E7;
   --rot:#B3382C; --rot-bg:#FAE8E5;
   --schatten:0 1px 2px rgba(16,26,30,.05);
+  --schatten-schwebt:0 4px 14px rgba(16,26,30,.09);
   --schatten-hoch:0 10px 30px rgba(16,26,30,.14);
   --r:16px; --r-s:12px; --r-xs:9px;
   --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
@@ -58,6 +59,7 @@
   --erf:#5CBE85; --erf-bg:#12291C;
   --rot:#E4857A; --rot-bg:#331B18;
   --schatten:0 1px 2px rgba(0,0,0,.4);
+  --schatten-schwebt:0 5px 16px rgba(0,0,0,.48);
   --schatten-hoch:0 12px 34px rgba(0,0,0,.55);}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0}
@@ -90,7 +92,7 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing
 .bogen.voll{border-color:color-mix(in srgb,var(--erf) 40%,var(--line));background:var(--erf-bg)}
 .bogen.voll .bogen-kopf b{color:var(--erf)}
 
-.sect{margin:24px 0 10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sect{margin:28px 0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .sect h2{font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
 .sect .zahl{font-size:11.5px;color:var(--ink-3);font-weight:500}
 
@@ -106,7 +108,7 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing
   stroke-dasharray:22;stroke-dashoffset:22}
 .auf.fertig .hak{background:var(--erf);border-color:var(--erf)}
 .auf.fertig .hak svg{stroke-dashoffset:0;transition:stroke-dashoffset .28s ease .06s}
-.auf-txt{flex:1;min-width:0;font-size:15.5px;line-height:1.38;letter-spacing:-.006em;word-break:break-word}
+.auf-txt{flex:1;min-width:0;font-size:15.5px;line-height:1.42;letter-spacing:-.006em;word-break:break-word}
 .auf.fertig .auf-txt{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
 .auf-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px}
 .auf-akt{display:flex;align-items:center;gap:2px;flex:none;align-self:center}
@@ -127,6 +129,16 @@ header h1{font-family:var(--serif);font-size:34px;font-weight:400;letter-spacing
 @keyframes hupf{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
 .hak.feier,.uhak.feier{animation:hupf .34s ease}
 .hak.feier::after,.uhak.feier::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--erf);animation:puls .55s ease-out}
+/* Konfetti beim Abhaken: ein paar Schnipsel in den Farben der App statt bunt-
+   beliebig, fliegen vom Haken weg und fallen dabei ab - kurz und leicht genug,
+   um bei jedem Abhaken zu laufen, ohne zu stören. */
+.konfetti-stueck{position:fixed;top:0;left:0;width:6px;height:9px;border-radius:1.5px;
+  pointer-events:none;z-index:70;will-change:transform,opacity;
+  animation:konfetti-flug .7s cubic-bezier(.12,.62,.35,1) forwards}
+@keyframes konfetti-flug{
+  0%{transform:translate(-50%,-50%) rotate(0deg);opacity:1}
+  100%{transform:translate(calc(-50% + var(--kx)),calc(-50% + var(--ky))) rotate(var(--kr));opacity:0}
+}
 @keyframes rein{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .auf{animation:rein .18s ease}
 
@@ -334,29 +346,6 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 .usheet.fertig .t{color:var(--ink-3);text-decoration:line-through}
 .usheet .weg{border:0;background:transparent;color:var(--ink-3);padding:6px 7px;font-size:14px}
 
-/* Auswahl vor dem Asana-Import: eine Zeile je Aufgabe, antippbar */
-.awahl{display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;
-  background:var(--card);border:1px solid var(--line);border-radius:var(--r-s);
-  padding:10px 12px;margin-bottom:6px;box-shadow:var(--schatten);transition:opacity .14s,border-color .14s}
-.awahl.unter{width:calc(100% - 18px);margin-left:18px}
-.awahl .ahak{width:20px;height:20px;flex:none;margin-top:1px;border-radius:6px;
-  border:1.6px solid var(--line-2);display:grid;place-items:center;font-size:12px;line-height:1;color:transparent}
-.awahl[aria-pressed="true"] .ahak{background:var(--akz);border-color:var(--akz);color:var(--auf-akz)}
-.awahl.aus{opacity:.45;border-style:dashed}
-.awahl.aus b{text-decoration:line-through}
-.awahl .atxt{flex:1;min-width:0}
-.awahl b{display:block;font-size:14.5px;font-weight:600;line-height:1.3}
-.awahl .anot{display:block;font-size:12.5px;color:var(--ink-3);margin-top:3px;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.awahl .nm{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-/* Die Karte beim Durchgehen: eine Aufgabe, groß genug zum Entscheiden */
-.adurch{background:var(--card);border:1px solid var(--line);border-radius:var(--r);
-  padding:15px 16px;margin-top:12px;box-shadow:var(--schatten)}
-.adurch b{display:block;font-family:var(--serif);font-size:21px;font-weight:400;line-height:1.2;margin-top:4px}
-.adurch .nm{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.adurch.aus{opacity:.55;border-style:dashed}
-.adurch.aus b{text-decoration:line-through}
-
 /* Der eigene Rhythmus: Zahl und Einheit in einer Zeile */
 .wdh-eigen{display:flex;align-items:center;gap:9px;margin-top:8px;flex-wrap:wrap}
 .wdh-eigen input{width:78px;flex:none;text-align:center}
@@ -402,13 +391,35 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* Verbindung zwischen Aufgabe und Notiz */
 .verweis{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--akz);
   background:var(--akz-bg);border:1px solid color-mix(in srgb,var(--akz) 22%,transparent);border-radius:99px;padding:3px 10px}
+
+/* ---------- Hover für Maus/Trackpad ----------
+   Die App ist für den Finger gebaut, wird aber auch im Browser am Rechner
+   benutzt - etwa nebenher zur Firebase-Konsole. touch-Geräte kennen kein
+   echtes Hover (nur ein simuliertes bei Tap-and-hold), deshalb ausdrücklich
+   auf "hover:hover" und "pointer:fine" begrenzt: sonst bliebe eine Zeile auf
+   dem Handy nach dem Antippen im Hover-Zustand hängen. */
+@media (hover:hover) and (pointer:fine){
+  .auf:not(.fertig):hover{border-color:var(--line-2);box-shadow:var(--schatten-schwebt)}
+  .tagblock .auf:not(.fertig):hover{box-shadow:none;background:var(--card-2)}
+  .notizreihe:hover{box-shadow:var(--schatten-schwebt)}
+  .nspur:hover{box-shadow:var(--schatten-schwebt);border-color:var(--line-2)}
+  .chip:not([aria-pressed="true"]):hover{border-color:var(--akz);color:var(--akz)}
+  .btn:not(.btn-primary):not(.btn-ghost):hover{border-color:var(--ink-3)}
+  .btn-primary:hover{filter:brightness(1.07)}
+  .btn-ghost:hover{background:var(--card-2)}
+  .aktionen button:hover{background:var(--card-2)}
+  nav button:not([aria-current="page"]):hover{color:var(--ink-2)}
+  .griff:hover{background:var(--card-2);color:var(--akz)}
+  .hak:not(:disabled):hover{border-color:var(--akz)}
+  .wahlzeile:hover{background:var(--card-2)}
+}
 </style>
 </head>
 <body>
 <div id="app">
   <header>
     <div class="hd-zeile">
-      <div><div class="eyebrow" id="eyebrow">Heute</div><h1 id="titel">Marco's brain</h1></div>
+      <div><div class="eyebrow" id="eyebrow">Heute</div><h1 id="titel">Brain</h1></div>
       <div id="hdside"></div>
     </div>
   </header>
@@ -419,12 +430,11 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 <div id="sheet"></div>
 <button class="daumen" id="daumen" onclick="daumenKnopf()" aria-label="Neu eintragen">+</button>
 <input type="file" id="bildwahl" accept="image/*" style="display:none">
-<input type="file" id="asanawahl" accept=".csv,text/csv,text/plain" multiple style="display:none">
 <script>
-/* ===== Marco's brain: Aufgaben und Notizen ===== */
+/* ===== Brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
-const APP_NAME="Marco's brain";
-const VERSION="2.14";
+const APP_NAME="Brain";
+const VERSION="2.15";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -1050,6 +1060,30 @@ function naechsterTermin(a){
   while(iso(d)<heute()&&schutz++<400) weiter();
   return iso(d);
 }
+/* Ein paar Schnipsel in den drei Farben der App (Akzent, Erledigt-Moos,
+   Bernstein) fliegen vom Haken weg. Wer bewegungsempfindlich eingestellt ist
+   (prefers-reduced-motion), bekommt keine - der Hupf/Puls-Effekt am Haken
+   selbst bleibt davon unberührt, der ist kurz genug, um das nicht zu stören. */
+const KONFETTI_FARBEN=["var(--akz)","var(--erf)","var(--gold)"];
+function konfetti(x,y){
+  if(typeof matchMedia==="function"&&matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  for(let i=0;i<12;i++){
+    const winkel=Math.random()*Math.PI*2;
+    const distanz=30+Math.random()*55;
+    const kx=Math.cos(winkel)*distanz;
+    const ky=Math.sin(winkel)*distanz*0.5+34+Math.random()*26;   /* fällt eher, als dass es steigt */
+    const stueck=document.createElement("div");
+    stueck.className="konfetti-stueck";
+    stueck.style.left=x+"px"; stueck.style.top=y+"px";
+    stueck.style.background=KONFETTI_FARBEN[i%KONFETTI_FARBEN.length];
+    stueck.style.setProperty("--kx",kx.toFixed(0)+"px");
+    stueck.style.setProperty("--ky",ky.toFixed(0)+"px");
+    stueck.style.setProperty("--kr",(Math.random()*440-220).toFixed(0)+"deg");
+    stueck.style.animationDelay=Math.round(Math.random()*60)+"ms";
+    document.body.appendChild(stueck);
+    setTimeout(()=>stueck.remove(),900);
+  }
+}
 function haken(id){
   const a=S.aufgaben[id]; if(!a) return;
   /* Kam die Aufgabe von einer verbundenen Person, meldet sich der Erledigt-
@@ -1076,7 +1110,11 @@ function haken(id){
      Unteraufgabe heißt anders, damit dieselbe Aufgabe an zwei Stellen der Seite
      nicht zweimal dieselbe Kennung trägt. */
   const el=document.getElementById("hak_"+id)||document.getElementById("uhak_"+id);
-  if(el&&el.classList){ el.classList.add("feier"); }
+  if(el&&el.classList){
+    el.classList.add("feier");
+    const r=el.getBoundingClientRect();
+    konfetti(r.left+r.width/2,r.top+r.height/2);
+  }
   /* Wer abgehakt hat, wird nur festgehalten, wenn unter „Mehr" ein Name steht.
      Ohne Namen bleibt die App wie bisher anonym. */
   const wer=(cfg.name||"").trim()||null;
@@ -1924,7 +1962,7 @@ function sucheFeld(){
   return `<div class="schnell"><input type="search" id="asuche" placeholder="Aufgaben und Notizen durchsuchen …" value="${esc(aufSuche)}" oninput="aufSucheAendern(this.value)">
     ${aufSuche?`<button class="btn" onclick="aufSuche='';render()">✕</button>`:""}</div>`;
 }
-/* Eine Suche über beides: für etwas, das „Marco's brain" heißt, ist die Trennung
+/* Eine Suche über beides: für etwas, das „Brain" heißt, ist die Trennung
    zwischen Aufgaben- und Notizsuche die unpassendere Idee. */
 function sucheTreffer(){
   const q=normText(aufSuche);
@@ -2519,361 +2557,6 @@ function bildVerkleinern(datei,maxKante,guete){
   });
 }
 
-/* ===== Import aus Asana ===== */
-/* Asana legt beim Export eines Projekts eine CSV an: eine Kopfzeile, darunter je
-   Aufgabe eine Zeile. Felder dürfen Kommas, Zeilenumbrüche und Anführungszeichen
-   enthalten - „Notes" tut das regelmäßig. Deshalb ein richtiger Leser und kein
-   split(","), das an der ersten mehrzeiligen Beschreibung zerbricht. */
-function csvLesen(text){
-  /* Excel und Asana schreiben gern ein Byte-Order-Mark voran; es gehört nicht zum ersten Spaltennamen. */
-  const s=String(text||"").replace(/^\uFEFF/,"");
-  const zeilen=[]; let feld="", zeile=[], inAnf=false;
-  for(let i=0;i<s.length;i++){
-    const c=s[i];
-    if(inAnf){
-      if(c==='"'){ if(s[i+1]==='"'){ feld+='"'; i++; } else inAnf=false; }
-      else feld+=c;
-      continue;
-    }
-    if(c==='"'){ inAnf=true; continue; }
-    if(c===","){ zeile.push(feld); feld=""; continue; }
-    if(c==="\r") continue;
-    if(c==="\n"){ zeile.push(feld); feld=""; zeilen.push(zeile); zeile=[]; continue; }
-    feld+=c;
-  }
-  if(feld.length||zeile.length){ zeile.push(feld); zeilen.push(zeile); }
-  return zeilen.filter(z=>z.some(x=>String(x==null?"":x).trim()!==""));
-}
-
-/* Asana benennt die Spalten je nach Sprache und Exportalter unterschiedlich.
-   Gesucht wird deshalb nach Namen, nicht nach Positionen; was fehlt, fehlt eben. */
-const ASANA_SPALTEN={
-  aid:["task id","id"],
-  typ:["type"],
-  name:["name","task name","aufgabe"],
-  notizen:["notes","description","beschreibung"],
-  faellig:["due date","due on","fälligkeitsdatum","faelligkeitsdatum"],
-  fertig:["completed at","completed","abgeschlossen am"],
-  erstellt:["created at","erstellt am"],
-  abschnitt:["section/column","section","column","abschnitt"],
-  projekt:["projects","project","projekt","projekte"],
-  etiketten:["tags","tag","etiketten"],
-  eltern:["parent task","parent","übergeordnete aufgabe"]
-};
-function asanaSpalten(kopf){
-  const norm=(kopf||[]).map(h=>String(h==null?"":h).trim().toLowerCase());
-  const raus={};
-  Object.entries(ASANA_SPALTEN).forEach(([feld,namen])=>{
-    const i=norm.findIndex(h=>namen.indexOf(h)>=0);
-    if(i>=0) raus[feld]=i;
-  });
-  return raus;
-}
-/* Asana schreibt Daten als „2026-08-14" oder „2026-08-14 09:12:33". Uhrzeiten
-   interessieren hier nicht - die App kennt nur Tage. */
-const asanaDatum=w=>{ const m=String(w==null?"":w).match(/(\d{4})-(\d{2})-(\d{2})/); return m?m[0]:null; };
-const asanaZeit=w=>{ const d=asanaDatum(w); return d?ausIso(d).getTime():null; };
-/* Mehrfachwerte stehen kommagetrennt in einem Feld; genommen wird der erste. */
-const asanaErstes=w=>String(w==null?"":w).split(",")[0].trim();
-
-function asanaLesen(name,text){
-  const zeilen=csvLesen(text);
-  if(zeilen.length<2) return {fehler:"keine Datenzeilen"};
-  const sp=asanaSpalten(zeilen[0]);
-  if(sp.name===undefined) return {fehler:"keine Spalte „Name“"};
-  const aufgaben=[];
-  zeilen.slice(1).forEach((z,i)=>{
-    const f=k=>sp[k]===undefined?"":String(z[sp[k]]==null?"":z[sp[k]]).trim();
-    const t=f("name");
-    if(!t) return;
-    /* Abschnitte tauchen in manchen Exporten als eigene Zeile auf. Sie sind
-       keine Aufgaben, sondern die Überschrift darüber. */
-    if(f("typ").toLowerCase()==="section") return;
-    aufgaben.push({
-      datei:name, schluessel:f("aid")||(name+"#"+i),
-      aid:f("aid"), t, notiz:f("notizen"),
-      faellig:asanaDatum(f("faellig")), fertig:asanaZeit(f("fertig")),
-      erstellt:asanaZeit(f("erstellt")),
-      abschnitt:f("abschnitt"), projekt:asanaErstes(f("projekt")),
-      etikett:asanaErstes(f("etiketten")), elternRoh:f("eltern")
-    });
-  });
-  return {aufgaben};
-}
-
-/* Die Spalte „Parent task" enthält je nach Export die Kennung, den Namen oder
-   „Name (Kennung)". Alle drei werden aufgelöst; was sich nicht auflösen lässt,
-   wird eine gewöhnliche Aufgabe statt einer verwaisten. */
-function asanaEltern(liste){
-  const nachId={}, nachName={};
-  liste.forEach(a=>{ if(a.aid) nachId[a.aid]=a.schluessel; nachName[normText(a.t)]=a.schluessel; });
-  const raus={};
-  liste.forEach(a=>{
-    const roh=a.elternRoh; if(!roh) return;
-    /* Der volle Name zählt zuerst: eine Aufgabe darf „Angebot (2)" heißen. Erst
-       danach wird eine angehängte Klammer als Kennung gelesen. */
-    const inKlammer=(roh.match(/\((\d+)\)\s*$/)||[])[1];
-    const ziel=nachId[roh]||nachName[normText(roh)]
-      ||(inKlammer?nachId[inKlammer]:null)
-      ||nachName[normText(roh.replace(/\s*\(\d+\)\s*$/,""))];
-    if(ziel&&ziel!==a.schluessel) raus[a.schluessel]=ziel;
-  });
-  /* Genau eine Ebene, wie überall in dieser App: Enkel hängen sich an den
-     obersten Vorfahren. Der Zähler bricht auch einen Ring auf. */
-  Object.keys(raus).forEach(k=>{
-    let oben=raus[k], schutz=0;
-    while(raus[oben]&&schutz++<8) oben=raus[oben];
-    raus[k]=oben===k?undefined:oben;
-    if(!raus[k]) delete raus[k];
-  });
-  return raus;
-}
-
-/* ---------- Oberfläche ---------- */
-let asanaStand=null;
-/* Was von Hand aussortiert wurde. Vorgabe ist: alles kommt mit; hier steht nur,
-   was ausdrücklich abgewählt ist. */
-let asanaWahl={};
-const asanaOpt={erledigteMit:false,listeAus:"abschnitt",alteTermine:true};
-const ASANA_QUELLE={abschnitt:"Abschnitt",projekt:"Projekt",etikett:"Etikett",keine:"Keine"};
-
-function asanaImport(){
-  asanaStand=null;
-  openSheet(asanaMaske());
-  const f=document.getElementById("asanawahl");
-  if(f){ f.value=""; f.onchange=()=>asanaDateienLesen(f.files); }
-}
-function asanaMaske(){
-  return `<div class="sheet-kopf"><h2>Aus Asana übernehmen</h2>
-      <button class="btn btn-ghost btn-s" onclick="closeSheet()" aria-label="Schließen">✕</button></div>
-    <p class="note" style="margin:6px 0 12px">In Asana das Projekt öffnen, oben im Menü <b>Exportieren/Drucken → CSV</b>.
-      Die Datei hier auswählen; mehrere Projekte auf einmal gehen auch.
-      Unteraufgaben aus der Spalte „Parent task“ hängen sich richtig ein.</p>
-    <button class="btn btn-primary btn-wide" onclick="asanaWaehlen()">Dateien auswählen</button>
-    <div id="asanabericht" style="margin-top:14px">${asanaStand?asanaBericht():""}</div>`;
-}
-function asanaWaehlen(){ const f=document.getElementById("asanawahl"); if(f&&f.click)f.click(); }
-
-async function asanaDateienLesen(dateien){
-  const liste=[...(dateien||[])];
-  if(!liste.length) return;
-  const ziel=document.getElementById("asanabericht");
-  if(ziel) ziel.innerHTML='<p class="note">Wird gelesen …</p>';
-  const aufgaben=[], kaputt=[];
-  for(const f of liste){
-    try{
-      const d=asanaLesen(f.name, await f.text());
-      if(d.fehler) kaputt.push(f.name+" ("+d.fehler+")");
-      else aufgaben.push(...d.aufgaben);
-    }catch(e){ kaputt.push(f.name+" (nicht lesbar)"); }
-  }
-  asanaStand={dateien:liste.length,aufgaben,kaputt,eltern:asanaEltern(aufgaben)};
-  asanaWahl={};
-  openSheet(asanaMaske(),true);
-}
-/* Was nach den Schaltern überhaupt in Frage kommt - die Grundlage der Handauswahl */
-function asanaMoeglich(){
-  if(!asanaStand) return [];
-  const alle=asanaStand.aufgaben.filter(a=>asanaOpt.erledigteMit||!a.fertig);
-  /* Themen zuerst, ihre Punkte gleich darunter: nur so ist zu sehen, was
-     zusammengehört, wenn man ein Thema aussortiert. */
-  const kinder=k=>alle.filter(x=>asanaStand.eltern[x.schluessel]===k);
-  const raus=[];
-  alle.filter(a=>!asanaStand.eltern[a.schluessel]).forEach(a=>{ raus.push(a); kinder(a.schluessel).forEach(x=>raus.push(x)); });
-  /* Punkte, deren Thema durch die Schalter herausgefallen ist, stehen für sich */
-  alle.forEach(a=>{ if(raus.indexOf(a)<0) raus.push(a); });
-  return raus;
-}
-function asanaAuswahl(){
-  return asanaMoeglich().filter(a=>asanaWahl[a.schluessel]!==false);
-}
-const asanaDrin=a=>asanaWahl[a.schluessel]!==false;
-/* Ein Punkt ohne sein Thema wäre zusammenhanglos, ein Thema ohne seine Punkte
-   ist in Ordnung. Deshalb zieht das Abwählen nach unten und das Anwählen nach
-   oben - beides genau eine Ebene weit, mehr gibt es nicht. */
-function asanaSetzen(schluessel,an){
-  if(!asanaStand) return;
-  asanaWahl[schluessel]=an;
-  if(!an) asanaStand.aufgaben.forEach(x=>{ if(asanaStand.eltern[x.schluessel]===schluessel) asanaWahl[x.schluessel]=false; });
-  else { const oben=asanaStand.eltern[schluessel]; if(oben) asanaWahl[oben]=true; }
-}
-function asanaUm(i){
-  const a=asanaMoeglich()[i]; if(!a) return;
-  asanaSetzen(a.schluessel,asanaWahl[a.schluessel]===false);
-  openSheet(asanaMaske(),true);
-}
-function asanaAlle(an){
-  asanaMoeglich().forEach(a=>{ asanaWahl[a.schluessel]=an; });
-  openSheet(asanaMaske(),true);
-}
-/* Woraus die Liste entsteht - und ob dabei überhaupt etwas herauskommt */
-const asanaListenName=a=>({abschnitt:a.abschnitt,projekt:a.projekt,etikett:a.etikett,keine:""})[asanaOpt.listeAus]||"";
-function asanaBericht(){
-  const alle=asanaStand.aufgaben;
-  const genommen=asanaAuswahl();
-  const erledigt=alle.filter(a=>a.fertig).length;
-  const unter=genommen.filter(a=>asanaStand.eltern[a.schluessel]).length;
-  const mitTermin=genommen.filter(a=>a.faellig).length;
-  const alt=genommen.filter(a=>a.faellig&&a.faellig<heute()).length;
-  const schonDa=new Set(Object.values(S.aufgaben||{}).map(a=>a.asana).filter(Boolean));
-  const doppelt=genommen.filter(a=>a.aid&&schonDa.has(a.aid)).length;
-  const namen=[...new Set(genommen.map(asanaListenName).filter(Boolean))];
-  const neueListen=namen.filter(e=>!Object.values(S.kategorien).some(k=>slug(k.n)===slug(e)));
-
-  const moeglich=asanaMoeglich();
-  const aussortiert=moeglich.length-genommen.length;
-  return `<div class="card" style="background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px">
-      <b style="font-size:15px">${genommen.length} von ${moeglich.length} ausgewählt${aussortiert?", "+aussortiert+" aussortiert":""}</b>
-      <p class="note" style="margin-top:8px">
-        <b style="color:var(--ink)">${genommen.length-doppelt} werden übernommen</b>${doppelt?", "+doppelt+" schon vorhanden und übersprungen":""}<br>
-        ${erledigt} erledigt${asanaOpt.erledigteMit?(erledigt===1?" (kommt mit)":" (kommen mit)"):(erledigt===1?" (bleibt draußen)":" (bleiben draußen)")}<br>
-        ${unter?(unter===1?"eine davon wird eine Unteraufgabe":unter+" davon werden Unteraufgaben")+"<br>":""}
-        ${mitTermin} mit Termin${alt?", davon "+alt+" in der Vergangenheit"+(asanaOpt.alteTermine?(alt===1?" - der landet im Sammeln":" - die landen im Sammeln"):(alt===1?" - der bleibt überfällig":" - die bleiben überfällig")):""}<br>
-        ${neueListen.length?"Neue Liste"+(neueListen.length>1?"n":"")+": "+neueListen.map(esc).join(", "):"Keine neue Liste"}
-        ${asanaStand.kaputt.length?"<br>Nicht lesbar: "+asanaStand.kaputt.slice(0,3).map(esc).join(", "):""}
-      </p></div>
-
-    <label class="fl">Erledigte</label>
-    <div class="chips" style="padding-bottom:4px">
-      <button class="chip" aria-pressed="${!asanaOpt.erledigteMit}" onclick="asanaSchalter('erledigteMit',false)">Weglassen</button>
-      <button class="chip" aria-pressed="${asanaOpt.erledigteMit}" onclick="asanaSchalter('erledigteMit',true)">Mitnehmen</button>
-    </div>
-    <label class="fl">Liste kommt aus</label>
-    <div class="chips" style="padding-bottom:4px">
-      ${Object.entries(ASANA_QUELLE).map(([q,l])=>`<button class="chip" aria-pressed="${asanaOpt.listeAus===q}"
-        onclick="asanaSchalter('listeAus','${q}')">${l}</button>`).join("")}
-    </div>
-    <label class="fl">Termine, die schon vorbei sind</label>
-    <div class="chips" style="padding-bottom:4px">
-      <button class="chip" aria-pressed="${asanaOpt.alteTermine}" onclick="asanaSchalter('alteTermine',true)">Ins Sammeln</button>
-      <button class="chip" aria-pressed="${!asanaOpt.alteTermine}" onclick="asanaSchalter('alteTermine',false)">Als überfällig</button>
-    </div>
-    ${moeglich.length?`<div class="sect"><h2>Was übernommen wird</h2><span class="zahl">${genommen.length} von ${moeglich.length}</span></div>
-      <div class="row-btns" style="margin-bottom:10px">
-        <button class="btn btn-s" onclick="asanaAlle(true)">Alle</button>
-        <button class="btn btn-s" onclick="asanaAlle(false)">Keine</button>
-        <button class="btn btn-s btn-primary" style="flex:1" onclick="asanaDurchgehen(0)">Nacheinander durchgehen</button>
-      </div>
-      <p class="note" style="margin:0 0 10px">Antippen sortiert eine Aufgabe aus oder holt sie zurück.
-        Aussortiert heißt: kommt nicht in diese App - in Asana ändert sich nichts.</p>
-      ${moeglich.map((a,i)=>asanaWahlzeile(a,i)).join("")}`
-      :`<p class="note" style="margin-top:12px">Nach diesen Regeln bleibt nichts übrig.</p>`}
-
-    <button class="btn btn-primary btn-wide" style="margin-top:14px" ${genommen.length?"":"disabled"} onclick="asanaUebernehmen()">
-      ${genommen.length?"Jetzt übernehmen ("+genommen.length+")":"Nichts ausgewählt"}</button>`;
-}
-function asanaSchalter(feld,wert){ asanaOpt[feld]=wert; openSheet(asanaMaske(),true); }
-
-/* Eine Zeile der Auswahl. Punkte stehen eingerückt unter ihrem Thema. */
-function asanaWahlzeile(a,i){
-  const oben=asanaStand.eltern[a.schluessel];
-  const l=asanaListenName(a);
-  const drin=asanaDrin(a);
-  return `<button class="awahl ${drin?"":"aus"} ${oben?"unter":""}" onclick="asanaUm(${i})"
-      aria-pressed="${drin}" aria-label="${drin?"Aussortieren":"Zurückholen"}">
-    <span class="ahak">✓</span>
-    <span class="atxt"><b>${esc(a.t)}</b>
-      ${a.notiz?`<span class="anot">${esc(a.notiz.slice(0,90))}</span>`:""}
-      <span class="nm">${l?`<span class="tag">${esc(l)}</span>`:""}
-        ${a.faellig?`<span class="mini">${datumText(a.faellig)}</span>`:`<span class="mini">ohne Termin</span>`}
-        ${a.fertig?`<span class="tag tag-erf">erledigt</span>`:""}</span></span>
-  </button>`;
-}
-
-/* ---------- Nacheinander durchgehen ----------
-   Eine Aufgabe, zwei Knöpfe. Wer zweihundert Zeilen aus Asana mitbringt, will
-   sie nicht in einer Liste suchen, sondern durchgereicht bekommen. Entschieden
-   wird beim Tippen; „Zurück" nimmt den letzten Griff wieder auf. */
-function asanaDurchgehen(i){
-  const liste=asanaMoeglich();
-  if(!liste.length){ openSheet(asanaMaske(),true); return; }
-  if(i>=liste.length){
-    const drin=asanaAuswahl().length;
-    openSheet(asanaMaske(),true);
-    hinweis("Durchgegangen: "+drin+" übernommen, "+(liste.length-drin)+" aussortiert");
-    return;
-  }
-  if(i<0) i=0;
-  const a=liste[i], oben=asanaStand.eltern[a.schluessel];
-  const eltern=oben?asanaStand.aufgaben.find(x=>x.schluessel===oben):null;
-  const l=asanaListenName(a);
-  const drin=asanaDrin(a);
-  openSheet(`<div class="sheet-kopf"><h2>Übernehmen?</h2>
-      <button class="btn btn-ghost btn-s" onclick="asanaDurchgehen(${liste.length})" aria-label="Durchgehen beenden">✕</button></div>
-    <p class="note" style="margin:2px 0 6px">${i+1} von ${liste.length}</p>
-    <div class="ubalken"><i style="width:${Math.round(i/liste.length*100)}%"></i></div>
-    <div class="adurch ${drin?"":"aus"}">
-      ${eltern?`<span class="mini">↳ gehört zu ${esc(eltern.t.slice(0,40))}</span>`:""}
-      ${drin?"":`<span class="mini" style="color:var(--rot);font-weight:600">zurzeit aussortiert</span>`}
-      <b>${esc(a.t)}</b>
-      ${a.notiz?`<p class="note" style="margin:8px 0 0;white-space:pre-wrap">${esc(a.notiz.slice(0,320))}</p>`:""}
-      <span class="nm" style="margin-top:10px">${l?`<span class="tag">${esc(l)}</span>`:""}
-        ${a.faellig?`<span class="tag tag-akz">${datumText(a.faellig)}</span>`:`<span class="tag">ohne Termin</span>`}
-        ${a.fertig?`<span class="tag tag-erf">in Asana erledigt</span>`:""}</span>
-    </div>
-    <div class="row-btns" style="margin-top:14px">
-      <button class="btn" style="flex:1;color:var(--rot);border-color:color-mix(in srgb,var(--rot) 34%,var(--line-2))"
-        onclick="asanaEntscheiden(${i},false)">Aussortieren</button>
-      <button class="btn btn-primary" style="flex:1" onclick="asanaEntscheiden(${i},true)">Übernehmen</button>
-    </div>
-    <div class="row-btns" style="margin-top:8px">
-      ${i>0?`<button class="btn btn-s btn-ghost" style="flex:1" onclick="asanaDurchgehen(${i-1})">‹ Zurück</button>`:""}
-      <button class="btn btn-s btn-ghost" style="flex:1" onclick="asanaDurchgehen(${liste.length})">Rest übernehmen</button>
-    </div>`,true);
-}
-function asanaEntscheiden(i,an){
-  const liste=asanaMoeglich();
-  const a=liste[i]; if(!a) return;
-  asanaSetzen(a.schluessel,an);
-  asanaDurchgehen(i+1);
-}
-
-function asanaUebernehmen(){
-  const genommen=asanaAuswahl();
-  if(!genommen.length) return;
-  /* Was schon einmal aus Asana kam, kommt nicht ein zweites Mal. Die Kennung
-     bleibt an der Aufgabe stehen, damit ein späterer Export dasselbe erkennt. */
-  const schonDa={};
-  Object.entries(S.aufgaben||{}).forEach(([id,a])=>{ if(a.asana) schonDa[a.asana]=id; });
-
-  /* Listen anlegen, soweit nötig */
-  const listeFuer={};
-  [...new Set(genommen.map(asanaListenName).filter(Boolean))].forEach(e=>{
-    const da=Object.entries(S.kategorien).find(([,k])=>slug(k.n)===slug(e));
-    if(da){ listeFuer[e]=da[0]; return; }
-    const id="k"+id6(), pos=Object.keys(S.kategorien).length;
-    setPfad(S,"kategorien/"+id,{n:e,f:FARBEN[pos%FARBEN.length],art:"beides",pos});
-    listeFuer[e]=id;
-  });
-
-  /* Erst alle Kennungen vergeben, dann schreiben: sonst zeigt eine Unteraufgabe
-     auf eine Hauptaufgabe, die es noch nicht gibt. */
-  const neu={};
-  genommen.forEach(a=>{ neu[a.schluessel]=(a.aid&&schonDa[a.aid])||("a"+id6()); });
-
-  let angelegt=0, uebersprungen=0, alsUnter=0;
-  genommen.forEach(a=>{
-    if(a.aid&&schonDa[a.aid]){ uebersprungen++; return; }
-    const obenSchluessel=asanaStand.eltern[a.schluessel];
-    const eltern=obenSchluessel?(neu[obenSchluessel]||null):null;
-    let wann=a.faellig||null;
-    if(wann&&asanaOpt.alteTermine&&wann<heute()) wann=null;
-    const l=asanaListenName(a);
-    setPfad(S,"aufgaben/"+neu[a.schluessel],{
-      t:a.t, wann, kat:listeFuer[l]||null, eltern:eltern||null,
-      fertig:a.fertig||null, notiz:a.notiz||null,
-      erstellt:a.erstellt||Date.now(), pos:naechstePos(), ts:Date.now(),
-      asana:a.aid||null
-    });
-    angelegt++; if(eltern) alsUnter++;
-  });
-  schreibenLokal();
-  if(basis()) senden("",S);
-  asanaStand=null; closeSheet(); go("listen");
-  hinweis(angelegt+" aus Asana übernommen"+(alsUnter?", "+(alsUnter===1?"eine davon als Unteraufgabe":alsUnter+" davon als Unteraufgaben"):"")
-    +(uebersprungen?", "+uebersprungen+" schon vorhanden":""));
-}
-
 /* ===== Textwerkzeug für Notizen ===== */
 
 const ENTITAET={nbsp:" ",amp:"&",quot:'"',apos:"'",lt:"<",gt:">",auml:"ä",ouml:"ö",uuml:"ü",
@@ -3054,10 +2737,6 @@ function vMehr(){
         <p class="note" style="margin-top:9px">Den eigenen Code findet die andere Person oben unter „Code für diese App“ in ihrer/seiner App. Dein Name muss dafür oben gesetzt sein, sonst weiß sie nicht, von wem eine Aufgabe kommt.</p>
       `}
     </div>
-
-    <div class="sect"><h2>Umzug aus Asana</h2></div>
-    <button class="btn btn-wide" onclick="asanaImport()">Asana-Export (CSV) einlesen</button>
-    <p class="note" style="margin-top:9px">Projekt in Asana öffnen, „Exportieren/Drucken → CSV“. Unteraufgaben, Termine, Beschreibungen und Abschnitte kommen mit; was schon einmal übernommen wurde, bleibt beim nächsten Mal außen vor.</p>
 
     <div class="sect"><h2>Sichern</h2></div>
     <div class="row-btns">
