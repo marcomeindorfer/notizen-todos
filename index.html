@@ -434,7 +434,7 @@ input:focus-visible,button:focus-visible,select:focus-visible,[contenteditable]:
 /* ===== Brain: Aufgaben und Notizen ===== */
 const KEY="tagwerk.v1";
 const APP_NAME="Brain";
-const VERSION="2.15";
+const VERSION="2.16";
 const TAG_MS=86400000;
 const TAGE=["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 const TAGE_K=["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -1691,13 +1691,17 @@ function schnellOeffnen(){
     ${cfg.partner?`<div class="chips" style="padding-bottom:4px">
       ${[["mir","Bei mir"],["partner","Bei "+cfg.partner.name]].map(([w,l])=>`<button class="chip" aria-pressed="${schnellBei===w}"
         onclick="schnellBeiWaehlen(this,'${w}')">${esc(l)}</button>`).join("")}</div>`:""}
-    <div class="chips" style="padding-bottom:4px">
+    <div class="chips" id="schnellZieleChips" style="padding-bottom:4px">
       ${SCHNELL_ZIELE.map(([w,l])=>`<button class="chip" aria-pressed="${schnellWohin===w}"
         onclick="schnellZiel(this,'${w}')">${l}</button>`).join("")}</div>
+    <div class="row-btns" style="padding-bottom:4px">
+      <input type="date" id="schnelldatum" style="flex:1" value="${/^\d{4}-/.test(schnellWohin)?schnellWohin:""}"
+        onchange="schnellDatum(this.value)">
+    </div>
     <div class="chips" style="padding-bottom:4px">
       ${SCHNELL_WDH.map(([w,l])=>`<button class="chip" aria-pressed="${schnellWdh===w}"
         onclick="schnellRhythmus(this,'${w}')">${l}</button>`).join("")}</div>
-    <p class="note" style="margin-top:10px">${cfg.partner?`Bei „Bei ${esc(cfg.partner.name)}“ gewählt: Das Datum oben gilt wie gewohnt - mit „Heute"/„Morgen"/„Diese Woche" landet die Aufgabe direkt in ihrem/seinem normalen Tagesgeschäft, bei „Nur sammeln" in der Liste „Von …“, in die aktiv hineingeklickt werden muss. Wiederholung unten wird nicht übernommen. `:""}„morgen", „Freitag", „14.9.", „#Geburt", „alle 3 Wochen" oder „jeden Montag" mitschreiben, das schlägt die Auswahl hier.</p>
+    <p class="note" style="margin-top:10px">${cfg.partner?`Bei „Bei ${esc(cfg.partner.name)}“ gewählt: Das Datum oben gilt wie gewohnt - mit „Heute"/„Morgen"/„Diese Woche"/eigenem Datum landet die Aufgabe direkt in ihrem/seinem normalen Tagesgeschäft, bei „Nur sammeln" in der Liste „Von …“, in die aktiv hineingeklickt werden muss. Wiederholung unten wird nicht übernommen. `:""}„morgen", „Freitag", „14.9.", „#Geburt", „alle 3 Wochen" oder „jeden Montag" mitschreiben, das schlägt die Auswahl hier.</p>
     <button class="btn btn-primary btn-wide fertig-knopf" onclick="schnellFertig()">Fertig</button>`;
   openSheet(koerper(),true);
   setTimeout(()=>{const e=document.getElementById("schnellfeld"); if(e&&e.focus)e.focus();},60);
@@ -1707,6 +1711,18 @@ function schnellOeffnen(){
 function schnellZiel(el,wohin){
   schnellWohin=wohin;
   schnellReihe(el);
+  /* Ein Chip-Klick nach einem eigenen Datum soll das Feld sichtbar zurücksetzen,
+     sonst stünde dort ein Datum, das gar nicht mehr gilt. */
+  const d=document.getElementById("schnelldatum"); if(d) d.value="";
+}
+function schnellDatum(wert){
+  if(!wert) return;
+  schnellWohin=wert;
+  /* Eigenes Datum schließt die vier Chips gegenseitig aus, genauso wie sie sich
+     selbst gegenseitig ausschließen - keiner davon soll noch gedrückt wirken. */
+  const reihe=document.getElementById("schnellZieleChips");
+  if(reihe&&reihe.querySelectorAll) reihe.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed","false"));
+  const f=document.getElementById("schnellfeld"); if(f&&f.focus)f.focus();
 }
 function schnellBeiWaehlen(el,w){
   schnellBei=w;
@@ -1725,7 +1741,8 @@ function schnellAnlegen(){
   const el=document.getElementById("schnellfeld"); if(!el) return;
   const t=el.value; if(!t.trim()) return;
   el.value="";
-  const wann=schnellWohin==="heute"?heute():schnellWohin==="morgen"?morgen():schnellWohin==="woche"?"woche":null;
+  const festesDatum=/^\d{4}-/.test(schnellWohin);
+  const wann=festesDatum?schnellWohin:schnellWohin==="heute"?heute():schnellWohin==="morgen"?morgen():schnellWohin==="woche"?"woche":null;
   if(schnellBei==="partner"&&cfg.partner){
     /* Dieselbe Wann-Auswahl wie bei einer eigenen Aufgabe: mit Datum landet
        die Aufgabe direkt im normalen Tagesgeschäft der anderen Person, "Nur
@@ -1736,7 +1753,8 @@ function schnellAnlegen(){
     return;
   }
   aufgabeAnlegen(t,wann,null,null,schnellWdh?{wdh:schnellWdh}:null);
-  hinweis(schnellWdh?"Eingetragen, wiederholt sich "+WDH[schnellWdh].toLowerCase()+".":"Eingetragen.");
+  hinweis(schnellWdh?"Eingetragen, wiederholt sich "+WDH[schnellWdh].toLowerCase()+".":
+    festesDatum?"Eingetragen für "+datumText(wann)+".":"Eingetragen.");
   const neu=document.getElementById("schnellfeld"); if(neu&&neu.focus)neu.focus();
 }
 /* "Fertig" schloss das Blatt bisher kommentarlos, auch wenn noch etwas

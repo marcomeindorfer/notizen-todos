@@ -1,9 +1,9 @@
 # Brain
 
 Aufgaben und Notizen in einer App. Ersatz für Google Notizen.
-**Version 2.15**, Stand 10. September 2026. Datei rund 179 KB, 3003 Zeilen.
+**Version 2.16**, Stand 11. September 2026. Datei rund 181 KB, 3021 Zeilen.
 Die Testreihen unter `tests/` prüfen 265 Punkte, Aufruf mit `./tests/run.sh`.
-**Für 2.6 bis 2.15 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
+**Für 2.6 bis 2.16 noch nicht mit `tests/run.sh` (JavaScriptCore) geprüft** - alle
 Änderungen entstanden ohne Mac in der Reichweite; vor dem Weiterarbeiten einmal
 laufen lassen.
 
@@ -492,7 +492,7 @@ Ansichten (offene Tastatur im Querformat) rutschen sie nach unten.
   nicht in „Angeheftet" ziehen, eine Aufgabe nicht von Montag auf Mittwoch - dafür gibt es
   die Ablegezonen auf „Heute" und die Wann-Auswahl im Blatt.
 
-## 14. Was in Version 2.8 bis 2.15 dazugekommen ist
+## 14. Was in Version 2.8 bis 2.16 dazugekommen ist
 
 **„Verbindung testen"** unter „Mehr → Aufgaben teilen" (nur sichtbar, wenn schon
 verbunden). Grund: Ein erfolgreicher `partnerSchicken()`-PUT beweist nur, dass ein
@@ -633,6 +633,23 @@ Test):**
   Ausdrücklich **kein** Wechsel auf Tailwind/shadcn - das wäre ein Rewrite mit
   Build-Pipeline gewesen und hätte gegen den „eine Datei, kein Framework"-Grundsatz
   verstoßen, siehe Grundlagen Abschnitt 2.
+
+**2.16 (eigenes Datum in der Schnelleingabe):** Die Schnelleingabe („+" unten,
+„Schnell eintragen") kannte bisher nur die vier Chips Heute/Morgen/Diese
+Woche/Nur sammeln - ein individuelles Datum ging nur über Mittippen im Text
+(„14.9.", „Freitag" …), das die Sprach-Erkennung erst noch richtig verstehen
+musste. Wer sich vertippte oder ein Datum meinte, das die Erkennung nicht
+kannte, landete die Aufgabe stillschweigend auf „Heute" statt auf dem
+gemeinten Tag. Neu: ein `<input type="date">` direkt unter den vier Chips
+(`schnelldatum`), das beim Ändern (`schnellDatum()`) `schnellWohin` auf das
+gewählte Datum setzt und die vier Chips sichtbar entdrückt - genau wie das
+schon lange bestehende Datumsfeld im Bearbeiten-Blatt einer Aufgabe
+(`aufgabeOeffnen()`). Ein Klick zurück auf einen der vier Chips
+(`schnellZiel()`) leert das Datumsfeld wieder, damit dort nie ein Datum
+stehen bleibt, das gar nicht mehr gilt. Gilt unverändert auch für die
+Zuweisung an die Partnerin/den Partner (Chip „Bei …“) - genau dafür war das
+Fehlen am wichtigsten, weil man dort nicht einfach hinterher im eigenen
+Bearbeiten-Blatt nachjustieren kann.
 
 ## 15. Was in Version 2.7 behoben wurde
 
